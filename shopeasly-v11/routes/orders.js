@@ -1,28 +1,33 @@
 const express = require('express');
 const router = express.Router();
-const fs = require('fs');
-const path = require('path');
+const { collections, createDocument, getAllDocuments } = require('../config/firebase');
 
 // Orders routes
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const orders = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/orders.json')));
+    // Get orders from Firestore
+    const orders = await getAllDocuments('orders', 50);
+
     res.render('layout', {
       body: `
         <h1>Orders Management</h1>
         <div class="mb-3">
           <a href="/orders/new" class="btn btn-primary">Create New Order</a>
+          <button onclick="location.reload()" class="btn btn-secondary">Refresh</button>
         </div>
         ${orders.length > 0 ? `
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title">All Orders (${orders.length})</h3>
+              <h3 class="card-title">All Orders (${orders.length}) - From Firestore</h3>
             </div>
             <div class="card-body">
               <table class="table">
                 <thead>
                   <tr>
                     <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Product</th>
+                    <th>Quantity</th>
                     <th>Status</th>
                     <th>Date</th>
                     <th>Actions</th>
@@ -31,12 +36,15 @@ router.get('/', (req, res) => {
                 <tbody>
                   ${orders.map(order => `
                     <tr>
-                      <td>${order.id || 'N/A'}</td>
-                      <td>${order.status || 'Pending'}</td>
-                      <td>${order.date || new Date().toLocaleDateString()}</td>
+                      <td>${order.id.substring(0, 8)}...</td>
+                      <td>${order.customerName || 'N/A'}</td>
+                      <td>${order.product || 'N/A'}</td>
+                      <td>${order.quantity || 'N/A'}</td>
+                      <td><span class="badge ${order.status === 'Delivered' ? 'bg-success' : order.status === 'Processing' ? 'bg-warning' : 'bg-secondary'}">${order.status || 'Pending'}</span></td>
+                      <td>${order.date || (order.createdAt ? new Date(order.createdAt._seconds * 1000).toLocaleDateString() : 'N/A')}</td>
                       <td>
-                        <button class="btn btn-secondary btn-sm">View</button>
-                        <button class="btn btn-primary btn-sm">Edit</button>
+                        <button class="btn btn-secondary btn-sm" onclick="viewOrder('${order.id}')">View</button>
+                        <button class="btn btn-primary btn-sm" onclick="editOrder('${order.id}')">Edit</button>
                       </td>
                     </tr>
                   `).join('')}
@@ -46,20 +54,38 @@ router.get('/', (req, res) => {
           </div>
         ` : `
           <div class="alert alert-info">
-            <h4>No Orders Found</h4>
+            <h4>No Orders Found in Firestore</h4>
             <p>You haven't created any orders yet. Click "Create New Order" to get started!</p>
+            <p><small>Connected to Firestore project: shopeasly-talk-sos-37743</small></p>
           </div>
         `}
+
+        <script>
+          function viewOrder(orderId) {
+            alert('View order: ' + orderId);
+            // TODO: Implement order view functionality
+          }
+
+          function editOrder(orderId) {
+            alert('Edit order: ' + orderId);
+            // TODO: Implement order edit functionality
+          }
+        </script>
       `
     });
   } catch (error) {
-    console.error('Error reading orders:', error);
+    console.error('Error loading orders from Firestore:', error);
     res.render('layout', {
       body: `
         <h1>Orders Management</h1>
         <div class="alert alert-error">
-          <h4>Error Loading Orders</h4>
-          <p>There was an error loading the orders data. Please try again.</p>
+          <h4>Error Loading Orders from Firestore</h4>
+          <p>There was an error connecting to Firestore. Please check your configuration.</p>
+          <p><strong>Error:</strong> ${error.message}</p>
+          <p><small>Project: shopeasly-talk-sos-37743</small></p>
+        </div>
+        <div class="mt-3">
+          <a href="/" class="btn btn-primary">Back to Dashboard</a>
         </div>
       `
     });
@@ -94,8 +120,16 @@ router.get('/new', (req, res) => {
                 <option value="Delivered">Delivered</option>
               </select>
             </div>
+            <div class="form-group">
+              <label class="form-label">Price ($)</label>
+              <input type="number" name="price" class="form-input" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Notes (Optional)</label>
+              <textarea name="notes" class="form-input" rows="3"></textarea>
+            </div>
             <div class="mt-3">
-              <button type="submit" class="btn btn-primary">Create Order</button>
+              <button type="submit" class="btn btn-primary">Create Order in Firestore</button>
               <a href="/orders" class="btn btn-secondary">Cancel</a>
             </div>
           </form>
@@ -130,6 +164,80 @@ router.post('/', (req, res) => {
           <p>There was an error creating the order. Please try again.</p>
         </div>
         <a href="/orders" class="btn btn-primary">Back to Orders</a>
+      `
+    });
+  }
+});
+
+// POST route to create new order in Firestore
+router.post('/', async (req, res) => {
+  try {
+    const { customerName, product, quantity, price, status, notes } = req.body;
+
+    // Validate required fields
+    if (!customerName || !product || !quantity) {
+      return res.render('layout', {
+        body: `
+          <h1>Create New Order</h1>
+          <div class="alert alert-error">
+            <h4>Validation Error</h4>
+            <p>Please fill in all required fields: Customer Name, Product, and Quantity.</p>
+          </div>
+          <a href="/orders/new" class="btn btn-primary">Try Again</a>
+        `
+      });
+    }
+
+    // Create order object
+    const orderData = {
+      customerName: customerName.trim(),
+      product: product.trim(),
+      quantity: parseInt(quantity),
+      price: price ? parseFloat(price) : null,
+      status: status || 'Pending',
+      notes: notes ? notes.trim() : '',
+      date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+      orderNumber: `ORD-${Date.now()}`, // Simple order number generation
+    };
+
+    // Save to Firestore
+    const docRef = await createDocument('orders', orderData);
+
+    res.render('layout', {
+      body: `
+        <h1>Order Created Successfully!</h1>
+        <div class="alert alert-success">
+          <h4>✅ Order Created in Firestore</h4>
+          <p><strong>Order ID:</strong> ${docRef.id}</p>
+          <p><strong>Customer:</strong> ${orderData.customerName}</p>
+          <p><strong>Product:</strong> ${orderData.product}</p>
+          <p><strong>Quantity:</strong> ${orderData.quantity}</p>
+          <p><strong>Status:</strong> ${orderData.status}</p>
+          ${orderData.price ? `<p><strong>Price:</strong> $${orderData.price}</p>` : ''}
+          ${orderData.notes ? `<p><strong>Notes:</strong> ${orderData.notes}</p>` : ''}
+        </div>
+        <div class="mt-3">
+          <a href="/orders" class="btn btn-primary">View All Orders</a>
+          <a href="/orders/new" class="btn btn-secondary">Create Another Order</a>
+          <a href="/" class="btn btn-outline">Back to Dashboard</a>
+        </div>
+      `
+    });
+
+  } catch (error) {
+    console.error('Error creating order in Firestore:', error);
+    res.render('layout', {
+      body: `
+        <h1>Error Creating Order</h1>
+        <div class="alert alert-error">
+          <h4>❌ Failed to Create Order</h4>
+          <p>There was an error saving the order to Firestore.</p>
+          <p><strong>Error:</strong> ${error.message}</p>
+        </div>
+        <div class="mt-3">
+          <a href="/orders/new" class="btn btn-primary">Try Again</a>
+          <a href="/orders" class="btn btn-secondary">Back to Orders</a>
+        </div>
       `
     });
   }

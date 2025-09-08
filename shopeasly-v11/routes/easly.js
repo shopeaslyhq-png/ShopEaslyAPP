@@ -4,7 +4,7 @@ const handleAICoPilot = require('../easly/aiHandler');
 
 // Easly AI routes
 router.get('/', (req, res) => {
-    res.send('Easly AI route - Welcome to AI features');
+    res.render('easly');
 });
 
 router.post('/co-pilot', handleAICoPilot);

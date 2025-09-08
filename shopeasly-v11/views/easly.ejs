@@ -1,0 +1,40 @@
+<% layout('layout') %>
+
+<div class="ai-hero">
+    <img src="https://storage.googleapis.com/onlyimagesfortj/for%20the%20app/Gemini_Generated_Image_v7wjc9v7wjc9v7wj.png" alt="ShopEasly Logo" class="logo-img-xl" />
+    <h1 class="ai-title">Easly AI Assistant</h1>
+    <p class="ai-desc">Ask anything about your business, orders, or inventory. Easly will help you brainstorm, automate, and get instant answers.</p>
+</div>
+
+<div class="ai-chat-card">
+    <div id="ai-chat-history" class="ai-chat-history"></div>
+    <form id="ai-form" class="ai-form">
+        <textarea id="ai-input" class="form-input ai-input" rows="2" placeholder="Type your question or command..."></textarea>
+        <button type="submit" class="btn btn-primary ai-send-btn">Send</button>
+    </form>
+</div>
+
+<script>
+const form = document.getElementById('ai-form');
+const input = document.getElementById('ai-input');
+const chatHistory = document.getElementById('ai-chat-history');
+
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const prompt = input.value.trim();
+    if (!prompt) return;
+    chatHistory.innerHTML += `<div class='ai-user-msg'><b>You:</b> ${prompt}</div>`;
+    input.value = '';
+    chatHistory.innerHTML += `<div class='ai-bot-msg ai-thinking'><b>Easly:</b> <span class='ai-spinner'></span> Thinking...</div>`;
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+    const res = await fetch('/ai/co-pilot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ textPart: prompt })
+    });
+    const data = await res.json();
+    document.querySelector('.ai-thinking').remove();
+    chatHistory.innerHTML += `<div class='ai-bot-msg'><b>Easly:</b> <pre>${JSON.stringify(data, null, 2)}</pre></div>`;
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+});
+</script>

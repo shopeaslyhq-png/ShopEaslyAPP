@@ -10,9 +10,18 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 const aiRoutes = require('./routes/ai');
 const voiceCommandRoutes = require('./routes/voiceCommands');
+const easlyRoutes = require('./routes/easly');
+const ordersRoutes = require('./routes/orders');
+const dashboardRoutes = require('./routes/dashboard');
+
+app.set('view engine', 'ejs');
+app.set('views', __dirname + '/views');
 
 app.use('/ai', aiRoutes);
 app.use('/voice-command', voiceCommandRoutes);
+app.use('/easly', easlyRoutes);
+app.use('/orders', ordersRoutes);
+app.use('/', dashboardRoutes);
 
 // TODO: Add other routes (dashboard, orders, etc.)
 

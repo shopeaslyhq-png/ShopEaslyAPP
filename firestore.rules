@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user has admin or manager role
+    function isAdminOrManager() {
+      return request.auth != null && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'manager'];
+    }
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // User documents - users can read/write their own data
+    match /users/{userId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Products collection - restricted write access
+    match /products/{productId} {
+      allow read: if true; // Allow public read access
+      allow write: if isAdminOrManager();
+    }
+    
+    // Designs collection - restricted write access
+    match /designs/{designId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdminOrManager();
+    }
+    
+    // Materials collection - restricted write access
+    match /materials/{materialId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdminOrManager();
+    }
+    
+    // Orders collection - restricted write access
+    match /orders/{orderId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdminOrManager();
+    }
+    
+    // Admin data - admin only access
+    match /adminData/{docId} {
+      allow read, write: if isAuthenticated() && 
+                           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Public data - authenticated users can write, anyone can read
+    match /public/{docId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+    
+    // Default deny all other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

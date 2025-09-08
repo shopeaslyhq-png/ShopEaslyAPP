@@ -8,25 +8,104 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛒</text></svg>">
 </head>
 <body>
-    <header class="header">
-        <div class="container">
-            <nav class="nav">
-                <a href="/" class="nav-brand">🛒 ShopEasly V11</a>
-                <ul class="nav-links">
-                    <li><a href="/" class="nav-link">Dashboard</a></li>
-                    <li><a href="/orders" class="nav-link">Orders</a></li>
-                    <li><a href="/easly" class="nav-link">AI Assistant</a></li>
-                    <li><a href="/voice-commands" class="nav-link">Voice Commands</a></li>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span style="font-size: 1.5rem;">🛒</span>
+                    <span>ShopEasly V11</span>
+                </div>
+                <div class="sidebar-profile">
+                    <div class="avatar" style="width: 32px; height: 32px; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-size: 0.8rem;">AI</div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.9rem;">AI-Powered</div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Inventory System</div>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><button class="nav-btn" onclick="window.location.href='/'">📊 Dashboard</button></li>
+                    <li><button class="nav-btn" onclick="window.location.href='/orders'">📦 Orders</button></li>
+                    <li><button class="nav-btn" onclick="window.location.href='/easly'">🤖 AI Assistant</button></li>
+                    <li><button class="nav-btn" onclick="window.location.href='/voice-commands'">🎤 Voice Commands</button></li>
                 </ul>
             </nav>
-        </div>
-    </header>
 
-    <main class="main">
-        <div class="container">
-            <%- body %>
+            <div class="sidebar-footer">
+                <div class="theme-picker">
+                    <button class="theme-btn" onclick="setTheme('light')" title="Light Theme">☀️</button>
+                    <button class="theme-btn" onclick="setTheme('dark')" title="Dark Theme">🌙</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div id="main-content">
+            <header class="main-header">
+                <div style="display: flex; align-items: center; gap: 1.2rem;">
+                    <a href="/" class="btn btn-secondary" style="font-size: 1.1rem; padding: 8px 18px; text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+                        🏠 Home
+                    </a>
+                    <div>
+                        <h1 style="margin: 0; color: var(--text-primary);">ShopEasly V11</h1>
+                        <p style="margin: 4px 0 0 0; color: var(--text-secondary); font-size: 0.9em;">AI-Powered Inventory Management System</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <input type="search" class="search-input form-input" placeholder="Search...">
+                    <button class="btn-icon" title="Notifications">🔔</button>
+                    <button class="btn-icon" title="Settings">⚙️</button>
+                </div>
+            </header>
+
+            <div id="app-views">
+                <%- body %>
+            </div>
         </div>
-    </main>
+    </div>
+
+    <!-- AI Floating Action Button -->
+    <button class="ai-fab" onclick="window.location.href='/easly'" title="AI Assistant">
+        🤖
+    </button>
+
+    <script>
+        // Theme switching functionality
+        function setTheme(theme) {
+            document.body.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+
+            // Update active theme button
+            document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.body.setAttribute('data-theme', savedTheme);
+
+        // Update active theme button on load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                if ((savedTheme === 'light' && btn.textContent.includes('☀️')) ||
+                    (savedTheme === 'dark' && btn.textContent.includes('🌙'))) {
+                    btn.classList.add('active');
+                }
+            });
+        });
+
+        // Highlight active navigation
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            const href = btn.getAttribute('onclick').match(/window\.location\.href='([^']+)'/);
+            if (href && href[1] === currentPath) {
+                btn.classList.add('active');
+            }
+        });
+    </script>
 
     <script src="/js/copilotModal.js"></script>
     <script src="/js/voicePromptModal.js"></script>

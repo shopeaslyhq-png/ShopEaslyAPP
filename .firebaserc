@@ -1,0 +1,12 @@
+{
+  "projects": {
+    "staging": "shopeasly",
+    "default": "shopeasly"
+  },
+  "targets": {},
+  "etags": {
+    "shopeasly": {
+      "extensionInstances": {}
+    }
+  }
+}
