@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShopEasly</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+<script type="importmap">
+{
+  "imports": {
+    "vite": "https://aistudiocdn.com/vite@^7.1.4",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.17.0",
+    "xlsx": "https://aistudiocdn.com/xlsx@^0.18.5",
+    "dompurify": "https://aistudiocdn.com/dompurify@^3.2.6",
+    "marked": "https://aistudiocdn.com/marked@^16.2.1"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body data-theme="dark">
+
+    <!-- Main App Wrapper -->
+    <div id="app-wrapper">
+        <div id="app" class="app-container">
+            <!-- Sidebar -->
+            <nav class="sidebar">
+                <div class="sidebar-header">
+                    <div class="logo">
+                       <img src="https://storage.googleapis.com/onlyimagesfortj/for%20the%20app/Gemini_Generated_Image_v7wjc9v7wjc9v7wj.png" alt="ShopEasly Logo" class="logo-img">
+                    </div>
+                </div>
+                <div class="sidebar-profile" id="user-profile">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="avatar"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <span>Authenticated User</span>
+                </div>
+                <ul class="sidebar-nav">
+                    <li><button id="nav-dashboard" data-view="dashboard-view" class="nav-btn active" aria-current="page">Dashboard</button></li>
+                    <li><button id="nav-orders" data-view="orders-view" class="nav-btn">Orders</button></li>
+                    <li><button id="nav-products" data-view="finished-goods-view" class="nav-btn">Products</button></li>
+                    <li><button id="nav-materials" data-view="materials-view" class="nav-btn">Materials</button></li>
+                    <li><button id="nav-packaging" data-view="packaging-view" class="nav-btn">Packaging</button></li>
+                    <li><button id="nav-ideas" data-view="ideas-view" class="nav-btn">Ideas Hub</button></li>
+                </ul>
+                <div class="sidebar-footer">
+                    <div class="theme-picker">
+                        <button class="theme-btn" data-theme="light" aria-label="Switch to light theme" aria-pressed="false"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></button>
+                        <button class="theme-btn active" data-theme="dark" aria-label="Switch to dark theme" aria-pressed="true"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></button>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main id="main-content">
+                <header class="main-header">
+                    <button id="sidebar-toggle-btn" class="btn btn-icon" aria-label="Toggle sidebar" aria-expanded="false">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                    </button>
+                    <div class="header-actions">
+                        <input type="search" id="main-search-input" class="form-input search-input" placeholder="Search items...">
+                        <button id="add-new-btn-header" class="btn btn-primary" data-action="add-product">Add New</button>
+                    </div>
+                </header>
+                
+                <div id="app-views">
+                    <!-- HOMEPAGE -->
+                    <div id="sos-homepage" class="app-view-container">
+                        <div class="hub-header">
+                             <img src="https://storage.googleapis.com/onlyimagesfortj/for%20the%20app/Gemini_Generated_Image_v7wjc9v7wjc9v7wj.png" alt="ShopEasly Logo" class="logo-img-xl">
+                            <h1>Dashboard</h1>
+                            <p>Your centralized command center for streamlined e-commerce management.</p>
+                        </div>
+                        <div class="hub-grid">
+                            <div class="hub-card" data-view="shopeasly-app-panel">
+                                <div class="card-icon">📈</div>
+                                <h2>App Panel</h2>
+                                <p>The core of your operations. Manage inventory, track orders, and view analytics.</p>
+                            </div>
+                            <div class="hub-card" data-view="mobile-command-post">
+                                <div class="card-icon">📱</div>
+                                <h2>Mobile Command Center</h2>
+                                <p>A tactical overview of your shop's key metrics, optimized for quick decisions.</p>
+                            </div>
+                            <div class="hub-card" data-view="sos-tablet">
+                               <div class="card-icon">📋</div>
+                                <h2>Fulfillment Tablet</h2>
+                                <p>A dedicated interface for your packing station to process and fulfill orders efficiently.</p>
+                            </div>
+                            <div class="hub-card" data-view="sos-creator">
+                                <div class="card-icon">📄</div>
+                                <h2>Creator</h2>
+                                <p>Generate Standard Operating Procedures (SOPs), guides, and manuals with AI.</p>
+                            </div>
+                        </div>
+                    </div>
+                     <!-- APP PANEL -->
+                    <div id="shopeasly-app-panel" class="app-view-container hidden">
+                        <!-- Dashboard View -->
+                        <div id="dashboard-view" class="view-container">
+                             <div class="stats-grid">
+                                <div class="stat-card clickable-widget" data-view="orders-view"><h3>Active Orders</h3><p id="stat-active-orders">0</p></div>
+                                <div class="stat-card clickable-widget" data-view="orders-view"><h3>In Production</h3><p id="stat-in-production">0</p></div>
+                                <div class="stat-card clickable-widget" data-view="orders-view"><h3>Completed Today</h3><p id="stat-completed-today">0</p></div>
+                                <div class="stat-card clickable-widget" data-view="materials-view"><h3>Low Stock Items</h3><p id="stat-low-stock">0</p></div>
+                            </div>
+                            <div class="dashboard-grid">
+                                <div class="dashboard-card">
+                                    <h3>Quick Actions</h3>
+                                    <div class="quick-actions">
+                                        <button class="btn" data-action="add-order">New Order</button>
+                                        <button class="btn" data-action="add-product">New Product</button>
+                                        <button class="btn" data-action="add-material">New Material</button>
+                                        <button class="btn" data-action="upload-excel">Import from Excel</button>
+                                    </div>
+                                    <input type="file" id="file-input-excel" class="hidden" accept=".xlsx, .xls">
+                                </div>
+                                <div class="dashboard-card">
+                                    <h3>Brainstorm with AI</h3>
+                                    <form id="brainstorm-form">
+                                        <textarea id="brainstorm-prompt" class="form-input" placeholder="e.g., 'Suggest 5 new t-shirt ideas for a summer collection'"></textarea>
+                                        <div class="form-actions">
+                                            <button id="brainstorm-generate-btn" type="submit" class="btn btn-primary" data-loading="false">
+                                                <span class="btn-text">Generate Ideas</span>
+                                                <div class="spinner"></div>
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                             <div id="brainstorm-results" class="dashboard-card markdown-content hidden"></div>
+                        </div>
+                        <!-- Other views -->
+                        <div id="orders-view" class="view-container hidden"><div class="table-wrapper"><table id="orders-table"></table></div></div>
+                        <div id="finished-goods-view" class="view-container hidden"><div class="table-wrapper"><table id="finished-goods-table"></table></div></div>
+                        <div id="materials-view" class="view-container hidden"><div class="table-wrapper"><table id="materials-table"></table></div></div>
+                        <div id="packaging-view" class="view-container hidden"><div class="table-wrapper"><table id="packaging-table"></table></div></div>
+                        
+                        <!-- Ideas Hub View -->
+                        <div id="ideas-view" class="view-container hidden">
+                            <div class="ideas-layout">
+                                <div class="ideas-form-container">
+                                    <h2>Ideas Hub Image Generator</h2>
+                                    <form id="idea-form">
+                                        <div class="form-group">
+                                            <label for="prompt-input">Prompt</label>
+                                            <textarea id="prompt-input" class="form-input" rows="4" placeholder="A majestic lion wearing a crown, cinematic lighting..."></textarea>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="image-style-select">Style</label>
+                                                <select id="image-style-select" class="form-input">
+                                                    <option value="photorealistic">Photorealistic</option>
+                                                    <option value="digital art">Digital Art</option>
+                                                    <option value="fantasy">Fantasy</option>
+                                                    <option value="anime">Anime</option>
+                                                    <option value="watercolor">Watercolor</option>
+                                                    <option value="cyberpunk">Cyberpunk</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="aspect-ratio-select">Aspect Ratio</label>
+                                                <select id="aspect-ratio-select" class="form-input">
+                                                    <option value="1:1">1:1 (Square)</option>
+                                                    <option value="16:9">16:9 (Widescreen)</option>
+                                                    <option value="9:16">9:16 (Portrait)</option>
+                                                    <option value="4:3">4:3 (Landscape)</option>
+                                                    <option value="3:4">3:4 (Tall)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-actions">
+                                            <button type="button" id="refine-prompt-btn" class="btn btn-secondary" data-loading="false">
+                                                <span class="btn-text">Refine Prompt</span>
+                                                <div class="spinner"></div>
+                                            </button>
+                                            <button type="submit" id="generate-btn" class="btn btn-primary">Generate Image</button>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="ideas-output-container">
+                                    <div id="image-output-container">
+                                        <div class="empty-state">Generate an image to see it here.</div>
+                                    </div>
+                                    <div id="loading-indicator" class="hidden"><div class="spinner-large"></div><p>Generating your masterpiece...</p></div>
+                                    <div id="error-message" class="error-text hidden"></div>
+                                    <div id="save-design-section" class="hidden">
+                                        <form id="save-design-form">
+                                            <input type="text" id="design-name" class="form-input" placeholder="Enter design name">
+                                            <div class="form-actions">
+                                                <button type="submit" id="save-design-btn" class="btn">Save Design</button>
+                                                <button type="button" id="create-product-btn" class="btn btn-primary">Create Product</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <!-- MOBILE COMMAND CENTER -->
+                    <div id="mobile-command-post" class="app-view-container hidden">
+                        <div class="mcc-header">
+                            <h1><button class="btn btn-icon back-to-hub-btn" aria-label="Back to Hub" data-view="sos-homepage"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button> Mobile Command Center</h1>
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-card clickable-widget" data-view="orders-view"><h3>Active Orders</h3><p id="mcc-stat-active-orders">0</p></div>
+                            <div class="stat-card clickable-widget" data-view="orders-view"><h3>In Production</h3><p id="mcc-stat-in-production">0</p></div>
+                             <div class="stat-card clickable-widget" data-view="materials-view"><h3>Low Stock Items</h3><p id="mcc-stat-low-stock">0</p></div>
+                        </div>
+                        <div class="hp-stats-grid">
+                            <div class="hp-stat-card">
+                                <h3>Active Orders</h3>
+                                <p id="hp-stat-active-orders">0</p>
+                            </div>
+                            <div class="hp-stat-card">
+                                <h3>In Production</h3>
+                                <p id="hp-stat-in-production">0</p>
+                            </div>
+                             <div class="hp-stat-card">
+                                <h3>Completed Today</h3>
+                                <p id="hp-stat-completed-today">0</p>
+                            </div>
+                            <div class="hp-stat-card">
+                                <h3>Low Stock</h3>
+                                <p id="hp-stat-low-stock">0</p>
+                            </div>
+                        </div>
+                        <div class="mcc-actions">
+                             <button class="btn btn-primary" data-action="go-to-ideas">Create New Design</button>
+                             <button class="btn" data-action="add-order">Add New Order</button>
+                        </div>
+                    </div>
+                     <!-- CREATOR -->
+                    <div id="sos-creator" class="app-view-container hidden">
+                         <div class="creator-header">
+                            <h1><button class="btn btn-icon back-to-hub-btn" aria-label="Back to Hub" data-view="sos-homepage"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button> Creator</h1>
+                        </div>
+                        <p class="hub-header" style="text-align: left; margin-bottom: 1.5rem;">Generate Standard Operating Procedures, manuals, and professional guides.</p>
+                        <form id="creator-form" class="creator-form">
+                            <input type="text" id="creator-prompt-input" class="form-input" placeholder="e.g., 'A guide to packaging fragile items'">
+                            <button id="creator-generate-btn" type="submit" class="btn btn-primary" data-loading="false">
+                                <span class="btn-text">Generate</span>
+                                <div class="spinner"></div>
+                            </button>
+                        </form>
+                        <div id="creator-output" class="markdown-content">
+                             <div class="empty-state">Your generated document will appear here.</div>
+                        </div>
+                    </div>
+                    <!-- FULFILLMENT TABLET -->
+                    <div id="sos-tablet" class="app-view-container hidden">
+                        <div class="fulfillment-header">
+                             <h1><button class="btn btn-icon back-to-hub-btn" aria-label="Back to Hub" data-view="sos-homepage"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button> Fulfillment Tablet</h1>
+                             <div class="fulfillment-controls">
+                                 <select id="order-status-filter" class="form-input">
+                                     <option value="New">New</option>
+                                     <option value="In Production">In Production</option>
+                                     <option value="Completed">Completed</option>
+                                     <option value="Shipped">Shipped</option>
+                                 </select>
+                                 <button id="fulfillment-refresh-btn" class="btn btn-icon" aria-label="Refresh list"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L20.49 10M3.51 14a9 9 0 0 1 14.85 3.36L20.49 14"></path></svg></button>
+                             </div>
+                        </div>
+                        <div id="fulfillment-list" class="fulfillment-grid">
+                            <!-- Fulfillment cards will be rendered here -->
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+
+        <!-- Item Modal -->
+        <div id="item-modal-overlay" class="modal-overlay hidden">
+            <div class="modal-content">
+                <button id="close-modal-btn" class="modal-close-btn" aria-label="Close modal">&times;</button>
+                <h2 id="modal-title"></h2>
+                <form id="item-form">
+                    <input type="hidden" id="item-id">
+                    <input type="hidden" id="item-type">
+                    <div class="form-group">
+                        <label for="item-name" id="item-name-label">Name</label>
+                        <input type="text" id="item-name" class="form-input" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="item-sku">SKU</label>
+                            <input type="text" id="item-sku" class="form-input">
+                        </div>
+                        <div class="form-group hidden" id="price-form-group">
+                            <label for="item-price">Selling Price ($)</label>
+                            <input type="number" id="item-price" class="form-input" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                         <div class="form-group">
+                            <label for="item-stock">Stock Quantity</label>
+                            <input type="number" id="item-stock" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="item-stock-threshold">Low Stock Threshold</label>
+                            <input type="number" id="item-stock-threshold" class="form-input">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="item-supplier">Supplier</label>
+                        <input type="text" id="item-supplier" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="item-notes">Notes</label>
+                        <textarea id="item-notes" class="form-input" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Order Modal -->
+        <div id="order-modal-overlay" class="modal-overlay hidden">
+            <div class="modal-content">
+                <button id="close-order-modal-btn" class="modal-close-btn" aria-label="Close modal">&times;</button>
+                <h2 id="order-modal-title"></h2>
+                <form id="order-form">
+                    <input type="hidden" id="order-id">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="order-customer-name">Customer Name</label>
+                            <input type="text" id="order-customer-name" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="order-status">Status</label>
+                            <select id="order-status" class="form-input">
+                                <option value="New">New</option>
+                                <option value="In Production">In Production</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Shipped">Shipped</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Items</label>
+                        <div id="order-items-container"></div>
+                        <button type="button" id="add-order-item-btn" class="btn btn-secondary">Add Item</button>
+                    </div>
+                    <div id="order-total-price" class="order-total">Total: $0.00</div>
+                    <div class="form-group">
+                        <label for="order-notes">Order Notes</label>
+                        <textarea id="order-notes" class="form-input" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Order</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- AI Assistant -->
+        <button id="ai-fab-btn" class="ai-fab" aria-label="Open AI Assistant">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 4.2-4.2 1.9 4.2 1.9L12 15l1.9-4.2 4.2-1.9-4.2-1.9L12 3z"></path><path d="M5 21v-4"></path><path d="M19 21v-4"></path><path d="M3 17h4"></path><path d="M17 17h4"></path></svg>
+        </button>
+
+        <div id="ai-assistant-modal" class="modal-overlay hidden">
+            <div class="modal-content ai-modal">
+                <div class="ai-modal-header">
+                     <h2>Easly AI Assistant</h2>
+                     <div>
+                        <button id="ai-guide-btn" class="btn btn-icon" aria-label="Show command guide"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></button>
+                        <button id="ai-modal-close-btn" class="modal-close-btn" aria-label="Close modal">&times;</button>
+                     </div>
+                </div>
+                <div id="ai-chat-history"></div>
+                <div class="ai-input-area">
+                    <div id="ai-mic-container">
+                       <svg class="mic-icon" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg>
+                       <div class="thinking-spinner"></div>
+                    </div>
+                    <p id="ai-status-text">Tap the mic to give me a command!</p>
+                </div>
+            </div>
+        </div>
+        
+        <div id="ai-guide-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                 <button id="ai-guide-close-btn" class="modal-close-btn" aria-label="Close modal">&times;</button>
+                 <h2>AI Command Guide</h2>
+                 <p>Try saying things like:</p>
+                 <ul>
+                    <li><em>"Create a new product called 'Premium Hoodie' with 50 in stock."</em></li>
+                    <li><em>"Let's make a new material called 'Organic Cotton', we have 200 units."</em></li>
+                    <li><em>"Update the stock for 'Organic Cotton' to 150."</em></li>
+                    <li><em>"Find the product named 'Summer Tee'."</em></li>
+                    <li><em>"Change order 101's status to shipped."</em></li>
+                 </ul>
+            </div>
+        </div>
+
+        <div id="toast-notification"></div>
+
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>

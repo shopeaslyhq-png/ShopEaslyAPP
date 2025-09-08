@@ -1,0 +1,101 @@
+<div class="dashboard">
+    <div class="dashboard-header mb-4">
+        <h1>Dashboard</h1>
+        <p class="text-secondary">Welcome to ShopEasly V11 - Your AI-powered inventory management system</p>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value"><%= orders.length %></div>
+            <div class="stat-label">Total Orders</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">0</div>
+            <div class="stat-label">Products</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">0</div>
+            <div class="stat-label">Low Stock Items</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">$0</div>
+            <div class="stat-label">Revenue</div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-2">
+        <!-- Recent Orders -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Recent Orders</h3>
+            </div>
+            <div class="card-body">
+                <% if (orders.length > 0) { %>
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% orders.slice(0, 5).forEach(order => { %>
+                                <tr>
+                                    <td><%= order.id || 'N/A' %></td>
+                                    <td><%= order.status || 'Pending' %></td>
+                                    <td><%= order.date || new Date().toLocaleDateString() %></td>
+                                </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } else { %>
+                    <div class="alert alert-info">
+                        <p>No orders found. Start by creating your first order!</p>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- AI Assistant Panel -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">🤖 AI Assistant</h3>
+            </div>
+            <div class="card-body">
+                <p>Your AI-powered assistant is ready to help with inventory management, order processing, and business insights.</p>
+                <div class="mt-3">
+                    <a href="/easly" class="btn btn-primary">Open AI Assistant</a>
+                    <a href="/voice-commands" class="btn btn-secondary">Voice Commands</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h3 class="card-title">Quick Actions</h3>
+        </div>
+        <div class="card-body">
+            <div class="grid grid-4">
+                <a href="/orders" class="btn btn-primary">View All Orders</a>
+                <a href="/orders/new" class="btn btn-success">Create New Order</a>
+                <a href="/inventory" class="btn btn-secondary">Manage Inventory</a>
+                <a href="/ai/co-pilot" class="btn btn-info">AI Co-Pilot</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Floating AI/Voice Icon -->
+<div style="position:fixed;bottom:24px;right:24px;z-index:1000;">
+    <button class="btn btn-primary" style="border-radius: 50%; width: 60px; height: 60px; font-size: 1.5rem;"
+            onclick="window.location.href='/easly'" title="AI Assistant">
+        🤖
+    </button>
+</div>

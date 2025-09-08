@@ -1,0 +1,8 @@
+{
+  "name": "ShopEasly",
+  "description": "Your personal AI-powered e-commerce assistant. Now powered by Google Cloud for enhanced security and performance.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "prompt": ""
+}
