@@ -9,11 +9,17 @@
     "preview": "vite preview",
     "start": "node shopeasly-v11/server.js",
     "dev:server": "node shopeasly-v11/server.js",
-    "dev:vite": "vite"
+    "dev:vite": "vite",
+    "lint": "eslint . --ext .js,.cjs --max-warnings=0",
+    "stylelint": "npx stylelint \"**/*.css\"",
+    "smoke": "node scripts/smoke-test.mjs"
   },
   "devDependencies": {
     "typescript": "^5.2.2",
-    "vite": "^5.2.0"
+    "vite": "^5.2.0",
+    "eslint": "^9.9.0",
+    "stylelint": "^16.8.0",
+    "stylelint-config-standard": "^36.0.0"
   },
   "dependencies": {
     "@google/genai": "^1.17.0",

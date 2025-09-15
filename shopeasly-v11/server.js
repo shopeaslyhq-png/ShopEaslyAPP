@@ -138,10 +138,9 @@ app.use('/orders', orders);
 app.use('/inventory', inventory);
 app.use('/voice/google-actions', googleActions);
 
-// Serve static files from multiple directories AFTER routes so '/' maps to dashboard
+// Serve only app-local static files to avoid conflicts with workspace root assets
+// This prevents accidental CSS/JS overrides from ../public or ../src
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static(path.join(__dirname, '..', 'public')));
-app.use(express.static(path.join(__dirname, '..', 'src')));
 
 // Health check
 app.get('/health', async (req, res) => {
