@@ -28,3 +28,11 @@
 {"ts":"2025-09-15T15:46:00.609Z","ip":"::1","type":"offline","prompt":"hi"}
 {"ts":"2025-09-15T16:34:32.850Z","ip":"::1","type":"gemini_error","prompt":"Give inventory summary","error":"Request failed with status code 503"}
 {"ts":"2025-09-15T16:34:32.872Z","ip":"::1","type":"local","prompt":"Give inventory summary","result":{"totalSkus":2,"totalUnits":120,"lowStock":0,"outOfStock":0,"inventoryValue":0,"topLow":[]}}
+{"ts":"2025-09-15T18:37:22.357Z","ip":"::1","type":"gemini","prompt":"hello","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T18:37:50.335Z","ip":"::1","type":"gemini","prompt":"create 50 white large t-shirts for our inventory","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T18:38:33.017Z","ip":"::1","type":"gemini","prompt":"just add it","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T18:38:46.439Z","ip":"::1","type":"gemini","prompt":"add the shirts to invnetory","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T18:39:21.179Z","ip":"::1","type":"gemini","prompt":"50 large white t-shirts add to inventory selection.","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T18:40:01.477Z","ip":"::1","type":"gemini","prompt":"the price cost is 7.00 selling at depending on finish product.","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T18:40:14.731Z","ip":"::1","type":"gemini","prompt":"we are just adding material","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T18:40:23.907Z","ip":"::1","type":"gemini","prompt":"white shirts","usage":{"model":"gemini-1.5-flash"}}

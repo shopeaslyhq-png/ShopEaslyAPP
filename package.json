@@ -10,8 +10,8 @@
     "start": "node shopeasly-v11/server.js",
     "dev:server": "node shopeasly-v11/server.js",
     "dev:vite": "vite",
-    "lint": "eslint . --ext .js,.cjs --max-warnings=0",
-    "stylelint": "npx stylelint \"**/*.css\"",
+    "lint": "eslint --config eslint.config.mjs . --ext .js,.cjs --max-warnings=0",
+    "stylelint": "npx stylelint \"**/*.css\" --config .stylelintrc.json",
     "smoke": "node scripts/smoke-test.mjs"
   },
   "devDependencies": {

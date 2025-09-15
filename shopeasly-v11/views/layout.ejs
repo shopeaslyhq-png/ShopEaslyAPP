@@ -16,8 +16,16 @@
     </script>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="icon" href="/images/shopeasly-logo.png">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+            <!-- Chart.js (UMD) for global `Chart` variable; pinned for stability -->
+            <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+            <!-- Chart.js DataLabels plugin compatible with v4 -->
+            <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+            <script>
+                // Safely register DataLabels if present; avoids runtime errors when not used
+                if (window.Chart && window.ChartDataLabels && typeof Chart.register === 'function') {
+                    Chart.register(ChartDataLabels);
+                }
+            </script>
     <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
     <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     <style>
