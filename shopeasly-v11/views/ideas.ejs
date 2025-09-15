@@ -1,0 +1,39 @@
+<% layout('layout') %>
+
+<div class="hub-header">
+  <h1>AI Idea Generator</h1>
+  <p class="header-subtitle">Generate product and design ideas for ShopEasly POD using the AI brainstormer.</p>
+</div>
+
+<div class="hub-grid">
+  <div class="hub-card">
+    <h3>Prompt</h3>
+    <p class="text-muted">Describe a trend, problem, or audience and the AI will propose ideas and an action plan.</p>
+    <textarea id="ideaPrompt" class="form-input" rows="6" placeholder="e.g. 'Lightweight organic hoodies for yoga enthusiasts in summer'" ></textarea>
+    <div style="margin-top: 1rem; display:flex; gap:10px;">
+      <button id="generateIdeaBtn" class="btn btn-primary">Generate Idea</button>
+      <button id="clearPromptBtn" class="btn btn-secondary">Clear</button>
+    </div>
+  </div>
+
+  <div class="hub-card" id="ideasListCard">
+    <h3>Saved Ideas</h3>
+    <div id="ideasList">
+      <% if (ideas && ideas.length) { %>
+        <% ideas.forEach(item => { %>
+          <div class="idea-item" style="border-bottom:1px solid var(--border); padding:12px 0;">
+            <div style="display:flex; justify-content:space-between; gap:12px;">
+              <strong><%= item.aiResult?.title || item.prompt %></strong>
+              <small style="color:var(--text-secondary); font-size:0.9rem;"><%= new Date(item.createdAt).toLocaleString() %></small>
+            </div>
+            <div style="margin-top:0.5rem; color:var(--text-secondary); white-space:pre-wrap;"><%= JSON.stringify(item.aiResult, null, 2) %></div>
+          </div>
+        <% }) %>
+      <% } else { %>
+        <div class="empty-state-small">No ideas yet — generate one to get started.</div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<script src="/js/ideas.js"></script>

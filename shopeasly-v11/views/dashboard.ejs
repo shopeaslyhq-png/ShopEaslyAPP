@@ -1,126 +1,489 @@
-<!-- Hero Section with Logo -->
-<div class="dashboard-hero">
+
+
+
+
+<!-- HERO SECTION -->
+<section class="dashboard-hero">
     <div class="dashboard-hero-bg"></div>
     <div class="dashboard-hero-content">
-        <img src="https://storage.googleapis.com/onlyimagesfortj/for%20the%20app/Gemini_Generated_Image_v7wjc9v7wjc9v7wj.png" alt="ShopEasly Logo" class="logo-img-xl" />
-        <h1 class="dashboard-title">Welcome to ShopEasly V11</h1>
-        <p class="dashboard-subtitle">Your AI-powered inventory management system</p>
+        <img src="/images/shopeasly-logo.png" alt="ShopEasly Logo" class="logo-img-xl" />
+        <h1 class="dashboard-title">Welcome to ShopEasly</h1>
+        <p class="dashboard-subtitle">
+            Operations and order fulfillment dashboard
+        </p>
     </div>
-</div>
+</section>
+<div class="page-container">
 
-<!-- Firestore Connection Status -->
-<div style="margin-bottom: 2rem;">
-    <% if (typeof stats !== 'undefined' && stats.firestoreConnected) { %>
-        <div style="margin-top: 1rem; padding: 1rem; background-color: #22c55e30; color: var(--success); border-radius: var(--radius-md); border-left: 4px solid var(--success);">
-            ✅ Connected to Firestore (Project: <%= projectId %>)
-        </div>
-    <% } else { %>
-        <div style="margin-top: 1rem; padding: 1rem; background-color: #ef444430; color: var(--error); border-radius: var(--radius-md); border-left: 4px solid var(--error);">
-            ❌ Firestore Connection Error
-            <% if (typeof error !== 'undefined') { %>
-                <br><small><%= error %></small>
-            <% } %>
-            <br><small>Running in offline mode with local data</small>
-        </div>
+
+<!-- STORAGE STATUS -->
+<section style="margin-bottom: 2rem;">
+    <div class="status success">
+        🗂 Using local JSON storage (no cloud required)
+    </div>
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="status error"><small><%= error %></small></div>
     <% } %>
-</div>
+</section>
 
-<!-- Stats Grid -->
-<div class="stats-grid">
-    <div class="stat-card stat-card-glass">
+<!-- STATS GRID -->
+<section class="stats-grid">
+    <div class="stat-card glass">
         <h3>Total Orders</h3>
-        <p style="color: var(--primary); font-size: 2rem; font-weight: 700;">
-            <%= (typeof stats !== 'undefined') ? stats.totalOrders : orders.length %>
-        </p>
+        <p><%= (typeof stats !== 'undefined' && stats.totalOrders != null) ? stats.totalOrders : (Array.isArray(orders) ? orders.length : 0) %></p>
     </div>
-    <div class="stat-card stat-card-glass">
-        <h3>Pending Orders</h3>
-        <p style="color: #f59e0b; font-size: 2rem; font-weight: 700;">
-            <%= (typeof stats !== 'undefined') ? stats.pendingOrders : 0 %>
-        </p>
-    </div>
-    <div class="stat-card stat-card-glass">
-        <h3>Processing</h3>
-        <p style="color: #3b82f6; font-size: 2rem; font-weight: 700;">
-            <%= (typeof stats !== 'undefined') ? stats.processingOrders : 0 %>
-        </p>
-    </div>
-    <div class="stat-card stat-card-glass">
-        <h3>Delivered</h3>
-        <p style="color: #10b981; font-size: 2rem; font-weight: 700;">
-            <%= (typeof stats !== 'undefined') ? stats.deliveredOrders : 0 %>
-        </p>
-    </div>
+    <div class="stat-card glass"><h3>Pending Orders</h3><p><%= stats?.pendingOrders ?? 0 %></p></div>
+    <div class="stat-card glass"><h3>Processing</h3><p><%= stats?.processingOrders ?? 0 %></p></div>
+    <div class="stat-card glass"><h3>Delivered</h3><p><%= stats?.deliveredOrders ?? 0 %></p></div>
+</section>
+
+<div class="dashboard-grid">
+    <!-- RECENT ORDERS TABLE -->
+    <section class="dashboard-card">
+        <h2>Recent Orders</h2>
+        <% if (orders && orders.length) { %>
+            <div class="table-wrapper" aria-label="Recent Orders Table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Product</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% orders.slice(0, 5).forEach(order => { %>
+                            <tr>
+                                <td><%= order.id ? order.id.slice(0,8) + '…' : 'N/A' %></td>
+                                <td><%= order.customerName || 'N/A' %></td>
+                                <td><%= order.product || 'N/A' %></td>
+                                <td>
+                                    <span class="status-badge <%= order.status === 'Delivered' ? 'completed' : order.status === 'Processing' ? 'in-production' : 'new' %>">
+                                        <%= order.status || 'Pending' %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <%= order.date || (order.createdAt ? new Date(order.createdAt._seconds*1000).toLocaleDateString() : 'N/A') %>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        <% } else { %>
+            <div class="empty-state-small">
+                <p>No orders yet. <a href="/orders/new">Create your first order.</a></p>
+
+            </div>
+        <% } %>
+    </section>
+
+    <!-- AI ASSISTANT PANEL -->
+    <section class="dashboard-card">
+        <h2>🤖 AI Assistant</h2>
+        <p>Your AI co-pilot is ready to help with tasks, inventory, and insights.</p>
+        <div class="quick-actions">
+            <a href="/easly" class="btn btn-primary">Open AI Assistant</a>
+        </div>
+    </section>
+
+    <!-- QUICK ACTIONS -->
+    <section class="dashboard-card">
+        <h2>Quick Actions</h2>
+        <div class="quick-actions">
+            <a href="/orders" class="btn btn-primary">📦 View All Orders</a>
+            <a href="/orders/new" class="btn btn-primary" style="background-color: var(--success);">➕ Create New Order</a>
+            <a href="/inventory" class="btn btn-secondary">📊 Manage Inventory</a>
+            <a href="/easly" class="btn btn-secondary">🤖 AI Co-Pilot</a>
+        </div>
+    </section>
 </div>
 
-<!-- Main Content Grid -->
-<div class="dashboard-grid">
-    <!-- Recent Orders -->
-    <div class="dashboard-card">
-        <h2 style="margin-bottom: 1rem;">Recent Orders</h2>
-        <div>
-                <% if (orders.length > 0) { %>
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Order ID</th>
-                                    <th>Customer</th>
-                                    <th>Product</th>
-                                    <th>Status</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <% orders.slice(0, 5).forEach(order => { %>
-                                <tr>
-                                    <td><%= order.id ? order.id.substring(0, 8) + '...' : 'N/A' %></td>
-                                    <td><%= order.customerName || 'N/A' %></td>
-                                    <td><%= order.product || 'N/A' %></td>
-                                    <td>
-                                        <span class="status-badge <%= order.status === 'Delivered' ? 'status-completed' : order.status === 'Processing' ? 'status-in-production' : 'status-new' %>">
-                                            <%= order.status || 'Pending' %>
-                                        </span>
-                                    </td>
-                                    <td><%= order.date || (order.createdAt ? new Date(order.createdAt._seconds * 1000).toLocaleDateString() : 'N/A') %></td>
-                                </tr>
-                                <% }); %>
-                            </tbody>
-                        </table>
-                    </div>
-                <% } else { %>
-                    <div class="empty-state-small">
-                        <p>No orders found in Firestore. Start by creating your first order!</p>
-                        <% if (typeof stats !== 'undefined' && stats.firestoreConnected) { %>
-                            <small style="color: var(--text-secondary);">Connected to Firestore project: <%= projectId %></small>
-                        <% } %>
-                    </div>
-                <% } %>
-            </div>
-        </div>
-
-        <!-- AI Assistant Panel -->
-        <div class="dashboard-card">
-            <h2 style="margin-bottom: 1rem;">🤖 AI Assistant</h2>
-            <p style="margin-bottom: 1.5rem; color: var(--text-secondary); line-height: 1.6;">
-                Your AI-powered assistant is ready to help with inventory management, order processing, and business insights.
-            </p>
-            <div class="quick-actions">
-                <a href="/easly" class="btn btn-primary" style="text-decoration: none;">Open AI Assistant</a>
-                <a href="/voice-commands" class="btn btn-secondary" style="text-decoration: none;">Voice Commands</a>
-            </div>
+<!-- BUSINESS ANALYTICS -->
+<section class="analytics-section">
+    <div class="section-header">
+        <h2>📊 Analytics</h2>
+        <div class="analytics-controls">
+            <select id="timeRange" class="form-input">
+                <option value="7">Last 7 days</option>
+                <option value="30" selected>Last 30 days</option>
+                <option value="90">Last 90 days</option>
+            </select>
+            <button class="btn btn-secondary" onclick="refreshAnalytics()">🔄 Refresh</button>
         </div>
     </div>
+    <div class="charts-grid">
+        <div class="chart-card"><h3>📈 Sales Trend</h3><canvas id="salesTrendChart"></canvas></div>
+        <div class="chart-card"><h3>📊 Order Status</h3><p class="chart-subtitle" style="color: var(--text-secondary); margin: 0.25rem 0 0.5rem;"><span id="totalOrdersCount">0 orders</span></p><canvas id="orderStatusChart"></canvas></div>
+        <div class="chart-card"><h3>🏆 Top Products</h3><p class="chart-subtitle" style="color: var(--text-secondary); margin: 0.25rem 0 0.5rem;"><span id="topProductsCount">0 products</span></p><canvas id="topProductsChart"></canvas></div>
+        <div class="chart-card"><h3>💰 Revenue</h3><p class="chart-subtitle" style="color: var(--text-secondary); margin: 0.25rem 0 0.5rem;"><span id="totalRevenue">$0</span></p><canvas id="revenueChart"></canvas></div>
+    </div>
+</section>
 
-    <!-- Quick Actions -->
-    <div class="dashboard-card" style="margin-top: 1.5rem;">
-        <h2 style="margin-bottom: 1rem;">Quick Actions</h2>
-        <div class="quick-actions">
-            <a href="/orders" class="btn btn-primary" style="text-decoration: none;">📦 View All Orders</a>
-            <a href="/orders/new" class="btn btn-primary" style="text-decoration: none; background-color: var(--success);">➕ Create New Order</a>
-            <a href="/inventory" class="btn btn-secondary" style="text-decoration: none;">📊 Manage Inventory</a>
-            <a href="/easly" class="btn btn-secondary" style="text-decoration: none;">🤖 AI Co-Pilot</a>
+<!-- PERFORMANCE METRICS -->
+<section class="metrics-section">
+    <div class="section-header">
+        <h2>⚡ Performance Metrics</h2>
+        <div class="metrics-summary">
+            <span class="metric-badge good"><span>📈</span> Growth: +12%</span>
+            <span class="metric-badge warning"><span>⚠️</span> Low Stock: 3 items</span>
         </div>
     </div>
+    <div class="kpi-grid">
+        <div class="kpi-card"><h4>Average Order Value</h4><div id="avgOrderValue">$0</div></div>
+        <div class="kpi-card"><h4>Conversion Rate</h4><div id="conversionRate">0%</div></div>
+        <div class="kpi-card"><h4>Processing Time</h4><div id="processingTime">0h</div></div>
+        <div class="kpi-card"><h4>Customer Satisfaction</h4><div id="customerSat">0%</div></div>
+    </div>
+</section>
+</div>
+
+<%
+  // Safely serialize dashboard data for inline JS
+  const __dashboardData = JSON.stringify({
+    orders: typeof orders !== 'undefined' ? orders : [],
+    stats: typeof stats !== 'undefined' ? stats : {}
+  });
+  // Prevent </script> breaks and XSS by escaping the < char
+  const __dashboardDataEscaped = __dashboardData.replace(/</g, '\\u003c');
+%>
+
+<script>
+// Dashboard Analytics and Charts
+class DashboardAnalytics {
+    constructor() {
+        this.charts = {};
+        this.data = JSON.parse('<%- __dashboardDataEscaped %>');
+        this.init();
+    }
+
+    init() {
+        this.setupCharts();
+        this.updateMetrics();
+        this.startRealTimeUpdates();
+    }
+
+    setupCharts() {
+        // Sales Trend Chart
+        this.createSalesTrendChart();
+
+        // Order Status Distribution Chart
+        this.createOrderStatusChart();
+
+        // Top Products Chart
+        this.createTopProductsChart();
+
+        // Revenue Chart
+        this.createRevenueChart();
+    }
+
+    createSalesTrendChart() {
+        const ctx = document.getElementById('salesTrendChart').getContext('2d');
+
+        // Generate sample data for the last 30 days
+        const days = [];
+        const revenue = [];
+        const orderCounts = [];
+
+        for (let i = 29; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            days.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+
+            // Simulate revenue data
+            revenue.push(Math.floor(Math.random() * 2000) + 500);
+            orderCounts.push(Math.floor(Math.random() * 20) + 5);
+        }
+
+        this.charts.salesTrend = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: days,
+                datasets: [{
+                    label: 'Revenue ($)',
+                    data: revenue,
+                    borderColor: 'rgb(99, 102, 241)',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    yAxisID: 'y'
+                }, {
+                    label: 'Orders',
+                    data: orderCounts,
+                    borderColor: 'rgb(34, 197, 94)',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    yAxisID: 'y1'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        grid: {
+                            drawOnChartArea: false,
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    createOrderStatusChart() {
+        const ctx = document.getElementById('orderStatusChart').getContext('2d');
+
+        // Calculate order status distribution
+        const statusCounts = {
+            'Pending': 0,
+            'Processing': 0,
+            'Shipped': 0,
+            'Delivered': 0
+        };
+
+        this.data.orders.forEach(order => {
+            const status = order.status || 'Pending';
+            if (statusCounts.hasOwnProperty(status)) {
+                statusCounts[status]++;
+            } else {
+                statusCounts['Pending']++;
+            }
+        });
+
+        this.charts.orderStatus = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(statusCounts),
+                datasets: [{
+                    data: Object.values(statusCounts),
+                    backgroundColor: [
+                        '#f59e0b', // Pending - Amber
+                        '#3b82f6', // Processing - Blue
+                        '#8b5cf6', // Shipped - Purple
+                        '#10b981'  // Delivered - Green
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    }
+                }
+            }
+        });
+
+        // Update total orders count
+        const elTotalOrders = document.getElementById('totalOrdersCount'); if (elTotalOrders) elTotalOrders.textContent = `${this.data.orders.length} orders`;
+    }
+
+    createTopProductsChart() {
+        const ctx = document.getElementById('topProductsChart').getContext('2d');
+
+        // Calculate product popularity
+        const productCounts = {};
+        this.data.orders.forEach(order => {
+            const product = order.product || 'Unknown Product';
+            productCounts[product] = (productCounts[product] || 0) + 1;
+        });
+
+        // Get top 5 products
+        const sortedProducts = Object.entries(productCounts)
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, 5);
+
+        const labels = sortedProducts.map(([product]) => product.length > 15 ? product.substring(0, 15) + '...' : product);
+        const data = sortedProducts.map(([,count]) => count);
+
+        this.charts.topProducts = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Orders',
+                    data: data,
+                    backgroundColor: 'rgba(99, 102, 241, 0.8)',
+                    borderColor: 'rgb(99, 102, 241)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        const elTop = document.getElementById('topProductsCount'); if (elTop) elTop.textContent = `${Object.keys(productCounts).length} products`;
+    }
+
+    createRevenueChart() {
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+
+        // Generate monthly revenue data
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+        const revenueData = months.map(() => Math.floor(Math.random() * 15000) + 5000);
+        const totalRevenue = revenueData.reduce((sum, val) => sum + val, 0);
+
+        this.charts.revenue = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: months,
+                datasets: [{
+                    label: 'Revenue',
+                    data: revenueData,
+                    backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                    borderColor: 'rgb(34, 197, 94)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        const elRev = document.getElementById('totalRevenue'); if (elRev) elRev.textContent = '$' + totalRevenue.toLocaleString();
+    }
+
+    updateMetrics() {
+        // Calculate and update KPI metrics
+        const orders = this.data.orders;
+
+        // Average Order Value
+        const totalValue = orders.reduce((sum, order) => {
+            const value = parseFloat(order.total) || Math.floor(Math.random() * 200) + 50;
+            return sum + value;
+        }, 0);
+        const avgOrderValue = orders.length > 0 ? totalValue / orders.length : 0;
+        document.getElementById('avgOrderValue').textContent = '$' + avgOrderValue.toFixed(2);
+
+        // Conversion Rate (simulated)
+        const conversionRate = Math.floor(Math.random() * 15) + 10;
+        document.getElementById('conversionRate').textContent = conversionRate + '%';
+
+        // Processing Time (simulated)
+        const processingHours = Math.floor(Math.random() * 24) + 12;
+        document.getElementById('processingTime').textContent = processingHours + 'h';
+
+        // Customer Satisfaction (simulated)
+        const satisfaction = Math.floor(Math.random() * 10) + 85;
+        document.getElementById('customerSat').textContent = satisfaction + '%';
+    }
+
+    startRealTimeUpdates() {
+        // Update metrics every 30 seconds
+        setInterval(() => {
+            this.updateMetrics();
+        }, 30000);
+    }
+}
+
+// Global functions
+function refreshDashboard() {
+    location.reload();
+}
+
+function refreshAnalytics() {
+    if (window.dashboardAnalytics) {
+        window.dashboardAnalytics.updateMetrics();
+
+        // Show refresh animation
+        const refreshBtn = event.target.closest('button');
+        const icon = refreshBtn.querySelector('.refresh-icon');
+        icon.style.animation = 'spin 1s linear';
+        setTimeout(() => {
+            icon.style.animation = '';
+        }, 1000);
+    }
+}
+
+// Initialize dashboard when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    window.dashboardAnalytics = new DashboardAnalytics();
+
+    // Optional smooth scroll to analytics only when explicitly requested via hash
+    const analyticsSection = document.querySelector('.analytics-section');
+    if (analyticsSection && window.location.hash === '#analytics') {
+        analyticsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+});
+
+// Add CSS animation for refresh icon
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(style);
+</script>
 
 

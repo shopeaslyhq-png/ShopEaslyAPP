@@ -1,52 +1,123 @@
-// Firebase Admin SDK Configuration for ShopEasly V11
-const admin = require('firebase-admin');
+// Local JSON storage configuration for ShopEasly V11 (no Firebase required)
 
-// Initialize Firebase Admin SDK
-// In production, you would use a service account key file
-// For development, we'll use the default credentials or environment variables
+// Local JSON-backed DB shim implementing a subset of Firestore-like API
 let db = null;
 
+const fs = require('fs');
+const path = require('path');
+
 const initializeFirebase = () => {
-  try {
-    // Check if Firebase is already initialized
-    if (admin.apps.length === 0) {
-      // Initialize with default credentials (works when deployed to Firebase)
-      // For local development, you can set GOOGLE_APPLICATION_CREDENTIALS
-      // or use a service account key file
-      
-      const app = admin.initializeApp({
-        projectId: 'shopeasly-talk-sos-37743',
-        // If you have a service account key file, uncomment and use:
-        // credential: admin.credential.cert(require('./serviceAccountKey.json'))
-      });
-      
-      console.log('✅ Firebase Admin initialized successfully');
+  // Always use local JSON store (no Firestore required)
+  const dataDir = path.join(__dirname, '..', 'data');
+  if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+
+  const fileFor = (name) => path.join(dataDir, `${name}.json`);
+  const readLocal = (name) => {
+    try {
+      const f = fileFor(name);
+      if (!fs.existsSync(f)) return [];
+      const raw = fs.readFileSync(f, 'utf8');
+      return JSON.parse(raw || '[]');
+    } catch (e) { return []; }
+  };
+  const writeLocal = (name, arr) => {
+    const f = fileFor(name);
+    fs.writeFileSync(f, JSON.stringify(arr, null, 2));
+  };
+
+  const makeQuery = (name, state = {}) => ({
+    _name: name,
+    _filters: state._filters || [],
+    _orderBy: state._orderBy || null,
+    _orderDir: state._orderDir || 'desc',
+    _limit: state._limit || null,
+    where(field, op, value) {
+      if (op !== '==') return this; // only equality supported
+      return makeQuery(name, { ...this, _filters: [...this._filters, { field, value }] });
+    },
+    orderBy(field, dir = 'desc') {
+      return makeQuery(name, { ...this, _orderBy: field, _orderDir: dir });
+    },
+    limit(n) {
+      return makeQuery(name, { ...this, _limit: Number(n) || null });
+    },
+    async get() {
+      let arr = readLocal(name);
+      // apply filters
+      for (const f of this._filters) {
+        arr = arr.filter(d => d && d[f.field] === f.value);
+      }
+      // order
+      if (this._orderBy) {
+        arr.sort((a, b) => {
+          const av = a?.[this._orderBy];
+          const bv = b?.[this._orderBy];
+          if (av === bv) return 0;
+          return (av > bv ? 1 : -1) * (this._orderDir === 'desc' ? -1 : 1);
+        });
+      }
+      // limit
+      if (this._limit != null) arr = arr.slice(0, this._limit);
+      const docs = arr.map(doc => ({ id: doc.id, data: () => doc }));
+      return {
+        empty: docs.length === 0,
+        docs,
+        forEach(cb) { docs.forEach(d => cb(d)); }
+      };
     }
-    
-    // Get Firestore instance
-    db = admin.firestore();
-    
-    // Configure Firestore settings
-    db.settings({
-      timestampsInSnapshots: true
-    });
-    
-    return db;
-  } catch (error) {
-    console.error('❌ Error initializing Firebase:', error);
-    throw error;
-  }
+  });
+
+  db = {
+    collection: (name) => ({
+      async add(data) {
+        const arr = readLocal(name);
+        const id = `local-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+        const doc = { id, ...data };
+        arr.unshift(doc);
+        writeLocal(name, arr);
+        return { id };
+      },
+      doc(id) {
+        return {
+          async get() {
+            const arr = readLocal(name);
+            const found = arr.find(d => d.id === id);
+            return { exists: !!found, id, data: () => found };
+          },
+          async update(data) {
+            const arr = readLocal(name);
+            const idx = arr.findIndex(d => d.id === id);
+            if (idx === -1) throw new Error('document not found');
+            arr[idx] = { ...arr[idx], ...data };
+            writeLocal(name, arr);
+          },
+          async delete() {
+            let arr = readLocal(name);
+            arr = arr.filter(d => d.id !== id);
+            writeLocal(name, arr);
+          }
+        };
+      },
+      // simple query support
+      where(field, op, value) { return makeQuery(name).where(field, op, value); },
+      orderBy(field, dir) { return makeQuery(name).orderBy(field, dir); },
+      limit(n) { return makeQuery(name).limit(n); },
+      async get() { return makeQuery(name).get(); }
+    })
+  };
+
+  console.log('🗂 Using local JSON storage (no Firestore required)');
+  return db;
 };
 
-// Initialize Firebase when this module is loaded
+// Initialize local storage when this module is loaded
 const firestore = initializeFirebase();
 
 // Export Firestore instance and admin for use in other modules
 module.exports = {
   db: firestore,
-  admin,
   
-  // Helper functions for common Firestore operations
+  // Helper functions for common data operations
   collections: {
     orders: () => firestore.collection('orders'),
     products: () => firestore.collection('products'),
@@ -60,10 +131,11 @@ module.exports = {
   // Utility functions
   async createDocument(collectionName, data) {
     try {
+      const ts = new Date().toISOString();
       const docRef = await firestore.collection(collectionName).add({
         ...data,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        createdAt: ts,
+        updatedAt: ts
       });
       console.log(`✅ Document created in ${collectionName}:`, docRef.id);
       return docRef;
@@ -89,9 +161,10 @@ module.exports = {
   
   async updateDocument(collectionName, docId, data) {
     try {
+      const ts = new Date().toISOString();
       await firestore.collection(collectionName).doc(docId).update({
         ...data,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        updatedAt: ts
       });
       console.log(`✅ Document updated in ${collectionName}:`, docId);
     } catch (error) {

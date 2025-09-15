@@ -75,7 +75,7 @@ export class ShopEaslyApp {
             'fulfillment-list', 'order-status-filter',
             'item-modal-overlay', 'close-modal-btn', 'modal-title', 'item-form', 'item-id', 'item-type', 'item-name', 'item-name-label', 'item-sku', 'price-form-group', 'item-price', 'item-stock', 'item-stock-threshold', 'item-supplier', 'item-notes',
             'order-modal-overlay', 'close-order-modal-btn', 'order-modal-title', 'order-form', 'order-id', 'order-customer-name', 'order-status', 'order-items-container', 'add-order-item-btn', 'order-total-price', 'order-notes',
-            'ai-fab-btn', 'ai-assistant-modal', 'ai-modal-close-btn', 'ai-chat-history', 'ai-mic-container', 'ai-status-text', 'ai-guide-btn', 'ai-guide-modal', 'ai-guide-close-btn',
+            'ai-fab-btn', 'ai-assistant-modal', 'ai-modal-close-btn', 'ai-chat-history', 'ai-text-input', 'ai-voice-btn', 'ai-send-btn', 'ai-status-text', 'ai-guide-btn', 'ai-guide-modal', 'ai-guide-close-btn',
             'toast-notification', 'file-input-excel'
         ];
         ids.forEach(id => {
@@ -139,7 +139,8 @@ export class ShopEaslyApp {
             
             // AI Assistant
             if (target.closest('#ai-fab-btn')) this.toggleAIModal(true);
-            if (target.closest('#ai-mic-container')) this.toggleMicListener();
+            if (target.closest('#ai-voice-btn')) this.toggleMicListener();
+            if (target.closest('#ai-send-btn')) this.sendTextMessage();
             if (target.closest('#ai-guide-btn')) this.aiGuideModal?.classList.remove('hidden');
 
             // Order form item management
@@ -160,6 +161,24 @@ export class ShopEaslyApp {
         
         // Other specific listeners
         this.fileInputExcel?.addEventListener('change', (e: any) => this.handleExcelUpload(e));
+
+        // AI text input handlers
+        if (this.aiTextInput) {
+            this.aiTextInput.addEventListener('input', () => this.handleTextInputChange());
+            this.aiTextInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.sendTextMessage();
+                }
+            });
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.closeAllModals();
+            }
+        });
         this.orderStatusFilter?.addEventListener('change', () => this.renderFulfillmentOrders());
         this.orderItemsContainer?.addEventListener('change', () => this.updateOrderTotal());
         this.orderItemsContainer?.addEventListener('input', () => this.updateOrderTotal());
@@ -848,17 +867,65 @@ export class ShopEaslyApp {
     }
 
     setMicState(state: 'idle' | 'listening' | 'thinking') {
-        if (!this.aiMicContainer || !this.aiStatusText) return;
-        this.aiMicContainer.classList.remove('listening', 'thinking');
+        if (!this.aiVoiceBtn || !this.aiStatusText) return;
+        this.aiVoiceBtn.classList.remove('listening', 'thinking');
         if (state === 'listening') {
-            this.aiMicContainer.classList.add('listening');
+            this.aiVoiceBtn.classList.add('listening');
             this.aiStatusText.textContent = 'Listening...';
         } else if (state === 'thinking') {
-            this.aiMicContainer.classList.add('thinking');
-            this.aiStatusText.textContent = 'Thinking...';
+            this.aiVoiceBtn.classList.add('thinking');
+            this.aiStatusText.textContent = 'Processing...';
         } else {
-            this.aiStatusText.textContent = 'Tap the mic to give me a command!';
+            this.aiStatusText.textContent = 'Type a message or tap the mic for voice input';
         }
+    }
+
+    handleTextInputChange() {
+        if (!this.aiTextInput || !this.aiSendBtn) return;
+        const hasText = this.aiTextInput.value.trim().length > 0;
+        this.aiSendBtn.disabled = !hasText;
+
+        // Auto-resize textarea
+        this.aiTextInput.style.height = 'auto';
+        this.aiTextInput.style.height = Math.min(this.aiTextInput.scrollHeight, 120) + 'px';
+    }
+
+    async sendTextMessage() {
+        if (!this.aiTextInput || !appState.aiChat) return;
+        const message = this.aiTextInput.value.trim();
+        if (!message) return;
+
+        // Clear input and disable send button
+        this.aiTextInput.value = '';
+        this.handleTextInputChange();
+
+        // Add user message to chat
+        await this.addMessageToChat('user', message);
+
+        // Set thinking state
+        this.setMicState('thinking');
+
+        try {
+            // Send to AI
+            const response = await appState.aiChat.sendMessage(message);
+            await this.addMessageToChat('model', response.text);
+        } catch (error) {
+            console.error('AI Error:', error);
+            await this.addMessageToChat('model', 'Sorry, I encountered an error. Please try again.');
+        } finally {
+            this.setMicState('idle');
+        }
+    }
+
+    closeAllModals() {
+        // Close all modals
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.classList.add('hidden');
+        });
+
+        // Reset AI state
+        this.setMicState('idle');
+        if (recognition) recognition.stop();
     }
 
     toggleMicListener() {

@@ -1,7 +1,7 @@
-# ShopEasly V11 - AI-Powered Inventory Management System
+# ShopEasly - AI-Powered Inventory Management System
 
 ## Overview
-ShopEasly V11 is a modern inventory management system powered by Google's Gemini AI. It provides intelligent assistance for order processing, inventory tracking, and business insights through both web interface and voice commands.
+ShopEasly is a modern inventory management system powered by Google's Gemini AI. It provides intelligent assistance for order processing, inventory tracking, and business insights through both web interface and voice commands.
 
 ## Features
 - 🤖 **AI Assistant**: Powered by Google Gemini for intelligent inventory management

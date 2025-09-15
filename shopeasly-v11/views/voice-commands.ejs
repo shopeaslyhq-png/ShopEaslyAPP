@@ -1,0 +1,63 @@
+<% layout('layout') %>
+
+<section class="page-header">
+  <div>
+    <h1>Voice Commands</h1>
+    <p class="header-subtitle">Test and process voice/text commands with the AI system</p>
+  </div>
+</section>
+
+<div class="card" style="max-width: 900px;">
+  <div class="card-header">
+    <h3 class="card-title">Try a Command</h3>
+  </div>
+  <div class="card-body">
+    <form id="voiceForm" onsubmit="return submitVoiceCommand(event)">
+      <div class="form-group">
+        <label class="form-label">Command</label>
+        <textarea id="commandInput" class="form-input" rows="3" placeholder="e.g., 'Show me pending orders for today'"></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">
+          <span class="btn-text">Send</span>
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('commandInput').value='';">Clear</button>
+      </div>
+    </form>
+
+    <div id="voiceResult" class="mt-3" style="display:none;">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title">Result</h4>
+        </div>
+        <div class="card-body">
+          <pre id="voiceResultPre" style="white-space: pre-wrap; margin: 0;"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function submitVoiceCommand(event) {
+  event.preventDefault();
+  const cmd = document.getElementById('commandInput').value.trim();
+  if (!cmd) { showToast('Please enter a command', 'error'); return false; }
+  try {
+    showLoading();
+    const resp = await fetch('/voice-commands/process', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ command: cmd })
+    });
+    const data = await resp.json();
+    document.getElementById('voiceResult').style.display = 'block';
+    document.getElementById('voiceResultPre').textContent = JSON.stringify(data, null, 2);
+    showToast('Command processed', 'success');
+  } catch (e) {
+    console.error(e);
+    showToast('Failed to process command', 'error');
+  } finally { hideLoading(); }
+  return false;
+}
+</script>
+

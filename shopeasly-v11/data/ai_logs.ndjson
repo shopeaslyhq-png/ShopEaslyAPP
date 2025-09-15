@@ -1,0 +1,30 @@
+{"ts":"2025-09-15T06:08:22.069Z","ip":"::1","type":"gemini","prompt":"hi","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T06:08:31.422Z","ip":"::1","type":"gemini","prompt":"what can you do","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T06:08:52.498Z","ip":"::1","type":"gemini","prompt":"what do you know about this shop","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T06:10:15.253Z","ip":"::1","type":"gemini","prompt":"i need you to add 20 back large shirts to inventory under the materials category","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T06:10:39.677Z","ip":"::1","type":"gemini","prompt":"thank you","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T06:10:47.813Z","ip":"::1","type":"gemini","prompt":"Show inventory status","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T06:11:37.557Z","ip":"::1","type":"gemini","prompt":"Generate sales report","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T06:12:49.133Z","ip":"::1","type":"gemini","prompt":"just got a custom order of 2 spider shirts. we need to make sure we have the black shirts in inventory and the material to print the design.","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T06:13:04.239Z","ip":"::1","type":"gemini","prompt":"that is your task","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T06:13:31.297Z","ip":"::1","type":"gemini","prompt":"Check inventory: Count black shirts; ensure enough for order.\nVerify materials: Confirm sufficient spider design transfer paper/ink.\nIf low: Order more shirts and/or print materials immediately.\nProduction: Once supplies are confirmed, print and apply designs.\nQuality check: Inspect finished shirts for flaws before packaging.\nOrder fulfillment: Package and prepare shirts for customer","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T06:14:27.036Z","ip":"::1","type":"gemini","prompt":"add 100 vinyl print sheets to inventory","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T15:32:52.702Z","ip":"::1","type":"gemini","prompt":"thank you","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T15:33:32.988Z","ip":"::1","type":"gemini","prompt":"Generate sales report","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T15:40:55.842Z","ip":"::1","type":"gemini_error","prompt":"did any orders come through?","error":"Request failed with status code 503"}
+{"ts":"2025-09-15T15:40:55.848Z","ip":"::1","type":"offline","prompt":"did any orders come through?"}
+{"ts":"2025-09-15T15:41:13.014Z","ip":"::1","type":"gemini_error","prompt":"how are you talking","error":"Request failed with status code 503"}
+{"ts":"2025-09-15T15:41:13.020Z","ip":"::1","type":"offline","prompt":"how are you talking"}
+{"ts":"2025-09-15T15:45:33.957Z","ip":"::1","type":"gemini_error","prompt":"List pending orders","error":"Request failed with status code 503"}
+{"ts":"2025-09-15T15:45:33.964Z","ip":"::1","type":"local","prompt":"List pending orders","result":{"counts":{"pending":1,"processing":0,"delivered":0},"topPending":[{"orderNumber":"ORD-1757905417528","id":"local-1757905417529-5hj12e","customer":"John Smith","total":0}]}}
+{"ts":"2025-09-15T15:45:41.153Z","ip":"::1","type":"gemini_error","prompt":"Generate sales report","error":"Request failed with status code 503"}
+{"ts":"2025-09-15T15:45:41.159Z","ip":"::1","type":"offline","prompt":"Generate sales report"}
+{"ts":"2025-09-15T15:45:45.480Z","ip":"::1","type":"gemini_error","prompt":"Help me optimize inventory","error":"Request failed with status code 503"}
+{"ts":"2025-09-15T15:45:45.486Z","ip":"::1","type":"offline","prompt":"Help me optimize inventory"}
+{"ts":"2025-09-15T15:45:47.402Z","ip":"::1","type":"gemini_error","prompt":"Generate sales report","error":"Request failed with status code 503"}
+{"ts":"2025-09-15T15:45:47.408Z","ip":"::1","type":"offline","prompt":"Generate sales report"}
+{"ts":"2025-09-15T15:45:56.036Z","ip":"::1","type":"gemini","prompt":"List pending orders","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T15:46:00.603Z","ip":"::1","type":"gemini_error","prompt":"hi","error":"Request failed with status code 503"}
+{"ts":"2025-09-15T15:46:00.609Z","ip":"::1","type":"offline","prompt":"hi"}
+{"ts":"2025-09-15T16:34:32.850Z","ip":"::1","type":"gemini_error","prompt":"Give inventory summary","error":"Request failed with status code 503"}
+{"ts":"2025-09-15T16:34:32.872Z","ip":"::1","type":"local","prompt":"Give inventory summary","result":{"totalSkus":2,"totalUnits":120,"lowStock":0,"outOfStock":0,"inventoryValue":0,"topLow":[]}}

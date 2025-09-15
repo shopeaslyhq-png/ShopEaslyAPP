@@ -1,2 +1,304 @@
-<h1>Inventory</h1>
-<!-- Inventory content here -->
+<div class="page-container">
+
+<section class="dashboard-card" style="display:flex; align-items:center; justify-content:space-between; gap:1rem;">
+  <div>
+    <h1>Inventory</h1>
+    <p style="color: var(--text-secondary); margin-top: 0.25rem;">Track stock levels, SKUs, and product availability</p>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-secondary" onclick="location.reload()">↻ Refresh</button>
+    <button class="btn btn-primary" onclick="openInventoryModal('add')">＋ New Item</button>
+  </div>
+</section>
+
+<div class="dashboard-grid">
+  <div class="dashboard-card">
+    <div class="card-header">
+      <h3 class="card-title">Overview</h3>
+    </div>
+    <div class="card-body">
+      <div class="stats-grid">
+        <div class="metric-card">
+          <div class="metric-label">Total SKUs</div>
+          <div class="metric-value">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Low Stock</div>
+          <div class="metric-value">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Out of Stock</div>
+          <div class="metric-value">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-card" style="grid-column: 1 / -1;">
+    <div class="card-header">
+      <h3 class="card-title">Items</h3>
+      <div class="card-actions">
+        <input type="search" class="form-input" style="max-width: 280px;" placeholder="Search inventory...">
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="inventory-empty" class="empty-state">
+        <div class="empty-icon">📦</div>
+        <h4>No inventory items yet</h4>
+        <p style="color: var(--text-secondary);">Add items to begin tracking your inventory.</p>
+        <button class="btn btn-primary" onclick="openInventoryModal('add')">Add your first item</button>
+      </div>
+      <div id="inventory-list" class="table-wrapper" style="display:none;">
+        <table>
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>SKU</th>
+
+              <th>Stock</th>
+              <th>Price</th>
+              <th>Status</th>
+              <th class="actions-cell">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="inventory-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+
+<!-- Inventory Add/Edit Modal -->
+<div id="inventory-modal" class="modal-overlay hidden" aria-hidden="true">
+  <div class="modal-content" role="dialog" aria-labelledby="inventory-modal-title">
+    <button class="modal-close-btn" onclick="closeInventoryModal()" aria-label="Close">✕</button>
+    <h2 id="inventory-modal-title">Add Item</h2>
+    <form id="inventory-form">
+      <input type="hidden" id="inventory-id">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="inventory-name">Product Name</label>
+          <input id="inventory-name" class="form-input" type="text" placeholder="e.g., Premium Tee" required>
+        </div>
+        <div class="form-group">
+          <label for="inventory-sku">SKU</label>
+          <input id="inventory-sku" class="form-input" type="text" placeholder="e.g., TEE-PRM-BLK-S" required>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="inventory-stock">Stock</label>
+          <input id="inventory-stock" class="form-input" type="number" min="0" placeholder="0" required>
+        </div>
+        <div class="form-group">
+          <label for="inventory-price">Price ($)</label>
+          <input id="inventory-price" class="form-input" type="number" min="0" step="0.01" placeholder="0.00" required>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="inventory-status">Status</label>
+          <select id="inventory-status" class="form-input">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="inventory-threshold">Low Stock Threshold</label>
+          <input id="inventory-threshold" class="form-input" type="number" min="0" placeholder="5">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="inventory-category">Category</label>
+        <input id="inventory-category" class="form-input" type="text" placeholder="e.g., Apparel">
+      </div>
+
+      <div class="form-group">
+        <label for="inventory-description">Description</label>
+        <textarea id="inventory-description" class="form-input" rows="3" placeholder="Short description..."></textarea>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeInventoryModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">
+          <span class="btn-text">Save</span>
+          <span class="spinner" aria-hidden="true"></span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(() => {
+  const state = { items: [], mode: 'add' };
+  const modal = document.getElementById('inventory-modal');
+  const form = document.getElementById('inventory-form');
+
+  function $(id) { return document.getElementById(id); }
+
+  async function loadItems() {
+    try {
+      const res = await fetch('/inventory/api');
+      if (!res.ok) throw new Error('Failed to load inventory');
+      state.items = await res.json();
+      renderList();
+    } catch (e) {
+      console.error(e);
+      if (window.showToast) window.showToast('Failed to load inventory', 'error');
+    }
+  }
+
+  function resetForm() {
+    $('inventory-id').value = '';
+    $('inventory-name').value = '';
+    $('inventory-sku').value = '';
+    $('inventory-stock').value = '';
+    $('inventory-price').value = '';
+    $('inventory-status').value = 'active';
+    $('inventory-threshold').value = '';
+    $('inventory-category').value = '';
+    $('inventory-description').value = '';
+  }
+
+  function fillForm(item) {
+    $('inventory-id').value = item.id;
+    $('inventory-name').value = item.name || '';
+    $('inventory-sku').value = item.sku || '';
+    $('inventory-stock').value = item.stock ?? '';
+    $('inventory-price').value = item.price ?? '';
+    $('inventory-status').value = item.status || 'active';
+    $('inventory-threshold').value = item.threshold ?? '';
+    $('inventory-category').value = item.category || '';
+    $('inventory-description').value = item.description || '';
+  }
+
+  function renderList() {
+    const emptyEl = $('inventory-empty');
+    const listEl = $('inventory-list');
+    const tbody = $('inventory-tbody');
+
+    if (!state.items.length) {
+      emptyEl.style.display = 'block';
+      listEl.style.display = 'none';
+      return;
+    }
+
+    emptyEl.style.display = 'none';
+    listEl.style.display = 'block';
+
+    tbody.innerHTML = state.items.map(item => `
+      <tr>
+        <td>${item.name}</td>
+        <td>${item.sku}</td>
+        <td>${item.stock}</td>
+        <td>$${Number(item.price).toFixed(2)}</td>
+        <td><span class="status-badge ${item.status === 'active' ? 'status-new' : 'status-completed'}">${item.status}</span></td>
+        <td class="actions-cell">
+          <button class="btn btn-secondary" onclick="editInventoryItem('${item.id}')">Edit</button>
+          <button class="btn" style="background:#fee2e2; color:#991b1b; border-color:#fecaca;" onclick="deleteInventoryItem('${item.id}')">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  window.openInventoryModal = function(mode = 'add', itemId = null) {
+    state.mode = mode;
+    resetForm();
+    const title = document.getElementById('inventory-modal-title');
+    title.textContent = mode === 'add' ? 'Add Item' : 'Edit Item';
+
+    if (mode === 'edit' && itemId) {
+      const item = state.items.find(i => i.id === itemId);
+      if (item) fillForm(item);
+    }
+
+    modal.classList.remove('hidden');
+    document.body.classList.add('no-scroll');
+    modal.setAttribute('aria-hidden', 'false');
+  }
+
+  window.closeInventoryModal = function() {
+    modal.classList.add('hidden');
+    document.body.classList.remove('no-scroll');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+
+  window.editInventoryItem = function(id) { window.openInventoryModal('edit', id); }
+
+  window.deleteInventoryItem = async function(id) {
+    try {
+      const res = await fetch(`/inventory/api/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Delete failed');
+      state.items = state.items.filter(i => i.id !== id);
+      renderList();
+      if (window.showToast) window.showToast('Item deleted', 'info');
+    } catch (e) {
+      console.error(e);
+      if (window.showToast) window.showToast('Failed to delete item', 'error');
+    }
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    form.setAttribute('data-loading', 'true');
+
+    const payload = {
+      name: $('inventory-name').value.trim(),
+      sku: $('inventory-sku').value.trim(),
+      stock: Number($('inventory-stock').value || 0),
+      price: Number($('inventory-price').value || 0),
+      status: $('inventory-status').value,
+      threshold: Number($('inventory-threshold').value || 0),
+      category: $('inventory-category').value.trim(),
+      description: $('inventory-description').value.trim(),
+    };
+
+    if (!payload.name || !payload.sku) {
+      form.removeAttribute('data-loading');
+      if (window.showToast) window.showToast('Name and SKU are required', 'error');
+      return;
+    }
+
+    try {
+      if (state.mode === 'add' && !$('inventory-id').value) {
+        const res = await fetch('/inventory/api', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error('Create failed');
+        const created = await res.json();
+        state.items.unshift(created);
+        if (window.showToast) window.showToast('Item added', 'success');
+      } else {
+        const id = $('inventory-id').value;
+        const res = await fetch(`/inventory/api/${id}`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error('Update failed');
+        const idx = state.items.findIndex(i => i.id === id);
+        if (idx !== -1) state.items[idx] = { id, ...payload };
+        if (window.showToast) window.showToast('Item updated', 'success');
+      }
+      renderList();
+      window.closeInventoryModal();
+    } catch (err) {
+      console.error(err);
+      if (window.showToast) window.showToast('Save failed', 'error');
+    } finally {
+      form.removeAttribute('data-loading');
+    }
+  });
+
+  modal.addEventListener('click', (e) => { if (e.target === modal) window.closeInventoryModal(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.classList.contains('hidden')) window.closeInventoryModal(); });
+
+  loadItems();
+})();
+</script>

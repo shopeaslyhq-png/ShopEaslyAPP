@@ -4,19 +4,22 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node shopeasly-v11/server.js",
     "build": "vite build",
     "preview": "vite preview",
-    "start": "node shopeasly-v11/app.js"
+    "start": "node shopeasly-v11/server.js",
+    "dev:server": "node shopeasly-v11/server.js",
+    "dev:vite": "vite"
   },
   "devDependencies": {
     "typescript": "^5.2.2",
     "vite": "^5.2.0"
   },
   "dependencies": {
-    "@dataconnect/generated": "file:src/dataconnect-generated",
     "@google/genai": "^1.17.0",
+    "@google/generative-ai": "^0.24.1",
     "dompurify": "^3.2.6",
+    "express-ejs-layouts": "^2.5.1",
     "marked": "^16.2.1",
     "xlsx": "^0.18.5"
   }

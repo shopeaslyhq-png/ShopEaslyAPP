@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ShopEasly</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+    <link rel="icon" href="/images/shopeasly-logo.png" type="image/png">
 <script type="importmap">
 {
   "imports": {
@@ -27,7 +27,8 @@
             <nav class="sidebar">
                 <div class="sidebar-header">
                     <div class="logo">
-                       <img src="https://storage.googleapis.com/onlyimagesfortj/for%20the%20app/Gemini_Generated_Image_v7wjc9v7wjc9v7wj.png" alt="ShopEasly Logo" class="logo-img">
+                       <img src="/images/shopeasly-logo.png" alt="ShopEasly Logo" class="logo-img">
+                       <span>ShopEasly</span>
                     </div>
                 </div>
                 <div class="sidebar-profile" id="user-profile">
@@ -66,9 +67,9 @@
                     <!-- HOMEPAGE -->
                     <div id="sos-homepage" class="app-view-container">
                         <div class="hub-header">
-                             <img src="https://storage.googleapis.com/onlyimagesfortj/for%20the%20app/Gemini_Generated_Image_v7wjc9v7wjc9v7wj.png" alt="ShopEasly Logo" class="logo-img-xl">
-                            <h1>Dashboard</h1>
-                            <p>Your centralized command center for streamlined e-commerce management.</p>
+                             <img src="/images/shopeasly-logo.png" alt="ShopEasly Logo" class="logo-img-xl">
+                            <h1>ShopEasly Dashboard</h1>
+                            <p>Your centralized command center for streamlined e-commerce management with intelligent automation.</p>
                         </div>
                         <div class="hub-grid">
                             <div class="hub-card" data-view="shopeasly-app-panel">
@@ -361,18 +362,26 @@
             <div class="modal-content ai-modal">
                 <div class="ai-modal-header">
                      <h2>Easly AI Assistant</h2>
-                     <div>
+                     <div class="ai-header-actions">
                         <button id="ai-guide-btn" class="btn btn-icon" aria-label="Show command guide"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></button>
                         <button id="ai-modal-close-btn" class="modal-close-btn" aria-label="Close modal">&times;</button>
                      </div>
                 </div>
-                <div id="ai-chat-history"></div>
+                <div id="ai-chat-history" class="ai-chat-container"></div>
                 <div class="ai-input-area">
-                    <div id="ai-mic-container">
-                       <svg class="mic-icon" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg>
-                       <div class="thinking-spinner"></div>
+                    <div class="ai-input-wrapper">
+                        <textarea id="ai-text-input" class="ai-text-input" placeholder="Type your message or use voice..." rows="1" maxlength="1000"></textarea>
+                        <div class="ai-input-actions">
+                            <button id="ai-voice-btn" class="ai-voice-btn" aria-label="Voice input" title="Voice input">
+                                <svg class="mic-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg>
+                                <div class="thinking-spinner"></div>
+                            </button>
+                            <button id="ai-send-btn" class="ai-send-btn" aria-label="Send message" title="Send message" disabled>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4z"></path><path d="M22 2 11 13"></path></svg>
+                            </button>
+                        </div>
                     </div>
-                    <p id="ai-status-text">Tap the mic to give me a command!</p>
+                    <p id="ai-status-text" class="ai-status-text">Type a message or tap the mic for voice input</p>
                 </div>
             </div>
         </div>

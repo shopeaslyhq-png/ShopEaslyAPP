@@ -3,8 +3,9 @@ const router = express.Router();
 const voiceHandler = require('../easly/voiceHandler');
 
 // Voice command routes
+// Redirect UI route to the unified AI Assistant page
 router.get('/', (req, res) => {
-    res.send('Voice Commands route - Voice processing features');
+    res.redirect(301, '/easly');
 });
 
 router.post('/process', (req, res) => {

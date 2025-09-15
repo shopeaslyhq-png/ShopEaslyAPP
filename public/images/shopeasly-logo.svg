@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <!-- Background -->
+  <rect width="800" height="600" fill="#f8f9fa"/>
+  
+  <!-- Main Logo Text -->
+  <text x="400" y="280" text-anchor="middle" font-family="Inter, sans-serif" font-size="120" font-weight="600" fill="#2c5282">Shop</text>
+  <text x="400" y="280" text-anchor="middle" font-family="Inter, sans-serif" font-size="120" font-weight="600" fill="#2c5282">
+    <tspan fill="#2c5282">Sh</tspan><tspan fill="#68d391">o</tspan><tspan fill="#2c5282">pEasly</tspan>
+  </text>
+  
+  <!-- Icon Row -->
+  <g transform="translate(150, 350)">
+    <!-- Printer Icon -->
+    <g fill="#2c5282" stroke="#2c5282" stroke-width="3">
+      <rect x="10" y="20" width="60" height="40" rx="4" fill="none"/>
+      <rect x="20" y="10" width="40" height="15" rx="2" fill="#2c5282"/>
+      <rect x="15" y="45" width="50" height="8" rx="2" fill="#2c5282"/>
+      <circle cx="25" cy="35" r="3" fill="#68d391"/>
+    </g>
+    
+    <!-- Arrow -->
+    <line x1="90" y1="40" x2="130" y2="40" stroke="#2c5282" stroke-width="4" marker-end="url(#arrowhead)"/>
+    
+    <!-- Cash Register -->
+    <g transform="translate(150, 0)" fill="#68d391" stroke="#2c5282" stroke-width="3">
+      <rect x="0" y="15" width="70" height="50" rx="6" fill="#68d391"/>
+      <rect x="10" y="25" width="50" height="20" rx="3" fill="#2c5282"/>
+      <rect x="15" y="50" width="40" height="8" rx="2" fill="#2c5282"/>
+      <circle cx="55" cy="10" r="8" fill="#68d391" stroke="#2c5282"/>
+    </g>
+    
+    <!-- Arrow -->
+    <line x1="240" y1="40" x2="280" y2="40" stroke="#2c5282" stroke-width="4" marker-end="url(#arrowhead)"/>
+    
+    <!-- Checklist/Tablet -->
+    <g transform="translate(300, 0)" fill="#68d391" stroke="#2c5282" stroke-width="3">
+      <rect x="0" y="10" width="60" height="60" rx="8" fill="#68d391"/>
+      <path d="M15 30 L25 40 L45 20" stroke="#2c5282" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="15" y1="50" x2="45" y2="50" stroke="#2c5282" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    
+    <!-- Arrow -->
+    <line x1="380" y1="40" x2="420" y2="40" stroke="#2c5282" stroke-width="4" marker-end="url(#arrowhead)"/>
+    
+    <!-- Delivery Truck -->
+    <g transform="translate(440, 0)" fill="#68d391" stroke="#2c5282" stroke-width="3">
+      <rect x="0" y="25" width="50" height="25" rx="4" fill="#68d391"/>
+      <rect x="45" y="30" width="20" height="20" rx="3" fill="#2c5282"/>
+      <circle cx="15" cy="55" r="8" fill="#2c5282"/>
+      <circle cx="50" cy="55" r="8" fill="#2c5282"/>
+      <rect x="5" y="15" width="15" height="15" rx="2" fill="#68d391"/>
+    </g>
+  </g>
+  
+  <!-- Arrow marker definition -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2c5282"/>
+    </marker>
+  </defs>
+</svg>

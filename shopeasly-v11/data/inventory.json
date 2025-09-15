@@ -1,0 +1,30 @@
+[
+  {
+    "id": "local-1757950360852-chi9qp",
+    "name": "vinyl print sheets",
+    "sku": "VINYL-PRINT-SHEETS",
+    "stock": 100,
+    "price": 0,
+    "status": "active",
+    "threshold": 0,
+    "category": "",
+    "description": "",
+    "dateAdded": "2025-09-15",
+    "createdAt": "2025-09-15T15:32:40.852Z",
+    "updatedAt": "2025-09-15T15:32:40.852Z"
+  },
+  {
+    "id": "local-1757916619607-tda3ly",
+    "name": "back large shirts",
+    "sku": "BACK-LARGE-SHIRTS",
+    "stock": 20,
+    "price": 0,
+    "status": "active",
+    "threshold": 0,
+    "category": "",
+    "description": "",
+    "dateAdded": "2025-09-15",
+    "createdAt": "2025-09-15T06:10:19.607Z",
+    "updatedAt": "2025-09-15T06:10:19.607Z"
+  }
+]

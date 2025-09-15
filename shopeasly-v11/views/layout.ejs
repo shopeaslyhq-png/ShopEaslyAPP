@@ -3,61 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShopEasly V11 - AI-Powered Inventory Management</title>
+    <title>ShopEasly</title>
+    <script>
+        (function(){
+            try {
+                var saved = localStorage.getItem('theme') || 'light';
+                document.documentElement.setAttribute('data-theme', saved);
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
     <link rel="stylesheet" href="/css/style.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛒</text></svg>">
+    <link rel="icon" href="/images/shopeasly-logo.png">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    <style>
+        /* Ensure basic fonts render consistently if custom fonts fail */
+        body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    </style>
+    <!-- Prevent search indexing -->
+    <meta name="robots" content="noindex,nofollow">
+    <meta name="referrer" content="no-referrer">
 </head>
 <body>
     <div class="app-container">
-        <!-- Sidebar Navigation -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <div class="logo">
-                    <span style="font-size: 1.5rem;">🛒</span>
-                    <span>ShopEasly V11</span>
+                    <img src="/images/shopeasly-logo.png" alt="ShopEasly" style="height:28px; width:auto; margin-right:8px;">
+                    <span>ShopEasly</span>
                 </div>
                 <div class="sidebar-profile">
-                    <div class="avatar" style="width: 32px; height: 32px; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-size: 0.8rem;">AI</div>
+                    <div class="avatar" style="width: 32px; height: 32px; background: var(--primary); display:flex; align-items:center; justify-content:center; color: white; font-size: 0.8rem;">AI</div>
                     <div>
-                        <div style="font-weight: 600; font-size: 0.9rem;">AI-Powered</div>
-                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Inventory System</div>
+                        <div style="font-weight:600; font-size:0.9rem;">AI-Powered</div>
+                        <div style="font-size:0.8rem; color: var(--text-secondary);">Inventory System</div>
                     </div>
                 </div>
             </div>
 
-            <nav class="sidebar-nav">
+            <nav class="sidebar-nav" aria-label="Primary">
                 <ul>
-                    <li><button class="nav-btn" onclick="window.location.href='/'">📊 Dashboard</button></li>
-                    <li><button class="nav-btn" onclick="window.location.href='/orders'">📦 Orders</button></li>
-                    <li><button class="nav-btn" onclick="window.location.href='/easly'">🤖 AI Assistant</button></li>
-                    <li><button class="nav-btn" onclick="window.location.href='/voice-commands'">🎤 Voice Commands</button></li>
+                    <li><a class="nav-btn" href="/">Dashboard</a></li>
+                    <li><a class="nav-btn" href="/orders">Orders</a></li>
+                    <li><a class="nav-btn" href="/inventory">Inventory</a></li>
+                    <li><a class="nav-btn" href="/easly">AI Assistant</a></li>
                 </ul>
             </nav>
 
             <div class="sidebar-footer">
                 <div class="theme-picker">
-                    <button class="theme-btn" onclick="setTheme('light')" title="Light Theme">☀️</button>
-                    <button class="theme-btn" onclick="setTheme('dark')" title="Dark Theme">🌙</button>
+                    <button class="theme-btn" data-theme="light" onclick="setTheme('light')" title="Light Theme">Light</button>
+                    <button class="theme-btn" data-theme="dark" onclick="setTheme('dark')" title="Dark Theme">Dark</button>
                 </div>
             </div>
         </aside>
 
-        <!-- Main Content Area -->
         <div id="main-content">
             <header class="main-header">
-                <div style="display: flex; align-items: center; gap: 1.2rem;">
-                    <a href="/" class="btn btn-secondary" style="font-size: 1.1rem; padding: 8px 18px; text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
-                        🏠 Home
-                    </a>
+                <div style="display:flex; align-items:center; gap:1.2rem;">
+                    <a href="/" class="btn btn-secondary" style="font-size:1.1rem; padding:8px 18px; text-decoration:none; display:flex; align-items:center; gap:0.5rem;">Home</a>
+                    <button id="sidebar-toggle-btn" class="btn btn-secondary" aria-label="Toggle sidebar" title="Toggle sidebar" onclick="toggleSidebar()">Menu</button>
                     <div>
-                        <h1 style="margin: 0; color: var(--text-primary);">ShopEasly V11</h1>
-                        <p style="margin: 4px 0 0 0; color: var(--text-secondary); font-size: 0.9em;">AI-Powered Inventory Management System</p>
+                        <h1 style="margin:0; color:var(--text-primary);">ShopEasly</h1>
+                        <p style="margin:4px 0 0 0; color:var(--text-secondary); font-size:0.9em;">Operations & order management</p>
                     </div>
                 </div>
                 <div class="header-actions">
                     <input type="search" class="search-input form-input" placeholder="Search...">
-                    <button class="btn-icon" title="Notifications">🔔</button>
-                    <button class="btn-icon" title="Settings">⚙️</button>
+                    <button class="btn-icon" title="Notifications">Notifications</button>
+                    <button class="btn-icon" title="Settings">Settings</button>
                 </div>
             </header>
 
@@ -67,47 +85,84 @@
         </div>
     </div>
 
-    <!-- AI Floating Action Button -->
-    <button class="ai-fab" onclick="window.location.href='/easly'" title="AI Assistant">
-        🤖
-    </button>
+    <button class="ai-fab" onclick="window.location.href='/easly'" title="AI Assistant">AI</button>
 
     <script>
-        // Theme switching functionality
         function setTheme(theme) {
-            document.body.setAttribute('data-theme', theme);
+            document.documentElement.setAttribute('data-theme', theme);
             localStorage.setItem('theme', theme);
-
-            // Update active theme button
             document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            var t = document.querySelector('.theme-btn[data-theme="' + theme + '"]');
+            if (t) t.classList.add('active');
         }
 
-        // Load saved theme
         const savedTheme = localStorage.getItem('theme') || 'light';
-        document.body.setAttribute('data-theme', savedTheme);
+        document.documentElement.setAttribute('data-theme', savedTheme);
 
-        // Update active theme button on load
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.theme-btn').forEach(btn => {
-                if ((savedTheme === 'light' && btn.textContent.includes('☀️')) ||
-                    (savedTheme === 'dark' && btn.textContent.includes('🌙'))) {
+                if (btn.dataset.theme === savedTheme) {
                     btn.classList.add('active');
                 }
             });
         });
 
-        // Highlight active navigation
-        const currentPath = window.location.pathname;
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            const href = btn.getAttribute('onclick').match(/window\.location\.href='([^']+)'/);
-            if (href && href[1] === currentPath) {
-                btn.classList.add('active');
+        (function(){
+            const currentPath = window.location.pathname.replace(/\/$/, '');
+            document.querySelectorAll('.sidebar-nav a.nav-btn').forEach(link => {
+                const href = (link.getAttribute('href') || '').replace(/\/$/, '');
+                const isActive = href === currentPath || (href && href !== '/' && currentPath.startsWith(href + '/'));
+                if (isActive) {
+                    link.classList.add('active');
+                    link.setAttribute('aria-current', 'page');
+                }
+            });
+        })();
+
+        function toggleSidebar() {
+            const app = document.querySelector('.app-container');
+            app.classList.toggle('sidebar-open');
+            document.body.classList.toggle('no-scroll', app.classList.contains('sidebar-open'));
+        }
+    </script>
+
+    <div class="loading-overlay" id="global-loading-overlay" style="display:none;">
+        <div class="loading-content">
+            <div class="spinner-large"></div>
+            <p>Loading...</p>
+        </div>
+    </div>
+    <div id="toast-notification"></div>
+    <script>
+        if (typeof window.showToast !== 'function') {
+            window.showToast = function(message, type = 'info') {
+                let toast = document.getElementById('toast-notification');
+                if (!toast) {
+                    toast = document.createElement('div');
+                    toast.id = 'toast-notification';
+                    document.body.appendChild(toast);
+                }
+                toast.textContent = message;
+                toast.className = `show ${type}`;
+                setTimeout(() => { toast.classList.remove('show'); }, 3000);
             }
-        });
+        }
+        if (typeof window.showLoading !== 'function') {
+            window.showLoading = function() {
+                const el = document.getElementById('global-loading-overlay');
+                if (el) el.style.display = 'flex';
+            }
+        }
+        if (typeof window.hideLoading !== 'function') {
+            window.hideLoading = function() {
+                const el = document.getElementById('global-loading-overlay');
+                if (el) el.style.display = 'none';
+            }
+        }
     </script>
 
     <script src="/js/copilotModal.js"></script>
     <script src="/js/voicePromptModal.js"></script>
 </body>
 </html>
+

@@ -5,7 +5,7 @@ const { getAllDocuments } = require('../config/firebase');
 // Dashboard routes
 router.get('/', async (req, res) => {
   try {
-    // Get recent orders from Firestore
+    // Get recent orders from local data store
     const orders = await getAllDocuments('orders', 10);
 
     // Calculate some basic stats
@@ -14,16 +14,15 @@ router.get('/', async (req, res) => {
       pendingOrders: orders.filter(order => order.status === 'Pending').length,
       processingOrders: orders.filter(order => order.status === 'Processing').length,
       deliveredOrders: orders.filter(order => order.status === 'Delivered').length,
-      firestoreConnected: true
+      storage: 'local'
     };
 
     res.render('dashboard', {
       orders: orders,
-      stats: stats,
-      projectId: 'shopeasly-talk-sos-37743'
+      stats: stats
     });
   } catch (error) {
-    console.error('Error connecting to Firestore:', error);
+    console.error('Error loading dashboard data:', error);
     res.render('dashboard', {
       orders: [],
       stats: {
@@ -31,9 +30,8 @@ router.get('/', async (req, res) => {
         pendingOrders: 0,
         processingOrders: 0,
         deliveredOrders: 0,
-        firestoreConnected: false
+        storage: 'local'
       },
-      projectId: 'shopeasly-talk-sos-37743',
       error: error.message
     });
   }

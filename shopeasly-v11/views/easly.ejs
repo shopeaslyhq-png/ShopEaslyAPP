@@ -1,40 +1,807 @@
-<% layout('layout') %>
+<!-- Enhanced AI Assistant Interface -->
+<div class="ai-theme ai-purple-orange">
+    <div class="ai-assistant-container">
+    <!-- Header Section -->
+    <div class="ai-header">
+        <div class="ai-header-content">
+            <div class="ai-title-section">
+                <div class="ai-icon">
+                    <img src="/images/shopeasly-logo.png" alt="ShopEasly AI" class="ai-logo" />
+                </div>
+                <div class="ai-title-text">
+                    <h1>Easly AI Assistant</h1>
+                    <p>Your ShopEasly operations assistant</p>
+                </div>
+            </div>
+            <div class="ai-status-indicator">
+                <div class="status-dot status-online"></div>
+                <span>AI Ready</span>
+            </div>
+        </div>
+    </div>
 
-<div class="ai-hero">
-    <img src="https://storage.googleapis.com/onlyimagesfortj/for%20the%20app/Gemini_Generated_Image_v7wjc9v7wjc9v7wj.png" alt="ShopEasly Logo" class="logo-img-xl" />
-    <h1 class="ai-title">Easly AI Assistant</h1>
-    <p class="ai-desc">Ask anything about your business, orders, or inventory. Easly will help you brainstorm, automate, and get instant answers.</p>
+    <!-- Main Chat Interface -->
+    <div class="ai-chat-container">
+        <!-- Chat History -->
+    <div class="ai-chat-history" id="ai-chat-history" role="log" aria-live="polite" aria-relevant="additions">
+            <!-- Welcome Message (concise) -->
+            <div class="chat-message ai-message">
+                <div class="message-avatar">
+                    <div class="avatar-ai">🤖</div>
+                </div>
+                <div class="message-content">
+                    <div class="message-header">
+                        <span class="sender-name">Easly AI</span>
+                        <span class="message-time">Just now</span>
+                    </div>
+                    <div class="message-text">
+                        <p>Welcome! How can I help you today?</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Section -->
+        <div class="ai-input-section">
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <button class="quick-action-btn" onclick="sendQuickMessage('Show me inventory summary')">
+                    📊 Inventory Summary
+                </button>
+                <button class="quick-action-btn" onclick="sendQuickMessage('What are my pending orders?')">
+                    📦 Pending Orders
+                </button>
+                <button class="quick-action-btn" onclick="sendQuickMessage('Generate sales report')">
+                    📈 Sales Report
+                </button>
+                <button class="quick-action-btn" onclick="sendQuickMessage('Help me optimize inventory')">
+                    💡 Optimization Tips
+                </button>
+            </div>
+
+            <!-- Enhanced Input Form -->
+            <form id="ai-form" class="ai-form">
+                <div class="input-wrapper">
+                    <textarea
+                        id="ai-input"
+                        class="form-input ai-input"
+                        rows="1"
+                        placeholder="Message Easly…"
+                        aria-label="Type a message"
+                        autocomplete="off"
+                        autocapitalize="sentences"
+                        spellcheck="true"
+                        maxlength="4000"
+                        onkeydown="handleKeyDown(event)"
+                    ></textarea>
+                    <div class="input-actions">
+                        <button type="button" class="voice-btn" id="voiceBtn" onclick="toggleVoiceRecording()" title="Voice Input" aria-label="Start voice input">
+                            <span class="voice-icon">🎤</span>
+                        </button>
+                        <button type="submit" class="send-btn" id="sendBtn" title="Send Message" aria-label="Send message" disabled>
+                            <span class="send-icon">➤</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Voice Status -->
+            <div class="voice-status" id="voiceStatus" style="display: none;">
+                <div class="voice-animation">
+                    <div class="voice-wave"></div>
+                    <div class="voice-wave"></div>
+                    <div class="voice-wave"></div>
+                </div>
+                <span class="voice-text">Listening...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Side Panel -->
+    <div class="ai-side-panel">
+        <div class="panel-section">
+            <h3>AI Capabilities</h3>
+            <div class="capabilities-grid">
+                <div class="capability-card" onclick="triggerCapability('analytics')" title="Get analytics and reports">
+                    <div class="capability-icon">📊</div>
+                    <span>Analytics</span>
+                </div>
+                <div class="capability-card" onclick="triggerCapability('voice')" title="Voice command help">
+                    <div class="capability-icon">🎤</div>
+                    <span>Voice Control</span>
+                </div>
+                <div class="capability-card" onclick="triggerCapability('forecasting')" title="Sales and inventory forecasting">
+                    <div class="capability-icon">📈</div>
+                    <span>Forecasting</span>
+                </div>
+                <div class="capability-card" onclick="triggerCapability('insights')" title="Business insights and recommendations">
+                    <div class="capability-icon">💡</div>
+                    <span>Insights</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Command Shortcuts -->
+        <div class="panel-section">
+            <h3>Quick Commands</h3>
+            <div class="quick-commands-grid">
+                <button class="quick-cmd-btn" onclick="sendQuickMessage('Show inventory status')">
+                    📦 Inventory Status
+                </button>
+                <button class="quick-cmd-btn" onclick="sendQuickMessage('List pending orders')">
+                    📋 Pending Orders
+                </button>
+                <button class="quick-cmd-btn" onclick="sendQuickMessage('Generate sales report')">
+                    📊 Sales Report
+                </button>
+                <button class="quick-cmd-btn" onclick="sendQuickMessage('Show low stock items')">
+                    ⚠️ Low Stock Alert
+                </button>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <h3>Settings</h3>
+            <div class="settings-options">
+                <label class="setting-item">
+                    <input type="checkbox" id="voiceResponsesToggle" onchange="updateSetting('voiceResponses', this.checked)">
+                    <span>Voice responses</span>
+                </label>
+                <label class="setting-item">
+                    <input type="checkbox" id="autoSuggestionsToggle" onchange="updateSetting('autoSuggestions', this.checked)">
+                    <span>Auto-suggestions</span>
+                </label>
+                <label class="setting-item">
+                    <input type="checkbox" id="showTimestampsToggle" onchange="updateSetting('showTimestamps', this.checked)">
+                    <span>Show timestamps</span>
+                </label>
+            </div>
+        </div>
+    </div>
 </div>
 
-<div class="ai-chat-card">
-    <div id="ai-chat-history" class="ai-chat-history"></div>
-    <form id="ai-form" class="ai-form">
-        <textarea id="ai-input" class="form-input ai-input" rows="2" placeholder="Type your question or command..."></textarea>
-        <button type="submit" class="btn btn-primary ai-send-btn">Send</button>
-    </form>
+<!-- Loading Overlay -->
+<div class="ai-loading-overlay" id="loadingOverlay" style="display: none;">
+    <div class="loading-content">
+        <div class="ai-thinking-animation">
+            <div class="thinking-dots">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+        </div>
+        <p>AI is thinking...</p>
+    </div>
+</div>
+
 </div>
 
 <script>
+// Enhanced AI Assistant JavaScript
+let isRecording = false;
+let recognition = null;
+
+// Initialize speech recognition if available
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('ai-input').value = transcript;
+        try { updateInputState(); } catch {}
+        stopVoiceRecording();
+    };
+
+    recognition.onerror = function(event) {
+        console.error('Speech recognition error:', event.error);
+        stopVoiceRecording();
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+            showToast('Microphone permission denied. Please allow access in your browser settings.', 'error');
+        } else if (event.error === 'no-speech') {
+            showToast('No speech detected. Try again.', 'info');
+        } else {
+            showToast('Voice recognition error. Please try again.', 'error');
+        }
+    };
+
+    recognition.onend = function() {
+        if (isRecording) stopVoiceRecording();
+    };
+}
+
+// Get DOM elements
 const form = document.getElementById('ai-form');
 const input = document.getElementById('ai-input');
 const chatHistory = document.getElementById('ai-chat-history');
+const sendBtn = document.getElementById('sendBtn');
+// Stable client id for chat history
+const clientId = (() => {
+    try {
+        let id = localStorage.getItem('easlyClientId');
+        if (!id) { id = 'cli_' + Math.random().toString(36).slice(2); localStorage.setItem('easlyClientId', id); }
+        return id;
+    } catch { return 'cli_' + Math.random().toString(36).slice(2); }
+})();
 
+// Auto-resize textarea and toggle send button state
+function updateInputState() {
+    if (!input || !sendBtn) return;
+
+    // Auto-resize textarea
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+
+    // Enable/disable send button based on content
+    const hasContent = input.value.trim().length > 0;
+    sendBtn.disabled = !hasContent || input.disabled;
+
+    // Update button visual state
+    if (hasContent && !input.disabled) {
+        sendBtn.classList.add('enabled');
+        sendBtn.classList.remove('disabled');
+    } else {
+        sendBtn.classList.add('disabled');
+        sendBtn.classList.remove('enabled');
+    }
+}
+
+// Add multiple event listeners for comprehensive input handling
+if (input) {
+    input.addEventListener('input', updateInputState);
+    input.addEventListener('keyup', updateInputState);
+    input.addEventListener('paste', () => setTimeout(updateInputState, 10));
+    input.addEventListener('cut', () => setTimeout(updateInputState, 10));
+}
+
+// Handle keyboard shortcuts
+function handleKeyDown(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        // Directly call the submit handler to avoid flashing
+        const prompt = input.value.trim();
+        if (prompt) {
+            submitMessage(prompt);
+        }
+        return false;
+    }
+}
+
+// Enhanced form submission with better UI
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    e.stopPropagation();
     const prompt = input.value.trim();
     if (!prompt) return;
-    chatHistory.innerHTML += `<div class='ai-user-msg'><b>You:</b> ${prompt}</div>`;
-    input.value = '';
-    chatHistory.innerHTML += `<div class='ai-bot-msg ai-thinking'><b>Easly:</b> <span class='ai-spinner'></span> Thinking...</div>`;
-    chatHistory.scrollTop = chatHistory.scrollHeight;
-    const res = await fetch('/ai/co-pilot', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ textPart: prompt })
-    });
-    const data = await res.json();
-    document.querySelector('.ai-thinking').remove();
-    chatHistory.innerHTML += `<div class='ai-bot-msg'><b>Easly:</b> <pre>${JSON.stringify(data, null, 2)}</pre></div>`;
-    chatHistory.scrollTop = chatHistory.scrollHeight;
+
+    submitMessage(prompt);
 });
+
+// Consolidated submit function to prevent flashing
+async function submitMessage(prompt) {
+    if (!prompt || input.disabled) return;
+
+    // Add user message with enhanced styling
+    addMessageToChat('user', prompt);
+    input.value = '';
+    input.style.height = 'auto';
+    input.disabled = true;
+    updateInputState(); // Update button state after clearing input
+
+    // Show enhanced loading state
+    showLoading();
+    addThinkingMessage();
+
+    try {
+        const res = await fetch('/ai/co-pilot', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ textPart: prompt, clientId })
+        });
+        if (!res.ok) { throw new Error(`HTTP ${res.status}`); }
+        const data = await res.json();
+
+        // Remove thinking message
+        removeThinkingMessage();
+        hideLoading();
+
+        // Add AI response with enhanced formatting
+        let responseText = '';
+        if (data.response) {
+            responseText = data.response;
+        } else if (data.text) {
+            responseText = data.text;
+        } else {
+            responseText = JSON.stringify(data, null, 2);
+        }
+
+        addMessageToChat('ai', responseText);
+        if (data.action) addActionCard(data.action);
+
+    } catch (error) {
+        console.error('AI request failed:', error);
+        removeThinkingMessage();
+        hideLoading();
+        addMessageToChat('ai', 'Sorry, I encountered an error while processing your request. Please try again.');
+        showToast('Failed to get AI response. Please try again.', 'error');
+    }
+    finally {
+        input.disabled = false;
+        updateInputState(); // Properly update button state
+        input.focus();
+    }
+}
+
+// Quick message function with enhanced feedback
+function sendQuickMessage(message) {
+    if (input.disabled) return;
+
+    // Find the button that was clicked and add loading state
+    const buttons = document.querySelectorAll('.quick-cmd-btn, .quick-action-btn');
+    buttons.forEach(btn => {
+        if (btn.textContent.includes(message.split(' ')[1])) {
+            btn.classList.add('loading');
+            btn.style.opacity = '0.7';
+            btn.style.pointerEvents = 'none';
+
+            // Reset after 3 seconds
+            setTimeout(() => {
+                btn.classList.remove('loading');
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = 'auto';
+            }, 3000);
+        }
+    });
+
+    // Add visual feedback
+    showToast('Sending command...', 'info');
+    submitMessage(message);
+}
+
+// Capability trigger function with enhanced feedback
+function triggerCapability(capability) {
+    if (input.disabled) return;
+
+    const capabilityMessages = {
+        'analytics': 'Show me detailed analytics and performance metrics for my store',
+        'voice': 'Help me understand voice commands and how to use voice control features',
+        'forecasting': 'Provide sales forecasting and inventory predictions based on current trends',
+        'insights': 'Give me business insights and recommendations to improve my store performance'
+    };
+
+    const message = capabilityMessages[capability];
+    if (message) {
+        // Find and animate the clicked capability card
+        const cards = document.querySelectorAll('.capability-card');
+        cards.forEach(card => {
+            const text = card.textContent.toLowerCase();
+            if (text.includes(capability)) {
+                card.classList.add('loading');
+                card.style.opacity = '0.7';
+                card.style.pointerEvents = 'none';
+
+                // Reset after 3 seconds
+                setTimeout(() => {
+                    card.classList.remove('loading');
+                    card.style.opacity = '1';
+                    card.style.pointerEvents = 'auto';
+                }, 3000);
+            }
+        });
+
+        // Add visual feedback
+        showToast(`Activating ${capability} capability...`, 'info');
+        submitMessage(message);
+    }
+}
+
+// Voice recording functions
+function toggleVoiceRecording() {
+    if (isRecording) {
+        stopVoiceRecording();
+    } else {
+        startVoiceRecording();
+    }
+}
+
+function startVoiceRecording() {
+    if (!recognition) {
+        showToast('Speech recognition is not supported in your browser.', 'error');
+        return;
+    }
+
+    // Proactively request microphone permission for better UX
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(() => {
+                isRecording = true;
+                document.getElementById('voiceBtn').classList.add('recording');
+                document.getElementById('voiceStatus').style.display = 'flex';
+                recognition.start();
+            })
+            .catch((err) => {
+                console.warn('Microphone permission error:', err && err.name);
+                showToast('Microphone access denied. Please allow access to use voice input.', 'error');
+            });
+    } else {
+        // Fallback: try starting recognition (may still prompt in some browsers)
+        try {
+            isRecording = true;
+            document.getElementById('voiceBtn').classList.add('recording');
+            document.getElementById('voiceStatus').style.display = 'flex';
+            recognition.start();
+        } catch (e) {
+            showToast('Microphone not available on this device.', 'error');
+            stopVoiceRecording();
+        }
+    }
+}
+
+function stopVoiceRecording() {
+    isRecording = false;
+    document.getElementById('voiceBtn').classList.remove('recording');
+    document.getElementById('voiceStatus').style.display = 'none';
+    if (recognition) {
+        recognition.stop();
+    }
+}
+
+// Enhanced message display
+function addMessageToChat(sender, message) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${sender}-message`;
+
+    const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+    messageDiv.innerHTML = `
+        <div class="message-avatar">
+            <div class="avatar-${sender}">${sender === 'user' ? '👤' : '🤖'}</div>
+        </div>
+        <div class="message-content">
+            <div class="message-header">
+                <span class="sender-name">${sender === 'user' ? 'You' : 'Easly AI'}</span>
+                <div class="message-tools">
+                    <span class="message-time" style="display: ${aiSettings.showTimestamps ? 'inline' : 'none'}">${time}</span>
+                    ${sender === 'ai' ? '<button class="speak-btn" title="Speak" aria-label="Speak response">🔊</button>' : ''}
+                </div>
+            </div>
+            <div class="message-text">
+                ${formatMessage(message)}
+            </div>
+        </div>
+    `;
+
+    chatHistory.appendChild(messageDiv);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+
+    // Add fade-in animation
+    messageDiv.style.opacity = '0';
+    messageDiv.style.transform = 'translateY(10px)';
+    setTimeout(() => {
+        messageDiv.style.transition = 'all 0.3s ease';
+        messageDiv.style.opacity = '1';
+        messageDiv.style.transform = 'translateY(0)';
+    }, 10);
+
+    if (sender === 'ai') {
+        const btn = messageDiv.querySelector('.speak-btn');
+        if (btn) {
+            btn.addEventListener('click', () => speakText(stripHtml(message)));
+        }
+        if (isTTSEnabled()) {
+            speakText(stripHtml(message));
+        }
+    }
+}
+
+function stripHtml(html) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || '';
+}
+
+// Settings management
+const aiSettings = {
+    voiceResponses: true,
+    autoSuggestions: true,
+    showTimestamps: false
+};
+
+// Load settings from localStorage
+function loadSettings() {
+    try {
+        const saved = localStorage.getItem('easlyAISettings');
+        if (saved) {
+            Object.assign(aiSettings, JSON.parse(saved));
+        }
+    } catch (e) {
+        console.warn('Failed to load settings:', e);
+    }
+
+    // Apply settings to UI
+    const voiceToggle = document.getElementById('voiceResponsesToggle');
+    const autoToggle = document.getElementById('autoSuggestionsToggle');
+    const timestampToggle = document.getElementById('showTimestampsToggle');
+
+    if (voiceToggle) voiceToggle.checked = aiSettings.voiceResponses;
+    if (autoToggle) autoToggle.checked = aiSettings.autoSuggestions;
+    if (timestampToggle) timestampToggle.checked = aiSettings.showTimestamps;
+}
+
+// Save settings to localStorage
+function saveSettings() {
+    try {
+        localStorage.setItem('easlyAISettings', JSON.stringify(aiSettings));
+    } catch (e) {
+        console.warn('Failed to save settings:', e);
+    }
+}
+
+// Update setting and apply changes
+function updateSetting(key, value) {
+    aiSettings[key] = value;
+    saveSettings();
+
+    // Apply setting immediately
+    applySetting(key, value);
+
+    // Show feedback
+    showToast(`${key.replace(/([A-Z])/g, ' $1').toLowerCase()} ${value ? 'enabled' : 'disabled'}`, 'success');
+}
+
+// Apply setting changes to the interface
+function applySetting(key, value) {
+    switch (key) {
+        case 'showTimestamps':
+            // Toggle timestamp visibility
+            const timestamps = document.querySelectorAll('.message-time');
+            timestamps.forEach(ts => {
+                ts.style.display = value ? 'inline' : 'none';
+            });
+            break;
+        case 'autoSuggestions':
+            // Toggle quick action buttons visibility
+            const quickActions = document.querySelector('.quick-actions');
+            if (quickActions) {
+                quickActions.style.display = value ? 'flex' : 'none';
+            }
+            break;
+        case 'voiceResponses':
+            // This is handled in the TTS function
+            break;
+    }
+}
+
+function isTTSEnabled() {
+    return aiSettings.voiceResponses;
+}
+
+function speakText(text) {
+    if (!('speechSynthesis' in window)) {
+        showToast('Text-to-speech is not supported in your browser.', 'error');
+        return;
+    }
+    try {
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 1.0; // natural speed
+        utter.pitch = 1.0;
+        // Prefer an English voice if available
+        const voices = window.speechSynthesis.getVoices();
+        const en = voices.find(v => /en-/i.test(v.lang));
+        if (en) utter.voice = en;
+        window.speechSynthesis.cancel(); // stop any ongoing speech
+        window.speechSynthesis.speak(utter);
+    } catch (e) {
+        console.warn('TTS error:', e);
+    }
+}
+
+function addActionCard(action) {
+    const card = document.createElement('div');
+    card.className = 'chat-message ai-message';
+    const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    card.innerHTML = `
+        <div class="message-avatar"><div class="avatar-ai">🤖</div></div>
+        <div class="message-content">
+            <div class="message-header">
+                <span class="sender-name">Easly AI</span>
+                <span class="message-time">${time}</span>
+            </div>
+            <div class="message-text">
+                <div class="card action-card">
+                    <div class="card-body">
+                        <p><strong>Proposed action:</strong> ${action.type}</p>
+                        <pre class="json-response">${JSON.stringify(action.payload, null, 2)}</pre>
+                        <div class="mt-2">
+                            <button class="btn btn-primary" id="confirm-${Date.now()}">Confirm</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    chatHistory.appendChild(card);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+    const btn = card.querySelector('button');
+    btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        try {
+            await performAction(action);
+            showToast('Action completed', 'success');
+        } catch (e) {
+            console.error(e);
+            showToast('Action failed: ' + (e.message||e), 'error');
+        } finally {
+            btn.disabled = false;
+        }
+    });
+}
+
+async function performAction(action) {
+    const { endpoint, method, payload } = action;
+    const res = await fetch(endpoint, {
+        method: method || 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload||{})
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json().catch(()=>({ ok:true }));
+}
+
+// Format message content
+function formatMessage(message) {
+    // Handle JSON responses
+    if (message.startsWith('{') || message.startsWith('[')) {
+        try {
+            const parsed = JSON.parse(message);
+            return `<pre class="json-response">${JSON.stringify(parsed, null, 2)}</pre>`;
+        } catch (e) {
+            // Not valid JSON, treat as regular text
+        }
+    }
+
+    // Convert markdown to HTML using marked.js if available
+    if (typeof marked !== 'undefined' && marked.parse) {
+        try {
+            return marked.parse(message);
+        } catch (e) {
+            console.warn('Marked.js parsing failed:', e);
+            // Fallback to manual markdown-like formatting
+        }
+    }
+
+    // Fallback: Handle basic markdown-like formatting manually
+    message = message.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    message = message.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    message = message.replace(/`(.*?)`/g, '<code>$1</code>');
+
+    // Convert line breaks to paragraphs
+    const paragraphs = message.split('\n\n').filter(p => p.trim());
+    if (paragraphs.length > 1) {
+        return paragraphs.map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
+    } else {
+        return `<p>${message.replace(/\n/g, '<br>')}</p>`;
+    }
+}
+
+// Loading and thinking states
+function addThinkingMessage() {
+    const thinkingDiv = document.createElement('div');
+    thinkingDiv.className = 'chat-message ai-message thinking-message';
+    thinkingDiv.innerHTML = `
+        <div class="message-avatar">
+            <div class="avatar-ai">🤖</div>
+        </div>
+        <div class="message-content">
+            <div class="message-header">
+                <span class="sender-name">Easly AI</span>
+                <span class="message-time">Now</span>
+            </div>
+            <div class="message-text">
+                <div class="thinking-indicator">
+                    <div class="thinking-dots">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                    <span>Thinking...</span>
+                </div>
+            </div>
+        </div>
+    `;
+
+    chatHistory.appendChild(thinkingDiv);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+}
+
+function removeThinkingMessage() {
+    const thinkingMessage = chatHistory.querySelector('.thinking-message');
+    if (thinkingMessage) {
+        thinkingMessage.remove();
+    }
+}
+
+function showLoading() {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+}
+
+function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+// Toast notification function
+function showToast(message, type = 'info') {
+    // Create toast if it doesn't exist
+    let toast = document.getElementById('toast-notification');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast-notification';
+        document.body.appendChild(toast);
+    }
+
+    toast.textContent = message;
+    toast.className = `show ${type}`;
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', async function() {
+    // Load settings first
+    loadSettings();
+
+    // Initialize input state and focus
+    updateInputState();
+
+    // Focus on input after a brief delay to ensure proper rendering
+    setTimeout(() => {
+        if (input) {
+            input.focus();
+            updateInputState();
+        }
+    }, 100);
+
+    // Hide voice button if not supported
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+        const vb = document.getElementById('voiceBtn');
+        if (vb) vb.style.display = 'none';
+    }
+
+    // Load chat history
+    try {
+        const r = await fetch(`/ai/history?clientId=${encodeURIComponent(clientId)}&limit=50`);
+        const j = await r.json();
+        if (Array.isArray(j.items)) {
+            for (const it of j.items) {
+                addMessageToChat(it.role === 'assistant' ? 'ai' : 'user', it.text || '');
+                if (it.role === 'assistant' && it.action) addActionCard(it.action);
+            }
+        }
+    } catch {}
+
+    // Add welcome message animation
+    setTimeout(() => {
+        const welcomeMessage = chatHistory.querySelector('.chat-message');
+        if (welcomeMessage) {
+            welcomeMessage.style.opacity = '0';
+            welcomeMessage.style.transform = 'translateY(20px)';
+            welcomeMessage.style.transition = 'all 0.5s ease';
+
+            setTimeout(() => {
+                welcomeMessage.style.opacity = '1';
+                welcomeMessage.style.transform = 'translateY(0)';
+            }, 100);
+        }
+    }, 500);
+
+    console.log('Enhanced AI Assistant page loaded successfully');
+});
+
+// Enhanced AI Assistant initialization complete
 </script>

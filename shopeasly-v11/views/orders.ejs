@@ -1,0 +1,897 @@
+<% layout('layout') %>
+
+
+
+<!-- Advanced Order Management Interface -->
+<div class="orders-container">
+    <!-- Header Section -->
+    <div class="orders-header">
+        <div class="header-content">
+            <div class="header-text">
+                <h1>📦 Order Management</h1>
+                <p class="header-subtitle">Manage and track all your orders with advanced tools</p>
+            </div>
+            <div class="header-stats">
+                <div class="quick-stat">
+                    <span class="stat-value" id="totalOrdersCount"><%= orders.length %></span>
+                    <span class="stat-label">Total Orders</span>
+                </div>
+                <div class="quick-stat">
+                    <span class="stat-value" id="pendingOrdersCount">0</span>
+                    <span class="stat-label">Pending</span>
+                </div>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-secondary" onclick="refreshOrders()">
+                <span class="refresh-icon">🔄</span> Refresh
+            </button>
+            <button class="btn btn-primary" onclick="showCreateOrderModal()">
+                <span>+</span> New Order
+            </button>
+        </div>
+    </div>
+
+    <!-- Advanced Filters and Search -->
+    <div class="orders-toolbar">
+        <div class="search-section">
+            <div class="search-input-wrapper">
+                <input type="text" id="searchInput" class="form-input search-input" placeholder="Search orders by customer, product, or order ID...">
+                <button class="search-btn" onclick="performSearch()">🔍</button>
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <select id="statusFilter" class="form-input filter-select" onchange="applyFilters()">
+                <option value="">All Statuses</option>
+                <option value="Pending">Pending</option>
+                <option value="Processing">Processing</option>
+                <option value="Shipped">Shipped</option>
+                <option value="Delivered">Delivered</option>
+            </select>
+
+            <select id="dateFilter" class="form-input filter-select" onchange="applyFilters()">
+                <option value="">All Dates</option>
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+            </select>
+
+            <button class="btn btn-secondary" onclick="clearFilters()">Clear Filters</button>
+        </div>
+
+        <div class="bulk-actions">
+            <select id="bulkActionSelect" class="form-input">
+                <option value="">Bulk Actions</option>
+                <option value="mark-processing">Mark as Processing</option>
+                <option value="mark-shipped">Mark as Shipped</option>
+                <option value="mark-delivered">Mark as Delivered</option>
+                <option value="delete">Delete Selected</option>
+            </select>
+            <button class="btn btn-secondary" onclick="executeBulkAction()" disabled id="bulkActionBtn">Apply</button>
+        </div>
+    </div>
+
+    <!-- Order Status Columns (Kanban Style) -->
+    <div class="orders-kanban" id="ordersKanban">
+        <div class="kanban-column" data-status="Pending">
+            <div class="column-header">
+                <h3>📋 Pending</h3>
+                <span class="order-count" id="pendingCount">0</span>
+            </div>
+            <div class="column-content" id="pendingOrders">
+                <!-- Orders will be populated here -->
+            </div>
+        </div>
+
+        <div class="kanban-column" data-status="Processing">
+            <div class="column-header">
+                <h3>⚙️ Processing</h3>
+                <span class="order-count" id="processingCount">0</span>
+            </div>
+            <div class="column-content" id="processingOrders">
+                <!-- Orders will be populated here -->
+            </div>
+        </div>
+
+        <div class="kanban-column" data-status="Shipped">
+            <div class="column-header">
+                <h3>🚚 Shipped</h3>
+                <span class="order-count" id="shippedCount">0</span>
+            </div>
+            <div class="column-content" id="shippedOrders">
+                <!-- Orders will be populated here -->
+            </div>
+        </div>
+
+        <div class="kanban-column" data-status="Delivered">
+            <div class="column-header">
+                <h3>✅ Delivered</h3>
+                <span class="order-count" id="deliveredCount">0</span>
+            </div>
+            <div class="column-content" id="deliveredOrders">
+                <!-- Orders will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Table View Toggle -->
+    <div class="view-toggle">
+        <button class="btn btn-secondary" id="kanbanViewBtn" onclick="switchToKanban()">📋 Kanban View</button>
+        <button class="btn btn-secondary active" id="tableViewBtn" onclick="switchToTable()">📊 Table View</button>
+    </div>
+
+    <!-- Advanced Table View -->
+    <div class="orders-table-container" id="ordersTable">
+        <div class="table-wrapper">
+            <table class="orders-table">
+                <thead>
+                    <tr>
+                        <th>
+                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                        </th>
+                        <th onclick="sortTable('orderNumber')">Order # <span class="sort-icon">↕️</span></th>
+                        <th onclick="sortTable('customerName')">Customer <span class="sort-icon">↕️</span></th>
+                        <th onclick="sortTable('product')">Product <span class="sort-icon">↕️</span></th>
+                        <th onclick="sortTable('quantity')">Qty <span class="sort-icon">↕️</span></th>
+                        <th onclick="sortTable('price')">Price <span class="sort-icon">↕️</span></th>
+                        <th onclick="sortTable('status')">Status <span class="sort-icon">↕️</span></th>
+                        <th onclick="sortTable('date')">Date <span class="sort-icon">↕️</span></th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersTableBody">
+                    <!-- Orders will be populated here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-container">
+            <div class="pagination-info">
+                Showing <span id="showingStart">0</span> to <span id="showingEnd">0</span> of <span id="totalOrders">0</span> orders
+            </div>
+            <div class="pagination-controls">
+                <button class="btn btn-secondary" onclick="previousPage()" id="prevBtn" disabled>← Previous</button>
+                <span class="page-numbers" id="pageNumbers"></span>
+                <button class="btn btn-secondary" onclick="nextPage()" id="nextBtn" disabled>Next →</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create/Edit Order Modal -->
+<div class="modal-overlay" id="orderModal" style="display: none;">
+    <div class="modal-content order-modal">
+        <button class="modal-close-btn" onclick="closeOrderModal()">&times;</button>
+        <h2 id="modalTitle">Create New Order</h2>
+
+        <form id="orderForm" onsubmit="submitOrder(event)">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Customer Name *</label>
+                    <input type="text" id="customerName" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label>Order Number</label>
+                    <input type="text" id="orderNumber" class="form-input" placeholder="Auto-generated">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Product *</label>
+                    <input type="text" id="product" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label>Quantity *</label>
+                    <input type="number" id="quantity" class="form-input" min="1" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Price ($)</label>
+                    <input type="number" id="price" class="form-input" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="status" class="form-input">
+                        <option value="Pending">Pending</option>
+                        <option value="Processing">Processing</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="Delivered">Delivered</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea id="notes" class="form-input" rows="3" placeholder="Optional notes about this order..."></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeOrderModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">
+                    <span class="btn-text">Create Order</span>
+                    <span class="spinner"></span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Order Details Modal -->
+<div class="modal-overlay" id="orderDetailsModal" style="display: none;">
+    <div class="modal-content order-details-modal">
+        <button class="modal-close-btn" onclick="closeOrderDetailsModal()">&times;</button>
+        <div id="orderDetailsContent">
+            <!-- Order details will be populated here -->
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay" style="display: none;">
+    <div class="loading-content">
+        <div class="spinner-large"></div>
+        <p>Processing orders...</p>
+    </div>
+</div>
+
+<!-- Advanced Order Management JavaScript -->
+<script>
+// Order Management System
+class OrderManager {
+    constructor() {
+        this.orders = <%= JSON.stringify(orders) %>;
+        this.filteredOrders = [...this.orders];
+        this.currentPage = 1;
+        this.ordersPerPage = 10;
+        this.currentSort = { field: 'date', direction: 'desc' };
+        this.selectedOrders = new Set();
+        this.currentView = 'table';
+        this.init();
+    }
+
+    init() {
+        this.populateOrders();
+        this.updateStats();
+        this.setupEventListeners();
+        this.setupDragAndDrop();
+    }
+
+    setupEventListeners() {
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            this.performSearch(e.target.value);
+        });
+
+        // Real-time filtering
+        document.getElementById('statusFilter').addEventListener('change', () => this.applyFilters());
+        document.getElementById('dateFilter').addEventListener('change', () => this.applyFilters());
+
+        // Bulk actions
+        document.getElementById('bulkActionSelect').addEventListener('change', (e) => {
+            document.getElementById('bulkActionBtn').disabled = !e.target.value || this.selectedOrders.size === 0;
+        });
+    }
+
+    setupDragAndDrop() {
+        // Enable drag and drop for kanban columns
+        const columns = document.querySelectorAll('.column-content');
+        columns.forEach(column => {
+            column.addEventListener('dragover', this.handleDragOver.bind(this));
+            column.addEventListener('drop', this.handleDrop.bind(this));
+        });
+    }
+
+    handleDragOver(e) {
+        e.preventDefault();
+        e.currentTarget.classList.add('drag-over');
+    }
+
+    handleDrop(e) {
+        e.preventDefault();
+        e.currentTarget.classList.remove('drag-over');
+
+        const orderId = e.dataTransfer.getData('text/plain');
+        const newStatus = e.currentTarget.parentElement.dataset.status;
+
+        this.updateOrderStatus(orderId, newStatus);
+    }
+
+    populateOrders() {
+        if (this.currentView === 'kanban') {
+            this.populateKanbanView();
+        } else {
+            this.populateTableView();
+        }
+    }
+
+    populateKanbanView() {
+        // Clear all columns
+        ['pending', 'processing', 'shipped', 'delivered'].forEach(status => {
+            document.getElementById(`${status}Orders`).innerHTML = '';
+        });
+
+        // Group orders by status
+        const ordersByStatus = {
+            'Pending': [],
+            'Processing': [],
+            'Shipped': [],
+            'Delivered': []
+        };
+
+        this.filteredOrders.forEach(order => {
+            const status = order.status || 'Pending';
+            if (ordersByStatus[status]) {
+                ordersByStatus[status].push(order);
+            }
+        });
+
+        // Populate each column
+        Object.entries(ordersByStatus).forEach(([status, orders]) => {
+            const columnId = status.toLowerCase() + 'Orders';
+            const column = document.getElementById(columnId);
+
+            orders.forEach(order => {
+                const orderCard = this.createOrderCard(order);
+                column.appendChild(orderCard);
+            });
+
+            // Update count
+            const countId = status.toLowerCase() + 'Count';
+            document.getElementById(countId).textContent = orders.length;
+        });
+    }
+
+    createOrderCard(order) {
+        const card = document.createElement('div');
+        card.className = 'order-card';
+        card.draggable = true;
+        card.dataset.orderId = order.id;
+
+        card.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', order.id);
+        });
+
+        const price = order.price ? `$${parseFloat(order.price).toFixed(2)}` : 'N/A';
+        const date = order.date || (order.createdAt ? new Date(order.createdAt._seconds * 1000).toLocaleDateString() : 'N/A');
+
+        card.innerHTML = `
+            <div class="order-card-header">
+                <span class="order-number">#${order.orderNumber || order.id?.substring(0, 8) || 'N/A'}</span>
+                <button class="card-menu-btn" onclick="showOrderMenu('${order.id}', event)">⋮</button>
+            </div>
+            <div class="order-card-content">
+                <h4>${order.customerName || 'Unknown Customer'}</h4>
+                <p class="product-name">${order.product || 'N/A'}</p>
+                <div class="order-meta">
+                    <span class="quantity">Qty: ${order.quantity || 0}</span>
+                    <span class="price">${price}</span>
+                </div>
+                <div class="order-date">${date}</div>
+            </div>
+        `;
+
+        card.addEventListener('click', () => this.showOrderDetails(order.id));
+
+        return card;
+    }
+
+    populateTableView() {
+        const tbody = document.getElementById('ordersTableBody');
+        tbody.innerHTML = '';
+
+        // Calculate pagination
+        const startIndex = (this.currentPage - 1) * this.ordersPerPage;
+        const endIndex = startIndex + this.ordersPerPage;
+        const paginatedOrders = this.filteredOrders.slice(startIndex, endIndex);
+
+        paginatedOrders.forEach(order => {
+            const row = this.createOrderRow(order);
+            tbody.appendChild(row);
+        });
+
+        this.updatePagination();
+    }
+
+    createOrderRow(order) {
+        const row = document.createElement('tr');
+        row.className = 'order-row';
+        row.dataset.orderId = order.id;
+
+        const price = order.price ? `$${parseFloat(order.price).toFixed(2)}` : 'N/A';
+        const date = order.date || (order.createdAt ? new Date(order.createdAt._seconds * 1000).toLocaleDateString() : 'N/A');
+        const status = order.status || 'Pending';
+
+        row.innerHTML = `
+            <td>
+                <input type="checkbox" class="order-checkbox" value="${order.id}" onchange="toggleOrderSelection('${order.id}')">
+            </td>
+            <td class="order-number">#${order.orderNumber || order.id?.substring(0, 8) || 'N/A'}</td>
+            <td>${order.customerName || 'Unknown'}</td>
+            <td>${order.product || 'N/A'}</td>
+            <td>${order.quantity || 0}</td>
+            <td>${price}</td>
+            <td>
+                <select class="status-select" onchange="updateOrderStatus('${order.id}', this.value)">
+                    <option value="Pending" ${status === 'Pending' ? 'selected' : ''}>Pending</option>
+                    <option value="Processing" ${status === 'Processing' ? 'selected' : ''}>Processing</option>
+                    <option value="Shipped" ${status === 'Shipped' ? 'selected' : ''}>Shipped</option>
+                    <option value="Delivered" ${status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                </select>
+            </td>
+            <td>${date}</td>
+            <td class="actions-cell">
+                <button class="btn btn-icon" onclick="showOrderDetails('${order.id}')" title="View Details">👁️</button>
+                <button class="btn btn-icon" onclick="editOrder('${order.id}')" title="Edit">✏️</button>
+                <button class="btn btn-icon" onclick="deleteOrder('${order.id}')" title="Delete">🗑️</button>
+            </td>
+        `;
+
+        return row;
+    }
+
+    performSearch(query) {
+        if (!query.trim()) {
+            this.filteredOrders = [...this.orders];
+        } else {
+            const searchTerm = query.toLowerCase();
+            this.filteredOrders = this.orders.filter(order =>
+                (order.customerName || '').toLowerCase().includes(searchTerm) ||
+                (order.product || '').toLowerCase().includes(searchTerm) ||
+                (order.id || '').toLowerCase().includes(searchTerm) ||
+                (order.orderNumber || '').toLowerCase().includes(searchTerm)
+            );
+        }
+
+        this.currentPage = 1;
+        this.populateOrders();
+        this.updateStats();
+    }
+
+    applyFilters() {
+        const statusFilter = document.getElementById('statusFilter').value;
+        const dateFilter = document.getElementById('dateFilter').value;
+
+        this.filteredOrders = this.orders.filter(order => {
+            // Status filter
+            if (statusFilter && (order.status || 'Pending') !== statusFilter) {
+                return false;
+            }
+
+            // Date filter
+            if (dateFilter) {
+                const orderDate = new Date(order.date || order.createdAt?._seconds * 1000);
+                const now = new Date();
+
+                switch (dateFilter) {
+                    case 'today':
+                        if (orderDate.toDateString() !== now.toDateString()) return false;
+                        break;
+                    case 'week':
+                        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                        if (orderDate < weekAgo) return false;
+                        break;
+                    case 'month':
+                        const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                        if (orderDate < monthAgo) return false;
+                        break;
+                }
+            }
+
+            return true;
+        });
+
+        this.currentPage = 1;
+        this.populateOrders();
+        this.updateStats();
+    }
+
+    updateStats() {
+        document.getElementById('totalOrdersCount').textContent = this.orders.length;
+
+        const pendingCount = this.orders.filter(order => (order.status || 'Pending') === 'Pending').length;
+        document.getElementById('pendingOrdersCount').textContent = pendingCount;
+    }
+
+    updatePagination() {
+        const totalPages = Math.ceil(this.filteredOrders.length / this.ordersPerPage);
+        const startIndex = (this.currentPage - 1) * this.ordersPerPage;
+        const endIndex = Math.min(startIndex + this.ordersPerPage, this.filteredOrders.length);
+
+        document.getElementById('showingStart').textContent = this.filteredOrders.length > 0 ? startIndex + 1 : 0;
+        document.getElementById('showingEnd').textContent = endIndex;
+        document.getElementById('totalOrders').textContent = this.filteredOrders.length;
+
+        document.getElementById('prevBtn').disabled = this.currentPage <= 1;
+        document.getElementById('nextBtn').disabled = this.currentPage >= totalPages;
+
+        // Update page numbers
+        const pageNumbers = document.getElementById('pageNumbers');
+        pageNumbers.innerHTML = '';
+
+        for (let i = Math.max(1, this.currentPage - 2); i <= Math.min(totalPages, this.currentPage + 2); i++) {
+            const pageBtn = document.createElement('button');
+            pageBtn.className = `btn btn-secondary ${i === this.currentPage ? 'active' : ''}`;
+            pageBtn.textContent = i;
+            pageBtn.onclick = () => this.goToPage(i);
+            pageNumbers.appendChild(pageBtn);
+        }
+    }
+
+    goToPage(page) {
+        this.currentPage = page;
+        this.populateOrders();
+    }
+
+    switchView(view) {
+        this.currentView = view;
+
+        if (view === 'kanban') {
+            document.getElementById('ordersTable').style.display = 'none';
+            document.getElementById('ordersKanban').style.display = 'grid';
+            document.getElementById('kanbanViewBtn').classList.add('active');
+            document.getElementById('tableViewBtn').classList.remove('active');
+        } else {
+            document.getElementById('ordersTable').style.display = 'block';
+            document.getElementById('ordersKanban').style.display = 'none';
+            document.getElementById('tableViewBtn').classList.add('active');
+            document.getElementById('kanbanViewBtn').classList.remove('active');
+        }
+
+        this.populateOrders();
+    }
+
+    async updateOrderStatus(orderId, newStatus) {
+        try {
+            showLoading();
+
+            // Optimistic UI update
+            const order = this.orders.find(o => o.id === orderId);
+            const prevStatus = order ? order.status : null;
+            if (order) order.status = newStatus;
+            this.populateOrders();
+            this.updateStats();
+
+            // Persist to server (Firestore)
+            const resp = await fetch(`/orders/${orderId}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            if (!resp.ok) {
+                throw new Error('Failed to update status');
+            }
+
+            showToast(`Order status updated to ${newStatus}`, 'success');
+        } catch (error) {
+            console.error('Error updating order status:', error);
+            showToast('Failed to update order status', 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    showOrderDetails(orderId) {
+        const order = this.orders.find(o => o.id === orderId);
+        if (!order) return;
+
+        const modal = document.getElementById('orderDetailsModal');
+        const content = document.getElementById('orderDetailsContent');
+
+        const price = order.price ? `$${parseFloat(order.price).toFixed(2)}` : 'N/A';
+        const date = order.date || (order.createdAt ? new Date(order.createdAt._seconds * 1000).toLocaleDateString() : 'N/A');
+
+        content.innerHTML = `
+            <div class="order-details-header">
+                <h2>Order Details</h2>
+                <span class="status-badge status-${(order.status || 'pending').toLowerCase()}">${order.status || 'Pending'}</span>
+            </div>
+
+            <div class="order-details-grid">
+                <div class="detail-section">
+                    <h3>Order Information</h3>
+                    <div class="detail-item">
+                        <label>Order Number:</label>
+                        <span>#${order.orderNumber || order.id?.substring(0, 8) || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Date:</label>
+                        <span>${date}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Status:</label>
+                        <span>${order.status || 'Pending'}</span>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h3>Customer Information</h3>
+                    <div class="detail-item">
+                        <label>Customer Name:</label>
+                        <span>${order.customerName || 'Unknown'}</span>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h3>Product Information</h3>
+                    <div class="detail-item">
+                        <label>Product:</label>
+                        <span>${order.product || 'N/A'}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Quantity:</label>
+                        <span>${order.quantity || 0}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Price:</label>
+                        <span>${price}</span>
+                    </div>
+                </div>
+
+                ${order.notes ? `
+                <div class="detail-section">
+                    <h3>Notes</h3>
+                    <p>${order.notes}</p>
+                </div>
+                ` : ''}
+            </div>
+
+            <div class="order-details-actions">
+                <button class="btn btn-secondary" onclick="closeOrderDetailsModal()">Close</button>
+                <button class="btn btn-primary" onclick="editOrder('${order.id}')">Edit Order</button>
+            </div>
+        `;
+
+        modal.style.display = 'flex';
+    }
+}
+
+// Global functions
+let orderManager;
+let editingOrderId = null;
+
+// Global wrappers for class methods used in inline handlers
+function updateOrderStatus(orderId, newStatus) { orderManager.updateOrderStatus(orderId, newStatus); }
+function showOrderDetails(orderId) { orderManager.showOrderDetails(orderId); }
+function performSearch() { orderManager.performSearch(document.getElementById('searchInput').value); }
+function showOrderMenu(orderId, event) { event?.stopPropagation?.(); /* reserved for future */ }
+
+function refreshOrders() { location.reload(); }
+
+function showCreateOrderModal() {
+    editingOrderId = null;
+    document.getElementById('modalTitle').textContent = 'Create New Order';
+    const form = document.getElementById('orderForm');
+    form.reset();
+    form.dataset.mode = 'create';
+    document.getElementById('orderModal').style.display = 'flex';
+}
+
+function closeOrderModal() {
+    document.getElementById('orderModal').style.display = 'none';
+}
+
+function closeOrderDetailsModal() {
+    document.getElementById('orderDetailsModal').style.display = 'none';
+}
+
+function switchToKanban() {
+    orderManager.switchView('kanban');
+}
+
+function switchToTable() {
+    orderManager.switchView('table');
+}
+
+function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.order-checkbox');
+
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+        toggleOrderSelection(checkbox.value);
+    });
+}
+
+function toggleOrderSelection(orderId) {
+    if (orderManager.selectedOrders.has(orderId)) {
+        orderManager.selectedOrders.delete(orderId);
+    } else {
+        orderManager.selectedOrders.add(orderId);
+    }
+
+    document.getElementById('bulkActionBtn').disabled =
+        orderManager.selectedOrders.size === 0 || !document.getElementById('bulkActionSelect').value;
+}
+
+function clearFilters() {
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('dateFilter').value = '';
+    document.getElementById('searchInput').value = '';
+    orderManager.applyFilters();
+}
+
+function previousPage() {
+    if (orderManager.currentPage > 1) {
+        orderManager.goToPage(orderManager.currentPage - 1);
+    }
+}
+
+function nextPage() {
+    const totalPages = Math.ceil(orderManager.filteredOrders.length / orderManager.ordersPerPage);
+    if (orderManager.currentPage < totalPages) {
+        orderManager.goToPage(orderManager.currentPage + 1);
+    }
+}
+
+function sortTable(field) {
+    if (orderManager.currentSort.field === field) {
+        orderManager.currentSort.direction = orderManager.currentSort.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        orderManager.currentSort = { field, direction: 'asc' };
+    }
+
+    orderManager.filteredOrders.sort((a, b) => {
+        let aVal = a[field] || '';
+        let bVal = b[field] || '';
+
+        if (field === 'price' || field === 'quantity') {
+            aVal = parseFloat(aVal) || 0;
+            bVal = parseFloat(bVal) || 0;
+        }
+
+        if (orderManager.currentSort.direction === 'asc') {
+            return aVal > bVal ? 1 : -1;
+        } else {
+            return aVal < bVal ? 1 : -1;
+        }
+    });
+
+    orderManager.populateOrders();
+}
+
+async function submitOrder(event) {
+    event.preventDefault();
+
+    const form = event.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    submitBtn.disabled = true;
+    submitBtn.setAttribute('data-loading', 'true');
+
+    try {
+        const orderData = {
+            customerName: document.getElementById('customerName').value.trim(),
+            product: document.getElementById('product').value.trim(),
+            quantity: parseInt(document.getElementById('quantity').value),
+            price: document.getElementById('price').value === '' ? null : parseFloat(document.getElementById('price').value),
+            status: document.getElementById('status').value,
+            notes: document.getElementById('notes').value.trim()
+        };
+
+        let url = '/orders';
+        let method = 'POST';
+        if (form.dataset.mode === 'edit' && editingOrderId) {
+            url = `/orders/${editingOrderId}`;
+            method = 'PUT';
+        }
+
+        const response = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(orderData)
+        });
+
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.error || (err.errors ? err.errors.join(', ') : 'Request failed'));
+        }
+
+        showToast(form.dataset.mode === 'edit' ? 'Order updated successfully!' : 'Order created successfully!', 'success');
+        closeOrderModal();
+        refreshOrders();
+    } catch (error) {
+        console.error('Order submit error:', error);
+        showToast(error.message || 'Failed to submit order', 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.removeAttribute('data-loading');
+    }
+}
+
+async function deleteOrder(orderId) {
+    if (!confirm('Are you sure you want to delete this order?')) return;
+    try {
+        showLoading();
+        const resp = await fetch(`/orders/${orderId}`, { method: 'DELETE' });
+        if (!resp.ok) throw new Error('Failed to delete');
+        showToast('Order deleted', 'success');
+        refreshOrders();
+    } catch (e) {
+        console.error(e);
+        showToast('Failed to delete order', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+function editOrder(orderId) {
+    const order = orderManager.orders.find(o => o.id === orderId);
+    if (!order) return showToast('Order not found', 'error');
+    editingOrderId = orderId;
+    document.getElementById('modalTitle').textContent = 'Edit Order';
+    const form = document.getElementById('orderForm');
+    form.dataset.mode = 'edit';
+    document.getElementById('customerName').value = order.customerName || '';
+    document.getElementById('orderNumber').value = order.orderNumber || '';
+    document.getElementById('product').value = order.product || '';
+    document.getElementById('quantity').value = order.quantity || 1;
+    document.getElementById('price').value = order.price || '';
+    document.getElementById('status').value = order.status || 'Pending';
+    document.getElementById('notes').value = order.notes || '';
+    document.getElementById('orderModal').style.display = 'flex';
+}
+
+async function executeBulkAction() {
+    const action = document.getElementById('bulkActionSelect').value;
+    if (!action) return;
+    const ids = Array.from(orderManager.selectedOrders);
+    if (ids.length === 0) return;
+
+    try {
+        showLoading();
+        const resp = await fetch('/orders/bulk', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, ids })
+        });
+        if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            throw new Error(err.error || 'Bulk action failed');
+        }
+        showToast('Bulk action completed', 'success');
+        refreshOrders();
+    } catch (e) {
+        console.error(e);
+        showToast(e.message || 'Bulk action failed', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+function showLoading() {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+}
+
+function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+function showToast(message, type = 'info') {
+    // Create toast if it doesn't exist
+    let toast = document.getElementById('toast-notification');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast-notification';
+        document.body.appendChild(toast);
+    }
+
+    toast.textContent = message;
+    toast.className = `show ${type}`;
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    orderManager = new OrderManager();
+    console.log('Advanced Order Management System initialized');
+});
+</script>
