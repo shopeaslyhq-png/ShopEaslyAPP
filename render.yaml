@@ -1,0 +1,15 @@
+# render.yaml configuration for ShopEaslyAPP
+
+services:
+  - type: web
+    name: ShopEaslyAPP
+    env: node
+    plan: free
+    runtime: nodejs:20
+    start: npm start
+    env:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    disk:
+      size: 512MB
+      persistent: true
