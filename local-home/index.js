@@ -38,6 +38,7 @@ app.onIdentify(async (request) => {
 	}
 });
 
+
 app.onExecute(async (request) => {
 	// Example: handle EXECUTE intent (turn on/off, set state, etc.)
 	// You would send a command to the device over HTTP/TCP/UDP here
@@ -48,11 +49,12 @@ app.onExecute(async (request) => {
 			commands: [{
 				ids: request.inputs[0].payload.commands[0].devices.map(d => d.id),
 				status: 'SUCCESS',
-				states: { on: true }
+				states: { on: true, online: true }
 			}]
 		}
 	};
 });
+
 
 app.onQuery(async (request) => {
 	// Example: handle QUERY intent (get device state)
