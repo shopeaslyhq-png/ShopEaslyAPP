@@ -15,18 +15,35 @@
     "smoke": "node scripts/smoke-test.mjs"
   },
   "devDependencies": {
-    "typescript": "^5.2.2",
-    "vite": "^5.2.0",
     "eslint": "^9.9.0",
     "stylelint": "^16.8.0",
-    "stylelint-config-standard": "^36.0.0"
+    "stylelint-config-standard": "^36.0.0",
+    "typescript": "^5.2.2",
+    "vite": "^5.2.0"
   },
   "dependencies": {
+    "@google-cloud/dialogflow": "^7.2.0",
     "@google/genai": "^1.17.0",
     "@google/generative-ai": "^0.24.1",
     "dompurify": "^3.2.6",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
     "express-ejs-layouts": "^2.5.1",
     "marked": "^16.2.1",
+    "openai": "^5.20.3",
     "xlsx": "^0.18.5"
-  }
+  },
+  "description": "<div align=\"center\"> <img width=\"1200\" height=\"475\" alt=\"GHBanner\" src=\"https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6\" /> </div>",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tjmorrow909/shopeasly-v11-starter.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tjmorrow909/shopeasly-v11-starter/issues"
+  },
+  "homepage": "https://github.com/tjmorrow909/shopeasly-v11-starter#readme"
 }

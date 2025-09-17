@@ -21,7 +21,7 @@
 <!-- STORAGE STATUS -->
 <section style="margin-bottom: 2rem;">
     <div class="status success">
-        🗂 Using local JSON storage (no cloud required)
+        Local Storage
     </div>
     <% if (typeof error !== 'undefined' && error) { %>
       <div class="status error"><small><%= error %></small></div>
@@ -37,6 +37,9 @@
     <div class="stat-card glass"><h3>Pending Orders</h3><p><%= stats?.pendingOrders ?? 0 %></p></div>
     <div class="stat-card glass"><h3>Processing</h3><p><%= stats?.processingOrders ?? 0 %></p></div>
     <div class="stat-card glass"><h3>Delivered</h3><p><%= stats?.deliveredOrders ?? 0 %></p></div>
+    <div class="stat-card glass"><h3>Total SKUs</h3><p><%= stats?.inventory?.totalSkus ?? 0 %></p></div>
+    <div class="stat-card glass"><h3>Low Stock</h3><p><%= stats?.inventory?.lowStockCount ?? 0 %></p></div>
+    <div class="stat-card glass"><h3>Out of Stock</h3><p><%= stats?.inventory?.outOfStockCount ?? 0 %></p></div>
 </section>
 
 <div class="dashboard-grid">
@@ -82,9 +85,38 @@
         <% } %>
     </section>
 
+        <!-- Inventory Alerts -->
+        <section class="dashboard-card">
+                <h2>Inventory Alerts</h2>
+                <% if (summary && summary.inventory && (summary.inventory.lowStockItems.length || summary.inventory.outOfStockItems.length)) { %>
+                    <% if (summary.inventory.outOfStockItems.length) { %>
+                        <div class="status error" style="margin-bottom: .75rem;">
+                            <strong><%= summary.inventory.outOfStockItems.length %></strong> item(s) out of stock
+                        </div>
+                        <ul class="list-unstyled" style="margin-bottom: 1rem;">
+                            <% summary.inventory.outOfStockItems.slice(0,5).forEach(it => { %>
+                                <li>❌ <strong><%= it.name %></strong> (<%= it.sku %>) — stock: <%= it.stock %></li>
+                            <% }) %>
+                        </ul>
+                    <% } %>
+                    <% if (summary.inventory.lowStockItems.length) { %>
+                        <div class="status warning" style="margin-bottom: .75rem;">
+                            <strong><%= summary.inventory.lowStockItems.length %></strong> item(s) low on stock
+                        </div>
+                        <ul class="list-unstyled">
+                            <% summary.inventory.lowStockItems.slice(0,5).forEach(it => { %>
+                                <li>⚠️ <strong><%= it.name %></strong> (<%= it.sku %>) — stock: <%= it.stock %> (threshold: <%= it.threshold %>)</li>
+                            <% }) %>
+                        </ul>
+                    <% } %>
+                <% } else { %>
+                    <div class="empty-state-small"><p>No alerts right now.</p></div>
+                <% } %>
+        </section>
+
     <!-- AI ASSISTANT PANEL -->
     <section class="dashboard-card">
-        <h2>🤖 AI Assistant</h2>
+        <h2>🤖 Easly AI</h2>
         <p>Your AI co-pilot is ready to help with tasks, inventory, and insights.</p>
         <div class="quick-actions">
             <a href="/easly" class="btn btn-primary">Open AI Assistant</a>
@@ -98,7 +130,7 @@
             <a href="/orders" class="btn btn-primary">📦 View All Orders</a>
             <a href="/orders/new" class="btn btn-primary" style="background-color: var(--success);">➕ Create New Order</a>
             <a href="/inventory" class="btn btn-secondary">📊 Manage Inventory</a>
-            <a href="/easly" class="btn btn-secondary">🤖 AI Co-Pilot</a>
+            <a href="/easly" class="btn btn-secondary">🤖 Easly AI</a>
         </div>
     </section>
 </div>

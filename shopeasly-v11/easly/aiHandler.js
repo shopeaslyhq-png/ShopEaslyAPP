@@ -133,7 +133,7 @@ async function handleLocalIntents(prompt) {
   return null;
 }
 
-// Handles AI co-pilot prompt using Google Gemini when configured; falls back to local intents
+// Handles Easly AI prompt using Google Gemini when configured; falls back to local intents
 module.exports = async function handleAICoPilot(req, res) {
   const ip = req.ip || req.headers['x-forwarded-for'] || 'local';
   try {
@@ -167,7 +167,7 @@ module.exports = async function handleAICoPilot(req, res) {
         const maybeJson = extractJsonCandidate(aiText);
         appendAILog({ ip, type: 'gemini', prompt, usage: { model: 'gemini-1.5-flash' } });
 
-        // Also compute local action suggestions to include alongside AI response
+  // Also compute local action suggestions to include alongside Easly AI response
         let localAction = null;
         try {
           const local = await handleLocalIntents(prompt);

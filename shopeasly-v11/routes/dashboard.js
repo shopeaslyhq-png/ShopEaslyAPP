@@ -1,25 +1,33 @@
 const express = require('express');
 const router = express.Router();
 const { getAllDocuments } = require('../config/firebase');
+const { getDashboardSummary } = require('../utils/dashboardSummary');
 
 // Dashboard routes
 router.get('/', async (req, res) => {
   try {
-    // Get recent orders from local data store
-    const orders = await getAllDocuments('orders', 10);
+    // Compute dashboard summary
+    const summary = await getDashboardSummary({ recentOrdersLimit: 10 });
 
-    // Calculate some basic stats
+    // Maintain existing vars for backward compat in the view
+    const orders = summary.orders.recent;
     const stats = {
-      totalOrders: orders.length,
-      pendingOrders: orders.filter(order => order.status === 'Pending').length,
-      processingOrders: orders.filter(order => order.status === 'Processing').length,
-      deliveredOrders: orders.filter(order => order.status === 'Delivered').length,
-      storage: 'local'
+      totalOrders: summary.orders.total,
+      pendingOrders: summary.orders.byStatus.Pending || 0,
+      processingOrders: summary.orders.byStatus.Processing || 0,
+      deliveredOrders: summary.orders.byStatus.Delivered || 0,
+      storage: summary.storage,
+      inventory: {
+        totalSkus: summary.inventory.totalSkus,
+        lowStockCount: summary.inventory.lowStockCount,
+        outOfStockCount: summary.inventory.outOfStockCount,
+      }
     };
 
     res.render('dashboard', {
-      orders: orders,
-      stats: stats
+      orders,
+      stats,
+      summary
     });
   } catch (error) {
     console.error('Error loading dashboard data:', error);

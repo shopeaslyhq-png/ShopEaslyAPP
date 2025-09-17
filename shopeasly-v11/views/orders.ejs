@@ -20,6 +20,18 @@
                     <span class="stat-value" id="pendingOrdersCount">0</span>
                     <span class="stat-label">Pending</span>
                 </div>
+                <div class="quick-stat">
+                    <span class="stat-value" id="processingOrdersCount">0</span>
+                    <span class="stat-label">Processing</span>
+                </div>
+                <div class="quick-stat">
+                    <span class="stat-value" id="shippedOrdersCount">0</span>
+                    <span class="stat-label">Shipped</span>
+                </div>
+                <div class="quick-stat">
+                    <span class="stat-value" id="deliveredOrdersCount">0</span>
+                    <span class="stat-label">Delivered</span>
+                </div>
             </div>
         </div>
         <div class="header-actions">
@@ -181,7 +193,9 @@
             <div class="form-row">
                 <div class="form-group">
                     <label>Product *</label>
-                    <input type="text" id="product" class="form-input" required>
+                    <select id="productSelect" class="form-input" required>
+                        <option value="">— Select product —</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label>Quantity *</label>
@@ -239,12 +253,20 @@
     </div>
 </div>
 
+<!-- Inject orders data safely (parsed later) -->
+<script id="orders-data" type="application/json"><%- JSON.stringify(orders) %></script>
+
 <!-- Advanced Order Management JavaScript -->
 <script>
 // Order Management System
 class OrderManager {
     constructor() {
-        this.orders = <%= JSON.stringify(orders) %>;
+        try {
+            const raw = document.getElementById('orders-data')?.textContent || '[]';
+            this.orders = JSON.parse(raw) || [];
+        } catch {
+            this.orders = [];
+        }
         this.filteredOrders = [...this.orders];
         this.currentPage = 1;
         this.ordersPerPage = 10;
@@ -493,8 +515,23 @@ class OrderManager {
     updateStats() {
         document.getElementById('totalOrdersCount').textContent = this.orders.length;
 
-        const pendingCount = this.orders.filter(order => (order.status || 'Pending') === 'Pending').length;
-        document.getElementById('pendingOrdersCount').textContent = pendingCount;
+        const { Pending, Processing, Shipped, Delivered } = this.getStatusCounts();
+        const el = (id) => document.getElementById(id);
+        if (el('pendingOrdersCount')) el('pendingOrdersCount').textContent = Pending;
+        if (el('processingOrdersCount')) el('processingOrdersCount').textContent = Processing;
+        if (el('shippedOrdersCount')) el('shippedOrdersCount').textContent = Shipped;
+        if (el('deliveredOrdersCount')) el('deliveredOrdersCount').textContent = Delivered;
+    }
+
+    // Compute counts by status from all orders
+    getStatusCounts() {
+        const counts = { Pending: 0, Processing: 0, Shipped: 0, Delivered: 0 };
+        (this.orders || []).forEach(o => {
+            const s = o.status || 'Pending';
+            if (counts[s] == null) counts[s] = 0;
+            counts[s]++;
+        });
+        return counts;
     }
 
     updatePagination() {
@@ -669,6 +706,12 @@ function showCreateOrderModal() {
     const form = document.getElementById('orderForm');
     form.reset();
     form.dataset.mode = 'create';
+    // Ensure product list is loaded and reset selection
+    if (typeof ensureProductsLoaded === 'function') {
+        ensureProductsLoaded();
+        const sel = document.getElementById('productSelect');
+        if (sel) sel.value = '';
+    }
     document.getElementById('orderModal').style.display = 'flex';
 }
 
@@ -765,9 +808,14 @@ async function submitOrder(event) {
     submitBtn.setAttribute('data-loading', 'true');
 
     try {
+        const productEl = document.getElementById('productSelect') || document.getElementById('product');
+        const productVal = (productEl?.value || '').trim();
+        if (!productVal) {
+            throw new Error('Please select a product');
+        }
         const orderData = {
             customerName: document.getElementById('customerName').value.trim(),
-            product: document.getElementById('product').value.trim(),
+            product: productVal,
             quantity: parseInt(document.getElementById('quantity').value),
             price: document.getElementById('price').value === '' ? null : parseFloat(document.getElementById('price').value),
             status: document.getElementById('status').value,
@@ -829,7 +877,17 @@ function editOrder(orderId) {
     form.dataset.mode = 'edit';
     document.getElementById('customerName').value = order.customerName || '';
     document.getElementById('orderNumber').value = order.orderNumber || '';
-    document.getElementById('product').value = order.product || '';
+    // Ensure products are loaded and preselect the product
+    if (typeof ensureProductsLoaded === 'function') {
+        ensureProductsLoaded().then(() => {
+            if (typeof populateProductSelect === 'function') {
+                populateProductSelect(order.product || '');
+            } else {
+                const sel = document.getElementById('productSelect');
+                if (sel) sel.value = order.product || '';
+            }
+        });
+    }
     document.getElementById('quantity').value = order.quantity || 1;
     document.getElementById('price').value = order.price || '';
     document.getElementById('status').value = order.status || 'Pending';
@@ -893,5 +951,49 @@ function showToast(message, type = 'info') {
 document.addEventListener('DOMContentLoaded', function() {
     orderManager = new OrderManager();
     console.log('Advanced Order Management System initialized');
+    if (typeof ensureProductsLoaded === 'function') {
+        ensureProductsLoaded().catch(() => {});
+    }
 });
+</script>
+
+<!-- Product loader for order modal -->
+<script>
+let __inventoryProducts = null; // cached finished goods
+function isMaterialsCat(c) { return /^(materials|raw\s*materials?)$/i.test(String(c||'')); }
+function isPackingCat(c) { return /^packing\s*materials?$/i.test(String(c||'')); }
+
+async function ensureProductsLoaded() {
+    if (Array.isArray(__inventoryProducts)) { populateProductSelect(); return __inventoryProducts; }
+    try {
+        const res = await fetch('/inventory/api');
+        if (!res.ok) throw new Error('Failed to load inventory');
+        const items = await res.json();
+        __inventoryProducts = items.filter(i => !(isMaterialsCat(i.category) || isPackingCat(i.category)));
+        populateProductSelect();
+        return __inventoryProducts;
+    } catch (e) {
+        console.error(e);
+        if (typeof showToast === 'function') showToast('Failed to load products. Add Products in Inventory first.', 'error');
+        return [];
+    }
+}
+
+function populateProductSelect(selectedName = '') {
+    const sel = document.getElementById('productSelect');
+    if (!sel) return;
+    const products = Array.isArray(__inventoryProducts) ? __inventoryProducts : [];
+    const opts = ['<option value="">— Select product —</option>'].concat(
+        products.map(p => `<option value="${(p.name || '').replace(/"/g,'&quot;')}">${p.name} (${p.sku || 'SKU'})</option>`)
+    );
+    sel.innerHTML = opts.join('');
+    if (selectedName) {
+        sel.value = selectedName;
+        if (sel.value !== selectedName) {
+            const lower = selectedName.toLowerCase();
+            const match = Array.from(sel.options).find(o => o.value.toLowerCase() === lower);
+            if (match) sel.value = match.value;
+        }
+    }
+}
 </script>

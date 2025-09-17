@@ -36,3 +36,233 @@
 {"ts":"2025-09-15T18:40:01.477Z","ip":"::1","type":"gemini","prompt":"the price cost is 7.00 selling at depending on finish product.","usage":{"model":"gemini-1.5-flash"}}
 {"ts":"2025-09-15T18:40:14.731Z","ip":"::1","type":"gemini","prompt":"we are just adding material","usage":{"model":"gemini-1.5-flash"}}
 {"ts":"2025-09-15T18:40:23.907Z","ip":"::1","type":"gemini","prompt":"white shirts","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T19:10:16.335Z","ip":"::1","type":"gemini","prompt":"add five white shirts to inventory size large","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T19:10:33.754Z","ip":"::1","type":"gemini","prompt":"the prices are $7 each in a threshold is about 10","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T19:15:23.315Z","ip":"::1","type":"gemini","prompt":"hi","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T19:15:31.262Z","ip":"::1","type":"gemini","prompt":"what can you do","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T19:15:43.464Z","ip":"::1","type":"gemini","prompt":"Help me understand voice commands and how to use voice control features","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T19:16:02.905Z","ip":"::1","type":"gemini","prompt":"show me item shirts","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T19:16:16.291Z","ip":"::1","type":"gemini","prompt":"can you show me images","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T19:16:22.922Z","ip":"::1","type":"gemini","prompt":"spiderman","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T19:16:28.074Z","ip":"::1","type":"gemini","prompt":"yes","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T19:16:39.426Z","ip":"::1","type":"gemini","prompt":"create a spiderman shirt","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T19:17:11.805Z","ip":"::1","type":"gemini","prompt":"can you show me the image","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T19:17:17.702Z","ip":"::1","type":"gemini","prompt":"spiderman","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T19:17:22.428Z","ip":"::1","type":"gemini","prompt":"shirt","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T19:17:37.805Z","ip":"::1","type":"gemini","prompt":"Show me inventory summary","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T19:17:51.349Z","ip":"::1","type":"gemini","prompt":"none of that is ture","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T19:18:04.318Z","ip":"::1","type":"gemini","prompt":"your data is untrue","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T19:18:35.472Z","ip":"::1","type":"gemini","prompt":"all your data that you have is inaccurate","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T19:19:44.686Z","ip":"::1","type":"gemini_enhanced","prompt":"are you smarter","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T19:20:01.586Z","ip":"::1","type":"gemini_enhanced","prompt":"can you add inventory","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T19:20:22.995Z","ip":"::1","type":"gemini_enhanced","prompt":"add white shirt to material","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T19:20:51.734Z","ip":"::1","type":"gemini_enhanced","prompt":"we dont have a product for it its just raw material","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T19:21:48.871Z","ip":"::1","type":"gemini_enhanced","prompt":"fill in the blank","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T19:22:11.897Z","ip":"::1","type":"direct_action","prompt":"add 50 white shirts to inventory as raw material","result":{"text":"✅ Created inventory item: white shirts (WHITE-SHIRTS-1891) with 50 units","executed":true,"action":{"type":"create_inventory","payload":{"name":"white shirts","sku":"WHITE-SHIRTS-1891","stock":50,"price":0,"status":"active","threshold":5}}}}
+{"ts":"2025-09-15T19:32:40.538Z","ip":"::1","type":"gemini_enhanced","prompt":"lets go it","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T19:33:07.086Z","ip":"::1","type":"gemini_enhanced","prompt":"lets brainstorm a product","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T20:19:57.502Z","ip":"::1","type":"gemini_enhanced","prompt":"we are making a rick and morty product line","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T20:20:34.178Z","ip":"::1","type":"gemini_enhanced","prompt":"we are going to add shirts only","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T20:21:07.844Z","ip":"::1","type":"gemini_enhanced","prompt":"fill in the blank","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T20:22:03.015Z","ip":"::1","type":"gemini_enhanced","prompt":"add 50 large black t-shirts as raw material for product creation","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T20:23:52.743Z","ip":"::1","type":"gemini_enhanced","prompt":"add 50 large black t-shirts as raw material for product creation, add a sku for me and the price is 20 a shirt it was bought from ninjatransfer.com","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T20:24:24.603Z","ip":"::1","type":"gemini_enhanced","prompt":"confirm","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T20:26:18.109Z","ip":"::1","type":"gemini_error","prompt":"add 50 large black t-shirts as raw material for product creation, generate a sku for me and the price is 20 a shirt it was bought from ninjatransfer.com","error":"Request failed with status code 429"}
+{"ts":"2025-09-15T20:26:18.118Z","ip":"::1","type":"offline","prompt":"add 50 large black t-shirts as raw material for product creation, generate a sku for me and the price is 20 a shirt it was bought from ninjatransfer.com"}
+{"ts":"2025-09-15T20:27:07.351Z","ip":"::1","type":"gemini_error","prompt":"dd 50 large black t-shirts as raw material for product creation, generate a sku for me and the price is 20 a shirt it was bought from ninjatransfer.com","error":"timeout of 15000ms exceeded"}
+{"ts":"2025-09-15T20:27:07.361Z","ip":"::1","type":"offline","prompt":"dd 50 large black t-shirts as raw material for product creation, generate a sku for me and the price is 20 a shirt it was bought from ninjatransfer.com"}
+{"ts":"2025-09-15T20:37:21.930Z","ip":"::1","type":"gemini_enhanced","prompt":"hi","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T20:37:46.588Z","ip":"::1","type":"gemini_error","prompt":"add 50 large black t-shirts as raw material for product creation, generate a sku for me and the price is 20 a shirt it was bought from ninjatransfer.com","error":"Request failed with status code 429"}
+{"ts":"2025-09-15T20:37:46.598Z","ip":"::1","type":"offline","prompt":"add 50 large black t-shirts as raw material for product creation, generate a sku for me and the price is 20 a shirt it was bought from ninjatransfer.com"}
+{"ts":"2025-09-15T20:38:07.987Z","ip":"::1","type":"gemini_error","prompt":"add 50 large black t-shirts as raw material for product creation, generate a sku for me and the price is 20 a shirt it was bought from ninjatransfer.com","error":"timeout of 15000ms exceeded"}
+{"ts":"2025-09-15T20:38:07.996Z","ip":"::1","type":"offline","prompt":"add 50 large black t-shirts as raw material for product creation, generate a sku for me and the price is 20 a shirt it was bought from ninjatransfer.com"}
+{"ts":"2025-09-15T20:39:56.158Z","ip":"::1","type":"gemini_error","prompt":"hi","error":"Request failed with status code 429"}
+{"ts":"2025-09-15T20:39:56.167Z","ip":"::1","type":"offline","prompt":"hi"}
+{"ts":"2025-09-15T20:40:03.896Z","ip":"::1","type":"gemini_error","prompt":"hi","error":"Request failed with status code 429"}
+{"ts":"2025-09-15T20:40:03.903Z","ip":"::1","type":"offline","prompt":"hi"}
+{"ts":"2025-09-15T20:40:52.631Z","ip":"::1","type":"gemini_error","prompt":"hi","error":"Request failed with status code 429"}
+{"ts":"2025-09-15T20:40:52.639Z","ip":"::1","type":"offline","prompt":"hi"}
+{"ts":"2025-09-15T20:42:15.756Z","ip":"::1","type":"gemini_error","prompt":"Show me inventory summary","error":"Request failed with status code 429"}
+{"ts":"2025-09-15T20:42:15.765Z","ip":"::1","type":"local_enhanced","prompt":"Show me inventory summary","result":{"totalSkus":1,"totalUnits":50,"lowStock":0,"outOfStock":0,"inventoryValue":350,"topLow":[]}}
+{"ts":"2025-09-15T20:42:19.987Z","ip":"::1","type":"gemini_error","prompt":"What are my pending orders?","error":"Request failed with status code 429"}
+{"ts":"2025-09-15T20:42:19.995Z","ip":"::1","type":"local_enhanced","prompt":"What are my pending orders?","result":{"counts":{"pending":2,"processing":0,"delivered":0},"topPending":[{"orderNumber":"ORD-1757952168986","id":"local-1757952168987-aq5dsz","customer":"John Smith","total":20},{"orderNumber":"ORD-1757905417528","id":"local-1757905417529-5hj12e","customer":"John Smith","total":149.99}]}}
+{"ts":"2025-09-15T20:42:30.053Z","ip":"::1","type":"gemini_error","prompt":"add inventory","error":"Request failed with status code 429"}
+{"ts":"2025-09-15T20:42:30.063Z","ip":"::1","type":"offline","prompt":"add inventory"}
+{"ts":"2025-09-15T20:42:45.120Z","ip":"::1","type":"gemini_error","prompt":"Show inventory status","error":"Request failed with status code 429"}
+{"ts":"2025-09-15T20:42:45.129Z","ip":"::1","type":"offline","prompt":"Show inventory status"}
+{"ts":"2025-09-15T20:42:47.428Z","ip":"::1","type":"gemini_error","prompt":"Generate sales report","error":"Request failed with status code 429"}
+{"ts":"2025-09-15T20:42:47.438Z","ip":"::1","type":"offline","prompt":"Generate sales report"}
+{"ts":"2025-09-15T20:42:48.573Z","ip":"::1","type":"gemini_error","prompt":"Show low stock items","error":"Request failed with status code 429"}
+{"ts":"2025-09-15T20:42:48.584Z","ip":"::1","type":"offline","prompt":"Show low stock items"}
+{"ts":"2025-09-15T20:42:50.214Z","ip":"::1","type":"gemini_error","prompt":"Show me inventory summary","error":"Request failed with status code 429"}
+{"ts":"2025-09-15T20:42:50.223Z","ip":"::1","type":"local_enhanced","prompt":"Show me inventory summary","result":{"totalSkus":1,"totalUnits":50,"lowStock":0,"outOfStock":0,"inventoryValue":350,"topLow":[]}}
+{"ts":"2025-09-15T20:46:55.592Z","ip":"::1","type":"gemini_error","prompt":"hi","error":"Request failed with status code 429"}
+{"ts":"2025-09-15T20:46:55.602Z","ip":"::1","type":"offline","prompt":"hi"}
+{"ts":"2025-09-15T20:50:11.445Z","ip":"::1","type":"gemini_enhanced","prompt":"Show me inventory summary","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T20:50:31.871Z","ip":"::1","type":"gemini_enhanced","prompt":"t shirts","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T20:50:38.079Z","ip":"::1","type":"gemini_error","prompt":"hi","error":"Request failed with status code 429"}
+{"ts":"2025-09-15T20:50:38.086Z","ip":"::1","type":"offline","prompt":"hi"}
+{"ts":"2025-09-15T20:50:55.804Z","ip":"::1","type":"gemini_enhanced","prompt":"i need to add inventory","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T20:51:12.633Z","ip":"::1","type":"direct_action","prompt":"add 20 black shirts to inventory","result":{"text":"✅ Created inventory item: black shirts (APP-BLACK-SHIRTS-1VDC) with 20 units (Defaults applied: SKU APP-BLACK-SHIRTS-1VDC, $15.00, category Apparel, threshold 3)","executed":true,"action":{"type":"create_inventory","payload":{"name":"black shirts","sku":"APP-BLACK-SHIRTS-1VDC","stock":20,"price":15,"status":"active","threshold":3,"category":"Apparel"},"endpoint":"/inventory/api","method":"POST"}}}
+{"ts":"2025-09-15T20:51:55.244Z","ip":"::1","type":"gemini_error","prompt":"add 20 white medium t shirts","error":"Request failed with status code 429"}
+{"ts":"2025-09-15T20:51:55.252Z","ip":"::1","type":"offline","prompt":"add 20 white medium t shirts"}
+{"ts":"2025-09-15T20:52:12.909Z","ip":"::1","type":"gemini_error","prompt":"add inventory","error":"Request failed with status code 429"}
+{"ts":"2025-09-15T20:52:12.919Z","ip":"::1","type":"offline","prompt":"add inventory"}
+{"ts":"2025-09-15T20:52:35.261Z","ip":"::1","type":"gemini_error","prompt":"add order","error":"Request failed with status code 429"}
+{"ts":"2025-09-15T20:52:35.272Z","ip":"::1","type":"offline","prompt":"add order"}
+{"ts":"2025-09-15T20:52:40.046Z","ip":"::1","type":"gemini_error","prompt":"lets add order","error":"Request failed with status code 429"}
+{"ts":"2025-09-15T20:52:40.055Z","ip":"::1","type":"offline","prompt":"lets add order"}
+{"ts":"2025-09-15T21:03:55.093Z","ip":"::1","type":"offline","prompt":"ready"}
+{"ts":"2025-09-15T21:04:04.858Z","ip":"::1","type":"offline","prompt":"create product"}
+{"ts":"2025-09-15T21:04:12.966Z","ip":"::1","type":"offline","prompt":"add inventory"}
+{"ts":"2025-09-15T21:04:15.274Z","ip":"::1","type":"offline","prompt":"add"}
+{"ts":"2025-09-15T21:04:19.739Z","ip":"::1","type":"local_enhanced","prompt":"Show me inventory summary","result":{"totalSkus":0,"totalUnits":0,"lowStock":0,"outOfStock":0,"inventoryValue":0,"topLow":[]}}
+{"ts":"2025-09-15T21:04:22.215Z","ip":"::1","type":"local_enhanced","prompt":"What are my pending orders?","result":{"counts":{"pending":2,"processing":0,"delivered":0},"topPending":[{"orderNumber":"ORD-1757952168986","id":"local-1757952168987-aq5dsz","customer":"John Smith","total":20},{"orderNumber":"ORD-1757905417528","id":"local-1757905417529-5hj12e","customer":"John Smith","total":149.99}]}}
+{"ts":"2025-09-15T21:04:25.018Z","ip":"::1","type":"offline","prompt":"Generate sales report"}
+{"ts":"2025-09-15T21:04:26.541Z","ip":"::1","type":"offline","prompt":"Help me optimize inventory"}
+{"ts":"2025-09-15T21:04:29.121Z","ip":"::1","type":"local_enhanced","prompt":"What are my pending orders?","result":{"counts":{"pending":2,"processing":0,"delivered":0},"topPending":[{"orderNumber":"ORD-1757952168986","id":"local-1757952168987-aq5dsz","customer":"John Smith","total":20},{"orderNumber":"ORD-1757905417528","id":"local-1757905417529-5hj12e","customer":"John Smith","total":149.99}]}}
+{"ts":"2025-09-15T21:12:34.961Z","ip":"::1","type":"local_enhanced","prompt":"What are my pending orders?","result":{"counts":{"pending":2,"processing":0,"delivered":0},"topPending":[{"orderNumber":"ORD-1757952168986","id":"local-1757952168987-aq5dsz","customer":"John Smith","total":20},{"orderNumber":"ORD-1757905417528","id":"local-1757905417529-5hj12e","customer":"John Smith","total":149.99}]}}
+{"ts":"2025-09-15T21:12:39.150Z","ip":"::1","type":"offline","prompt":"hi"}
+{"ts":"2025-09-15T22:14:22.099Z","ip":"::1","type":"offline","prompt":"how are you"}
+{"ts":"2025-09-15T22:14:33.694Z","ip":"::1","type":"offline","prompt":"create inventory"}
+{"ts":"2025-09-15T22:14:38.223Z","ip":"::1","type":"local_enhanced","prompt":"Show me inventory summary","result":{"totalSkus":5,"totalUnits":224,"lowStock":0,"outOfStock":0,"inventoryValue":403.40999999999997,"topLow":[]}}
+{"ts":"2025-09-15T22:14:43.662Z","ip":"::1","type":"offline","prompt":"offline"}
+{"ts":"2025-09-15T22:14:50.958Z","ip":"::1","type":"offline","prompt":"create product"}
+{"ts":"2025-09-15T22:26:19.444Z","ip":"::1","type":"offline","prompt":"Show inventory status"}
+{"ts":"2025-09-15T22:32:18.939Z","ip":"::1","type":"gemini_enhanced","prompt":"Give me business insights and recommendations to improve my store performance","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T22:32:44.476Z","ip":"::1","type":"local_enhanced","prompt":"how many black shirts do we have?"}
+{"ts":"2025-09-15T22:33:05.494Z","ip":"::1","type":"offline","prompt":"add 20 black shirts to materials"}
+{"ts":"2025-09-15T22:33:15.239Z","ip":"::1","type":"offline","prompt":"add inventory"}
+{"ts":"2025-09-15T22:38:06.446Z","ip":"::1","type":"offline","prompt":"add 50 black t-shirts"}
+{"ts":"2025-09-15T22:38:13.932Z","ip":"::1","type":"local_enhanced","prompt":"inventory summary","result":{"totalSkus":5,"totalUnits":224,"lowStock":0,"outOfStock":0,"inventoryValue":403.40999999999997,"topLow":[]}}
+{"ts":"2025-09-15T22:38:22.527Z","ip":"::1","type":"gemini_enhanced","prompt":"generate design for spider logo","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T22:39:15.674Z","ip":"::1","type":"gemini_enhanced","prompt":"just add the shirt","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T22:39:31.400Z","ip":"::1","type":"offline","prompt":"add 20 black shirts"}
+{"ts":"2025-09-15T22:40:02.478Z","ip":"::1","type":"gemini_error","prompt":"Generate sales report","error":"Request failed with status code 429"}
+{"ts":"2025-09-15T22:40:02.486Z","ip":"::1","type":"offline","prompt":"Generate sales report"}
+{"ts":"2025-09-15T22:40:03.513Z","ip":"::1","type":"gemini_error","prompt":"Help me optimize inventory","error":"Request failed with status code 429"}
+{"ts":"2025-09-15T22:40:03.523Z","ip":"::1","type":"offline","prompt":"Help me optimize inventory"}
+{"ts":"2025-09-15T22:40:04.456Z","ip":"::1","type":"local_enhanced","prompt":"Show me inventory summary","result":{"totalSkus":5,"totalUnits":224,"lowStock":0,"outOfStock":0,"inventoryValue":403.40999999999997,"topLow":[]}}
+{"ts":"2025-09-15T22:40:10.202Z","ip":"::1","type":"local_enhanced","prompt":"order status","result":{"counts":{"pending":2,"processing":0,"delivered":0},"topPending":[{"orderNumber":"ORD-1757952168986","id":"local-1757952168987-aq5dsz","customer":"John Smith","total":20},{"orderNumber":"ORD-1757905417528","id":"local-1757905417529-5hj12e","customer":"John Smith","total":149.99}]}}
+{"ts":"2025-09-15T23:15:35.361Z","ip":"::1","type":"gemini_error","prompt":"hi","error":"Request failed with status code 429"}
+{"ts":"2025-09-15T23:15:35.371Z","ip":"::1","type":"offline","prompt":"hi"}
+{"ts":"2025-09-15T23:15:53.688Z","ip":"::1","type":"gemini_error","prompt":"Help me optimize inventory","error":"Request failed with status code 429"}
+{"ts":"2025-09-15T23:15:53.696Z","ip":"::1","type":"offline","prompt":"Help me optimize inventory"}
+{"ts":"2025-09-15T23:15:55.011Z","ip":"::1","type":"gemini_error","prompt":"Generate sales report","error":"Request failed with status code 429"}
+{"ts":"2025-09-15T23:15:55.020Z","ip":"::1","type":"offline","prompt":"Generate sales report"}
+{"ts":"2025-09-15T23:15:56.890Z","ip":"::1","type":"gemini_enhanced","prompt":"What are my pending orders?","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-15T23:15:58.812Z","ip":"::1","type":"local_enhanced","prompt":"Show me inventory summary","result":{"totalSkus":5,"totalUnits":224,"lowStock":0,"outOfStock":0,"inventoryValue":403.40999999999997,"topLow":[]}}
+{"ts":"2025-09-15T23:18:21.736Z","ip":"::1","type":"gemini_error","prompt":"Help me optimize inventory","error":"Request failed with status code 429"}
+{"ts":"2025-09-15T23:18:21.746Z","ip":"::1","type":"offline","prompt":"Help me optimize inventory"}
+{"ts":"2025-09-15T23:25:54.406Z","ip":"::1","type":"gemini_error","prompt":"Help me optimize inventory","error":"Request failed with status code 429"}
+{"ts":"2025-09-15T23:25:54.419Z","ip":"::1","type":"offline","prompt":"Help me optimize inventory"}
+{"ts":"2025-09-15T23:25:57.668Z","ip":"::1","type":"gemini_error","prompt":"Generate sales report","error":"Request failed with status code 429"}
+{"ts":"2025-09-15T23:25:57.677Z","ip":"::1","type":"offline","prompt":"Generate sales report"}
+{"ts":"2025-09-15T23:25:59.315Z","ip":"::1","type":"gemini_error","prompt":"What are my pending orders?","error":"Request failed with status code 429"}
+{"ts":"2025-09-15T23:25:59.329Z","ip":"::1","type":"local_enhanced","prompt":"What are my pending orders?","result":{"counts":{"pending":2,"processing":0,"delivered":0},"topPending":[{"orderNumber":"ORD-1757952168986","id":"local-1757952168987-aq5dsz","customer":"John Smith","total":20},{"orderNumber":"ORD-1757905417528","id":"local-1757905417529-5hj12e","customer":"John Smith","total":149.99}]}}
+{"ts":"2025-09-15T23:26:03.330Z","ip":"::1","type":"offline","prompt":"remove"}
+{"ts":"2025-09-15T23:26:49.219Z","ip":"::1","type":"offline","prompt":"remove"}
+{"ts":"2025-09-16T00:11:24.190Z","ip":"::1","type":"gemini_error","prompt":"are u live","error":"Request failed with status code 429"}
+{"ts":"2025-09-16T00:11:24.198Z","ip":"::1","type":"offline","prompt":"are u live"}
+{"ts":"2025-09-16T00:42:52.510Z","ip":"::1","type":"gemini_error","prompt":"hi","error":"Request failed with status code 429"}
+{"ts":"2025-09-16T00:42:54.202Z","ip":"::1","type":"openai_enhanced","prompt":"hi","usage":{"model":"gpt-4o-mini"}}
+{"ts":"2025-09-16T00:43:01.590Z","ip":"::1","type":"gemini_error","prompt":"can you help me","error":"Request failed with status code 429"}
+{"ts":"2025-09-16T00:43:05.180Z","ip":"::1","type":"openai_enhanced","prompt":"can you help me","usage":{"model":"gpt-4o-mini"}}
+{"ts":"2025-09-16T00:43:20.217Z","ip":"::1","type":"offline","prompt":"add 40 pink medium"}
+{"ts":"2025-09-16T00:43:25.258Z","ip":"::1","type":"gemini_enhanced","prompt":"help","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T00:43:37.163Z","ip":"::1","type":"offline","prompt":"add 40 pink shirts"}
+{"ts":"2025-09-16T00:44:50.493Z","ip":"::1","type":"local_enhanced","prompt":"how many shirts do we have"}
+{"ts":"2025-09-16T01:07:20.384Z","ip":"::1","type":"gemini_error","prompt":"hi","error":"Request failed with status code 429"}
+{"ts":"2025-09-16T01:07:20.407Z","ip":"::1","type":"offline","prompt":"hi"}
+{"ts":"2025-09-16T01:57:14.611Z","ip":"::1","type":"gemini_enhanced","prompt":"hi","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T01:57:21.540Z","ip":"::1","type":"gemini_error","prompt":"are you live","error":"Request failed with status code 429"}
+{"ts":"2025-09-16T01:57:21.549Z","ip":"::1","type":"offline","prompt":"are you live"}
+{"ts":"2025-09-16T01:57:25.470Z","ip":"::1","type":"gemini_enhanced","prompt":"hello","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T01:57:29.584Z","ip":"::1","type":"gemini_error","prompt":"greeting","error":"Request failed with status code 429"}
+{"ts":"2025-09-16T01:57:29.592Z","ip":"::1","type":"offline","prompt":"greeting"}
+{"ts":"2025-09-16T01:57:54.881Z","ip":"::1","type":"gemini_error","prompt":"hi","error":"Request failed with status code 429"}
+{"ts":"2025-09-16T01:57:54.890Z","ip":"::1","type":"offline","prompt":"hi"}
+{"ts":"2025-09-16T04:45:43.220Z","ip":"::1","type":"offline","prompt":"add inventory"}
+{"ts":"2025-09-16T04:45:53.420Z","ip":"::1","type":"gemini_enhanced","prompt":"Give me business insights and recommendations to improve my store performance","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T04:46:28.466Z","ip":"::1","type":"gemini_enhanced","prompt":"Show me detailed analytics and performance metrics for my store","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T04:46:46.845Z","ip":"::1","type":"gemini_enhanced","prompt":"What are my pending orders?","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T05:06:14.939Z","ip":"::1","type":"gemini_enhanced","prompt":"What are my pending orders?","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T05:06:42.692Z","ip":"::1","type":"gemini_error","prompt":"Show low stock items","error":"Request failed with status code 429"}
+{"ts":"2025-09-16T05:06:42.701Z","ip":"::1","type":"offline","prompt":"Show low stock items"}
+{"ts":"2025-09-16T05:19:07.627Z","ip":"::1","type":"gemini_error","prompt":"hi","error":"Request failed with status code 429"}
+{"ts":"2025-09-16T05:19:07.792Z","ip":"::1","type":"openai_error","prompt":"hi","error":"Request failed with status code 401"}
+{"ts":"2025-09-16T05:19:07.803Z","ip":"::1","type":"offline","prompt":"hi"}
+{"ts":"2025-09-16T05:25:06.654Z","ip":"::1","type":"gemini_error","prompt":"hi","error":"Request failed with status code 429"}
+{"ts":"2025-09-16T05:25:06.974Z","ip":"::1","type":"openai_error","prompt":"hi","error":"Request failed with status code 401"}
+{"ts":"2025-09-16T05:25:06.986Z","ip":"::1","type":"offline","prompt":"hi"}
+{"ts":"2025-09-16T05:29:20.512Z","ip":"::1","type":"gemini_error","prompt":"brainstorm","error":"Request failed with status code 429"}
+{"ts":"2025-09-16T05:29:20.629Z","ip":"::1","type":"openai_error","prompt":"brainstorm","error":"Request failed with status code 401"}
+{"ts":"2025-09-16T05:29:20.638Z","ip":"::1","type":"offline","prompt":"brainstorm"}
+{"ts":"2025-09-16T05:33:24.294Z","ip":"::1","type":"gemini_error","prompt":"hi","error":"Request failed with status code 429"}
+{"ts":"2025-09-16T05:33:24.787Z","ip":"::1","type":"openai_error","prompt":"hi","error":"Request failed with status code 401"}
+{"ts":"2025-09-16T05:33:24.795Z","ip":"::1","type":"offline","prompt":"hi"}
+{"ts":"2025-09-16T05:33:41.256Z","ip":"::1","type":"gemini_error","prompt":"are you offline still","error":"Request failed with status code 429"}
+{"ts":"2025-09-16T05:33:41.372Z","ip":"::1","type":"openai_error","prompt":"are you offline still","error":"Request failed with status code 401"}
+{"ts":"2025-09-16T05:33:41.381Z","ip":"::1","type":"offline","prompt":"are you offline still"}
+{"ts":"2025-09-16T05:34:25.106Z","ip":"::1","type":"gemini_error","prompt":"hi","error":"Request failed with status code 429"}
+{"ts":"2025-09-16T05:34:25.290Z","ip":"::1","type":"openai_error","prompt":"hi","error":"Request failed with status code 401"}
+{"ts":"2025-09-16T05:34:25.300Z","ip":"::1","type":"offline","prompt":"hi"}
+{"ts":"2025-09-16T05:42:58.244Z","ip":"::1","type":"gemini_error","prompt":"hi","error":"Request failed with status code 429"}
+{"ts":"2025-09-16T05:42:58.357Z","ip":"::1","type":"openai_error","prompt":"hi","error":"Request failed with status code 401"}
+{"ts":"2025-09-16T05:42:58.452Z","ip":"::1","type":"fallback_llm_error","prompt":"hi","error":"Request failed with status code 429"}
+{"ts":"2025-09-16T05:42:58.461Z","ip":"::1","type":"offline","prompt":"hi"}
+{"ts":"2025-09-16T14:41:26.859Z","ip":"::1","type":"gemini_enhanced","prompt":"hi","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T14:41:46.319Z","ip":"::1","type":"gemini_enhanced","prompt":"are you live","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T14:42:34.454Z","ip":"::1","type":"gemini_enhanced_fallback","prompt":"add 6 black robes to our materials"}
+{"ts":"2025-09-16T14:43:10.553Z","ip":"::1","type":"gemini_enhanced","prompt":"i dont see it","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T14:44:41.087Z","ip":"::1","type":"gemini_enhanced","prompt":"i want you to generate the sku and the price will be 30 and the cost is 10 and threshold is 5","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T14:44:59.434Z","ip":"::1","type":"gemini_enhanced","prompt":"perfect","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T14:45:23.975Z","ip":"::1","type":"gemini_enhanced","prompt":"Item: Black Robes\nGenerated SKU: BR-BLK-001\nQuantity: 6\nCost Price: $10\nSelling Price: $30\nReorder Threshold: 5","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T14:45:37.076Z","ip":"::1","type":"gemini_enhanced_fallback","prompt":"add Item: Black Robes\nGenerated SKU: BR-BLK-001\nQuantity: 6\nCost Price: $10\nSelling Price: $30\nReorder Threshold: 5"}
+{"ts":"2025-09-16T17:18:00.125Z","ip":"::1","type":"gemini_enhanced","prompt":"hi","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T17:18:09.643Z","ip":"::1","type":"gemini_enhanced","prompt":"lets create a product","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T17:18:26.169Z","ip":"::1","type":"gemini_enhanced_fallback","prompt":"add everything for me"}
+{"ts":"2025-09-16T17:19:04.077Z","ip":"::1","type":"gemini_enhanced","prompt":"spiderman black shirt quantity 20 price 40","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T17:19:34.444Z","ip":"::1","type":"gemini_enhanced","prompt":"yes per shirt","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T17:19:54.981Z","ip":"::1","type":"gemini_enhanced","prompt":"i want you to create a description","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T17:20:09.213Z","ip":"::1","type":"gemini_enhanced","prompt":"come up with a cost","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T17:20:14.013Z","ip":"::1","type":"gemini_enhanced_fallback","prompt":"add now"}
+{"ts":"2025-09-16T17:20:35.061Z","ip":"::1","type":"gemini_enhanced","prompt":"yes add item to inventory products","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T17:20:43.602Z","ip":"::1","type":"gemini_enhanced","prompt":"comfirm","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T17:20:57.754Z","ip":"::1","type":"gemini_enhanced","prompt":"CONFIRM","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T17:21:33.601Z","ip":"::1","type":"gemini_enhanced","prompt":"i dont see the product in my inventory","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T17:28:56.705Z","ip":"::1","type":"gemini_enhanced","prompt":"Give me business insights and recommendations to improve my store performance","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T17:29:39.815Z","ip":"::1","type":"local_enhanced","prompt":"add 25 to SKU-ABC-123"}
+{"ts":"2025-09-16T17:41:31.323Z","ip":"::1","type":"gemini_error","prompt":"Show low stock items","error":"Request failed with status code 503"}
+{"ts":"2025-09-16T17:41:43.021Z","ip":"::1","type":"gemini_enhanced_fallback","prompt":"Show low stock items"}
+{"ts":"2025-09-16T17:42:13.725Z","ip":"::1","type":"gemini_enhanced_fallback","prompt":"Add packing material 6x9 Poly Mailer dimensions 6x9 in stock 250"}
+{"ts":"2025-09-16T17:53:10.778Z","ip":"local","type":"direct_action","prompt":"add packing material 6x9 Poly Mailer dimensions 6x9 in stock 250 price 0.12","result":{"text":"📦 Added packing material \"6x9 poly mailer\" (PKG-6X9-POLY-MAILER) — 6, stock 0.","executed":true,"data":{"id":"local-1758045190771-5u3vsl","sku":"PKG-6X9-POLY-MAILER"}}}
+{"ts":"2025-09-16T17:53:36.771Z","ip":"local","type":"direct_action","prompt":"add packing material 6x9 Poly Mailer dimensions 6x9 in stock 250 price 0.12","result":{"text":"✅ Updated price for PKG-6X9-POLY-MAILER to $0.12.","executed":true}}
+{"ts":"2025-09-16T17:53:36.841Z","ip":"local","type":"direct_action","prompt":"add material dtf film stock 200 price 0.45","result":{"text":"✅ Updated price for PKG-6X9-POLY-MAILER to $0.45.","executed":true}}
+{"ts":"2025-09-16T17:53:36.916Z","ip":"local","type":"direct_action","prompt":"create product Space T-Shirt price 25 qty 10 using materials dtf film packaging poly mailer","result":{"text":"✅ Updated price for PKG-6X9-POLY-MAILER to $25.00.","executed":true}}
+{"ts":"2025-09-16T17:54:02.488Z","ip":"::1","type":"gemini_error","prompt":"hello","error":"Request failed with status code 503"}
+{"ts":"2025-09-16T17:54:13.886Z","ip":"local","type":"direct_action","prompt":"add packing material 6x9 Poly Mailer dimensions 6x9 in stock 250 price 0.12","result":{"text":"📦 Added packing material \"6x9 poly mailer\" (PKG-6X9-POLY-MAILER-001) — 6, stock 0.","executed":true,"data":{"id":"local-1758045253874-zvthif","sku":"PKG-6X9-POLY-MAILER-001"}}}
+{"ts":"2025-09-16T17:54:13.971Z","ip":"local","type":"direct_action","prompt":"add material dtf film stock 200 price 0.45","result":{"text":"🧩 Added material \"dtf film\" (DTF-FILM) with stock 200.","executed":true,"data":{"id":"local-1758045253962-ubpwc8","sku":"DTF-FILM"}}}
+{"ts":"2025-09-16T17:54:14.065Z","ip":"local","type":"direct_action","prompt":"create product Space T-Shirt price 25 qty 10 using materials dtf film packaging poly mailer","result":{"text":"✅ Created product \"space t-shirt\" (SKU SPACE-T-SHIRT) qty 10 at $25.00 (1 material(s), packaging attached).","executed":true,"data":{"id":"local-1758045254056-uyfg6m","sku":"SPACE-T-SHIRT"}}}
+{"ts":"2025-09-16T17:54:14.390Z","ip":"::1","type":"gemini_enhanced_fallback","prompt":"hello"}
+{"ts":"2025-09-16T17:54:42.498Z","ip":"::1","type":"gemini_enhanced","prompt":"why does it take you so long to think?","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T17:56:10.987Z","ip":"::1","type":"gemini_error","prompt":"lets brainstorm","error":"Request failed with status code 503"}
+{"ts":"2025-09-16T17:56:22.020Z","ip":"::1","type":"gemini_enhanced_fallback","prompt":"lets brainstorm"}
+{"ts":"2025-09-16T17:56:44.721Z","ip":"::1","type":"gemini_enhanced","prompt":"Start a design brainstorming session","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T17:57:19.111Z","ip":"::1","type":"gemini_enhanced","prompt":"its a black batman t-shirt","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T17:57:56.622Z","ip":"::1","type":"gemini_enhanced","prompt":"give me your best mock up","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T17:58:37.902Z","ip":"::1","type":"gemini_enhanced","prompt":"how can i give you the ability to generate images","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T18:05:24.775Z","ip":"local","type":"direct_action","prompt":"create product Test Image Tee price 22 qty 3","result":{"text":"✅ Created product \"test image tee\" (SKU TEST-IMAGE-TEE) qty 3 at $22.00 (image linked).","executed":true,"data":{"id":"local-1758045924765-d3380k","sku":"TEST-IMAGE-TEE"}}}
+{"ts":"2025-09-16T18:06:26.880Z","ip":"::1","type":"gemini_error","prompt":"Generate design mockup for Space T-Shirt","error":"Request failed with status code 503"}
+{"ts":"2025-09-16T18:06:26.890Z","ip":"::1","type":"local_enhanced","prompt":"Generate design mockup for Space T-Shirt"}
+{"ts":"2025-09-16T18:08:21.603Z","ip":"::1","type":"gemini_enhanced","prompt":"Generate design mockup for Space T-Shirt","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T18:27:29.733Z","ip":"::1","type":"gemini_enhanced","prompt":"lets make a shirt out of this","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T18:29:12.598Z","ip":"::1","type":"gemini_enhanced","prompt":"this will go on a black shirt as a full partridge view image","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T18:29:58.476Z","ip":"::1","type":"gemini_enhanced","prompt":"generate design mockup for halloween scary mask t-shirt","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T18:47:46.183Z","ip":"::1","type":"gemini_enhanced","prompt":"Create product from last design at $25 qty 10","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T23:55:41.406Z","ip":"::1","type":"gemini_enhanced_fallback","prompt":"add inventory"}
+{"ts":"2025-09-16T23:56:48.308Z","ip":"::1","type":"gemini_enhanced","prompt":"100 pack heat print vinyl","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-16T23:57:12.763Z","ip":"::1","type":"gemini_error","prompt":"fill in the blank. i will edit if need","error":"Request failed with status code 503"}
+{"ts":"2025-09-16T23:57:12.915Z","ip":"::1","type":"fallback_llm_error","prompt":"fill in the blank. i will edit if need","error":"Request failed with status code 503"}
+{"ts":"2025-09-16T23:57:12.923Z","ip":"::1","type":"offline","prompt":"fill in the blank. i will edit if need"}
+{"ts":"2025-09-16T23:57:31.549Z","ip":"::1","type":"gemini_enhanced","prompt":"tem Name: (e.g., \"Heat Print Vinyl - 100 Pack\") This will be how it appears in our system.\nSKU: (Stock Keeping Unit - a unique identifier, e.g., \"HPV-100\") This is crucial for tracking. If you don't have one, I can generate one.\nPrice per Pack: (e.g., $15.00) The selling price.\nCost per Pack: (Optional, but helpful for profit margin calculations).\nDescription: (Optional, but recommended. E.g., \"High-quality heat transfer vinyl, 100 sheets per pack, suitable for...\")\nSupplier: (Optional, for tracking purposes)","usage":{"model":"gemini-1.5-flash"}}

@@ -25,7 +25,7 @@ app.set('views', path.join(__dirname, 'views'));
 // Production hardening middleware
 app.use(compression());
 
-// Configure helmet with custom CSP for AI assistant functionality
+// Configure helmet with custom CSP for Easly AI functionality
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -126,7 +126,10 @@ const voiceCommands = require('./routes/voiceCommands');
 const ai = require('./routes/ai');
 const orders = require('./routes/orders');
 const inventory = require('./routes/inventory');
-const googleActions = require('./routes/googleActions');
+
+const dialogflowRoute = require('./easly/dialogflowRoute');
+const googleActions = require('./routes/googleActionsEnhanced');
+const oauthRouter = require('./routes/oauth');
 
 // Route mounting
 app.use('/', dashboard);  // Dashboard at root
@@ -136,7 +139,11 @@ app.use('/voice-commands', voiceCommands);
 app.use('/ai', ai);
 app.use('/orders', orders);
 app.use('/inventory', inventory);
+
+// Dialogflow webhook for Google Home integration
+app.use('/voice/dialogflow', dialogflowRoute);
 app.use('/voice/google-actions', googleActions);
+app.use('/oauth', oauthRouter);
 
 // Serve only app-local static files to avoid conflicts with workspace root assets
 // This prevents accidental CSS/JS overrides from ../public or ../src

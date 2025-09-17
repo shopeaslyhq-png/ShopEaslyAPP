@@ -8,7 +8,8 @@ const path = require('path');
 
 const initializeFirebase = () => {
   // Always use local JSON store (no Firestore required)
-  const dataDir = path.join(__dirname, '..', 'data');
+  // Allow override via DATA_DIR for production deployments (e.g., Render Disk)
+  const dataDir = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
   if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 
   const fileFor = (name) => path.join(dataDir, `${name}.json`);

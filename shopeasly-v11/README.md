@@ -47,29 +47,12 @@ shopeasly-v11/
 ## Prerequisites
 - Node.js (v16 or higher)
 - Google Gemini API key
-
-## Installation
-
 1. **Install dependencies:**
    ```bash
-   npm install
-   ```
-
 2. **Configure environment variables:**
    - Copy `.env` and update the `GEMINI_API_KEY` with your actual API key
-   - Get your API key from: https://ai.google.dev/
-
-3. **Start the server:**
    ```bash
    npm start
-   ```
-   or for development:
-   ```bash
-   npm run dev
-   ```
-
-4. **Access the application:**
-   Open your browser and navigate to `http://localhost:3000`
 
 ## Configuration
 
@@ -81,13 +64,7 @@ Create or update the `.env` file with the following variables:
 PORT=3000
 NODE_ENV=development
 
-# Google Gemini AI Configuration
-GEMINI_API_KEY=your_actual_api_key_here
-
 # Optional: Database Configuration
-# DATABASE_URL=
-
-# Optional: Security Configuration
 # JWT_SECRET=
 # SESSION_SECRET=
 ```
@@ -98,9 +75,6 @@ GEMINI_API_KEY=your_actual_api_key_here
    - Create a new project or use existing one
    - Generate an API key
    - Add it to your `.env` file
-
-## Usage
-
 ### Dashboard
 - Access the main dashboard at `http://localhost:3000`
 - View order statistics, recent orders, and quick actions
@@ -127,22 +101,17 @@ GEMINI_API_KEY=your_actual_api_key_here
 - `GET /orders` - Order management
 
 ## Development
-
-### Adding New Features
-1. Create route handlers in the `routes/` directory
 2. Add corresponding views in the `views/` directory
 3. Update the navigation in `views/layout.ejs`
 4. Add any AI logic to the `easly/` directory
 
 ### Styling
 - Main styles are in `public/css/style.css`
-- Uses CSS custom properties for theming
 - Responsive design with mobile-first approach
 
 ### AI Integration
 - AI handlers are in the `easly/` directory
 - Uses Google Gemini API for natural language processing
-- Supports both text and voice input
 
 ## Troubleshooting
 

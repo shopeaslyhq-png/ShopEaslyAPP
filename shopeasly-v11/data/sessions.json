@@ -1,0 +1,30 @@
+{
+  "cli_test": {
+    "lastInventory": {
+      "id": "local-1758045190771-5u3vsl",
+      "name": "6x9 poly mailer",
+      "sku": "PKG-6X9-POLY-MAILER",
+      "price": 25
+    },
+    "expiresAt": 1758045816913,
+    "updatedAt": "2025-09-16T17:53:36.913Z"
+  },
+  "cli_test2": {
+    "lastInventory": {
+      "id": "local-1758045254056-uyfg6m",
+      "name": "space t-shirt",
+      "sku": "SPACE-T-SHIRT"
+    },
+    "expiresAt": 1758045854062,
+    "updatedAt": "2025-09-16T17:54:14.063Z"
+  },
+  "cli_img": {
+    "lastInventory": {
+      "id": "local-1758045924765-d3380k",
+      "name": "test image tee",
+      "sku": "TEST-IMAGE-TEE"
+    },
+    "expiresAt": 1758046524771,
+    "updatedAt": "2025-09-16T18:05:24.772Z"
+  }
+}

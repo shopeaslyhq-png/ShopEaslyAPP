@@ -1,30 +1,10 @@
 <% layout('layout') %>
 
-<!-- Enhanced AI Assistant Interface -->
-<div class="ai-theme">
+                <button class="panel-tab active" data-tab="quick">Quick</button>
     <div class="ai-assistant-container">
     <!-- Header Section -->
     <div class="ai-header">
-        <div class="ai-header-content">
-            <div class="ai-title-section">
-                <div class="ai-icon">
-                    <img src="/images/shopeasly-logo.png" alt="ShopEasly AI" class="ai-logo" />
-                </div>
-                <div class="ai-title-text">
-                    <h1>Easly AI Assistant</h1>
-                    <p>Your ShopEasly operations assistant</p>
-                </div>
-            </div>
-            <div class="ai-status-indicator">
-                <div class="status-dot status-online"></div>
-                <span>AI Ready</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Chat Interface -->
-    <div class="ai-chat-container">
-        <!-- Chat History -->
+                <div data-panel="quick">
     <div class="ai-chat-history" id="ai-chat-history" role="log" aria-live="polite" aria-relevant="additions">
             <!-- Welcome Message (concise) -->
             <div class="chat-message ai-message">
@@ -53,11 +33,11 @@
                 <button class="quick-action-btn" onclick="sendQuickMessage('What are my pending orders?')">
                     📦 Pending Orders
                 </button>
-                <button class="quick-action-btn" onclick="sendQuickMessage('Generate sales report')">
-                    📈 Sales Report
+                <button class="quick-action-btn" onclick="sendQuickMessage('Generate inventory usage report')">
+                    📈 Usage Report
                 </button>
-                <button class="quick-action-btn" onclick="sendQuickMessage('Help me optimize inventory')">
-                    💡 Optimization Tips
+                <button class="quick-action-btn" onclick="sendQuickMessage('Start a design brainstorming session')">
+                    🎨 Brainstorm Design
                 </button>
             </div>
 
@@ -77,6 +57,8 @@
                         onkeydown="handleKeyDown(event)"
                     ></textarea>
                     <div class="input-actions">
+                        <button type="button" class="attach-btn" id="attachBtn" title="Attach image" aria-label="Attach image">📎</button>
+                        <button type="button" class="attach-btn" id="openGenBtn" title="Generate design image" aria-label="Generate design image">🖼️</button>
                         <button type="button" class="voice-btn" id="voiceBtn" onclick="toggleVoiceRecording()" title="Voice Input" aria-label="Start voice input">
                             <span class="voice-icon">🎤</span>
                         </button>
@@ -86,6 +68,8 @@
                     </div>
                 </div>
             </form>
+            <input type="file" id="imageInput" accept="image/*" style="display:none" />
+            <div id="attachmentPreview" class="attachment-preview" style="display:none"></div>
 
             <!-- Voice Status -->
             <div class="voice-status" id="voiceStatus" style="display: none;">
@@ -99,66 +83,152 @@
         </div>
     </div>
 
-    <!-- Side Panel -->
+    <!-- Side Panel (tabbed) -->
     <div class="ai-side-panel">
-        <div class="panel-section">
-            <h3>AI Capabilities</h3>
-            <div class="capabilities-grid">
-                <div class="capability-card" onclick="triggerCapability('analytics')" title="Get analytics and reports">
-                    <div class="capability-icon">📊</div>
-                    <span>Analytics</span>
+        <div class="panel-section" id="brand-card-section">
+            <div class="brand-card" id="brand-card">
+                <img src="/images/shopeasly-logo.png" alt="Easly AI" class="brand-logo" />
+                <div>
+                    <div class="brand-title">Easly AI</div>
+                    <small class="text-muted">Creative + Operations Copilot</small>
                 </div>
-                <div class="capability-card" onclick="triggerCapability('voice')" title="Voice command help">
-                    <div class="capability-icon">🎤</div>
-                    <span>Voice Control</span>
-                </div>
-                <div class="capability-card" onclick="triggerCapability('forecasting')" title="Sales and inventory forecasting">
-                    <div class="capability-icon">📈</div>
-                    <span>Forecasting</span>
-                </div>
-                <div class="capability-card" onclick="triggerCapability('insights')" title="Business insights and recommendations">
-                    <div class="capability-icon">💡</div>
-                    <span>Insights</span>
-                </div>
+                <button class="brand-dismiss" id="brand-dismiss" title="Hide">✕</button>
+            </div>
+            <div style="margin-top:0.5rem; display:flex; gap:0.5rem;">
+                <button id="openProductWizardBtn" class="btn btn-primary" style="flex:1;">+ Product</button>
             </div>
         </div>
-
-        <!-- Quick Command Shortcuts -->
         <div class="panel-section">
-            <h3>Quick Commands</h3>
-            <div class="quick-commands-grid">
+            <div class="panel-tabs">
+                </div>
+                <div data-panel="reference" class="hidden">
+                <button class="panel-tab" data-tab="reference">Reference</button>
+            </div>
+            <div class="panel-content" id="panel-content">
+                <div data-panel="quick">
+                    <div class="quick-actions" style="margin-bottom:0.5rem;">
+                        <button class="quick-action-btn" onclick="sendQuickMessage('Show me inventory summary')">📊 Inventory Summary</button>
+                        <button class="quick-action-btn" onclick="sendQuickMessage('What are my pending orders?')">📦 Pending Orders</button>
+                        <button class="quick-action-btn" onclick="sendQuickMessage('Generate inventory usage report')">📈 Usage Report</button>
+                        <button class="quick-action-btn" onclick="sendQuickMessage('Start a design brainstorming session')">🎨 Brainstorm Design</button>
+                    </div>
+                    <div class="quick-commands-grid">
                 <button class="quick-cmd-btn" onclick="sendQuickMessage('Show inventory status')">
                     📦 Inventory Status
                 </button>
                 <button class="quick-cmd-btn" onclick="sendQuickMessage('List pending orders')">
                     📋 Pending Orders
                 </button>
-                <button class="quick-cmd-btn" onclick="sendQuickMessage('Generate sales report')">
-                    📊 Sales Report
-                </button>
-                <button class="quick-cmd-btn" onclick="sendQuickMessage('Show low stock items')">
-                    ⚠️ Low Stock Alert
-                </button>
-            </div>
-        </div>
+                        <button class="quick-cmd-btn" onclick="sendQuickMessage('Generate inventory usage report')">📊 Inventory Usage</button>
+                        <button class="quick-cmd-btn" onclick="sendQuickMessage('Show low stock items')">⚠️ Low Stock Alert</button>
+                        <button class="quick-cmd-btn" onclick="sendQuickMessage('Show packing materials low stock')">📦⚠️ Packing Low Stock</button>
+                        <button class="quick-cmd-btn" onclick="sendQuickMessage('Start design brainstorm')">🎨 Start Brainstorm</button>
+                        <button class="quick-cmd-btn" onclick="sendQuickMessage('Generate design mockup for Space T-Shirt')">🖼️ Generate Mockup</button>
+                        <button class="quick-cmd-btn" onclick="sendQuickMessage('Create product from last design at $25 qty 10')">🛠️ Create Product</button>
+                        <button class="quick-cmd-btn" onclick="sendQuickMessage('Add packing material 6x9 Poly Mailer dimensions 6x9 in stock 250')">📦➕ Add Packing Material</button>
+                    </div>
+                </div>
+                <div data-panel="commands" class="hidden">
+                    <div class="key-terms-container">
+                <div class="terms-category">
+                    <h4>📦 Inventory</h4>
+                    <div class="terms-list">
+                        <div class="term-item" onclick="sendQuickMessage('inventory summary')">
+                            <code>inventory summary</code>
+                            <span>Complete overview</span>
+                        </div>
+                        <div class="term-item" onclick="sendQuickMessage('add 25 to SKU-ABC-123')">
+                            <code>add 25 to SKU-ABC-123</code>
+                            <span>Restock by SKU</span>
+                        </div>
+                        <div class="term-item" onclick="sendQuickMessage('add 50 black t-shirts')">
+                            <code>add [qty] [item]</code>
+                            <span>Restock or create</span>
+                        </div>
+                        <div class="term-item" onclick="sendQuickMessage('add 50 new black t-shirts price 15')">
+                            <code>add [qty] new [item] price [x]</code>
+                            <span>Create new item explicitly</span>
+                        </div>
+                        <div class="term-item" onclick="sendQuickMessage('how many shirts do we have')">
+                            <code>how many [item]</code>
+                            <span>Check stock</span>
+                        </div>
+                        <div class="term-item" onclick="sendQuickMessage('set stock SKU-ABC-123 to 50')">
+                            <code>set stock [sku] to [qty]</code>
+                            <span>Update stock</span>
+                        </div>
+                        <div class="term-item" onclick="sendQuickMessage('show packing materials low stock')">
+                            <code>show packing materials low stock</code>
+                            <span>Packing-only alerts</span>
+                        </div>
+                        <div class="term-item" onclick="sendQuickMessage('add packing material 6x9 Poly Mailer dimensions 6x9 in stock 250')">
+                            <code>add packing material [name] dimensions [LxW(xH) unit] stock [qty]</code>
+                            <span>Add packing material</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="terms-category">
+                    <h4>📋 Orders</h4>
+                    <div class="terms-list">
+                        <div class="term-item" onclick="sendQuickMessage('order status')">
+                            <code>order status</code>
+                            <span>Orders overview</span>
+                        </div>
+                        <div class="term-item" onclick="sendQuickMessage('mark order ORD-123 as delivered')">
+                            <code>mark order [id] as [status]</code>
+                            <span>Update status</span>
+                        </div>
+                        <div class="term-item" onclick="sendQuickMessage('create order for John Smith')">
+                            <code>create order for [customer]</code>
+                            <span>New order</span>
+                        </div>
+                    </div>
+                </div>
 
-        <div class="panel-section">
-            <h3>Settings</h3>
-            <div class="settings-options">
-                <label class="setting-item">
-                    <input type="checkbox" id="voiceResponsesToggle" onchange="updateSetting('voiceResponses', this.checked)">
-                    <span>Voice responses</span>
-                </label>
-                <label class="setting-item">
-                    <input type="checkbox" id="autoSuggestionsToggle" onchange="updateSetting('autoSuggestions', this.checked)">
-                    <span>Auto-suggestions</span>
-                </label>
-                <label class="setting-item">
-                    <input type="checkbox" id="showTimestampsToggle" onchange="updateSetting('showTimestamps', this.checked)">
-                    <span>Show timestamps</span>
-                </label>
+                <div class="terms-category">
+                    <h4>🎨 Design</h4>
+                    <div class="terms-list">
+                        <div class="term-item" onclick="sendQuickMessage('start design brainstorm')">
+                            <code>start design brainstorm</code>
+                            <span>Begin session</span>
+                        </div>
+                        <div class="term-item" onclick="sendQuickMessage('generate design mockup for retro space t-shirt')">
+                            <code>generate design mockup for [theme] [product]</code>
+                            <span>Create mockup</span>
+                        </div>
+                        <div class="term-item" onclick="sendQuickMessage('create product from last design at $25 qty 10')">
+                            <code>create product from last design at $[price] qty [n]</code>
+                            <span>Add to inventory</span>
+                        </div>
+                        <div class="term-item" onclick="sendQuickMessage('attach image https://example.com/pic.jpg for SKU-123')">
+                            <code>attach image [url] for [sku]</code>
+                            <span>Link images</span>
+                        </div>
+                        <div class="terms-legend">
+                            <small>
+                                <strong>Legend:</strong><br>
+                                <code>[qty]</code> = quantity (e.g., 50)<br>
+                                <code>[item]</code> = product name<br>
+                                <code>[sku]</code> = SKU code<br>
+                                <code>[status]</code> = pending, processing, shipped, delivered
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div data-panel="reference" class="hidden">
+                    <div class="capabilities-grid">
+                        <div class="capability-card" onclick="triggerCapability('analytics')" title="Analytics & reports"><div class="capability-icon">📊</div><span>Analytics</span></div>
+                        <div class="capability-card" onclick="triggerCapability('voice')" title="Voice controls"><div class="capability-icon">🎤</div><span>Voice</span></div>
+                        <div class="capability-card" onclick="triggerCapability('forecasting')" title="Forecasting"><div class="capability-icon">📈</div><span>Forecasting</span></div>
+                        <div class="capability-card" onclick="triggerCapability('insights')" title="Insights"><div class="capability-icon">💡</div><span>Insights</span></div>
+                    </div>
+                </div>
             </div>
         </div>
+        </div>
+    </div>
+
     </div>
 </div>
 
@@ -177,6 +247,136 @@
 </div>
 
 </div>
+
+<!-- Settings Modal -->
+<div id="settingsModal" class="modal-overlay" style="display: none;" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-content">
+        <button class="modal-close-btn" id="closeSettingsBtn" aria-label="Close settings">×</button>
+        <h2 style="margin-bottom: 1rem;">Settings</h2>
+        <div class="settings-options">
+            <label class="setting-item">
+                <input type="checkbox" id="voiceResponsesToggle" onchange="updateSetting('voiceResponses', this.checked)">
+                <span>Voice responses</span>
+            </label>
+            <label class="setting-item">
+                <input type="checkbox" id="autoSuggestionsToggle" onchange="updateSetting('autoSuggestions', this.checked)">
+                <span>Auto-suggestions</span>
+            </label>
+            <label class="setting-item">
+                <input type="checkbox" id="showTimestampsToggle" onchange="updateSetting('showTimestamps', this.checked)">
+                <span>Show timestamps</span>
+            </label>
+        </div>
+    </div>
+    
+</div>
+
+<!-- Image Generator Modal -->
+<div id="imageGenModal" class="modal-overlay" style="display: none;" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-content">
+        <button class="modal-close-btn" id="closeImageGenBtn" aria-label="Close image generator">×</button>
+        <h2 style="margin-bottom: 1rem;">Generate Design Image</h2>
+        <form id="imageGenForm">
+            <div class="form-group">
+                <label for="genDescription">Describe the design</label>
+                <input id="genDescription" class="form-input" type="text" placeholder="e.g., retro space astronaut with neon colors" required />
+            </div>
+            <div class="form-group">
+                <label for="genProduct">Target product (optional)</label>
+                <select id="genProduct" class="form-input">
+                    <option value="">(none)</option>
+                    <option value="t-shirt">T-Shirt</option>
+                    <option value="hoodie">Hoodie</option>
+                    <option value="mug">Mug</option>
+                    <option value="sticker">Sticker</option>
+                    <option value="poster">Poster</option>
+                </select>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Generate</button>
+            </div>
+        </form>
+        <small class="text-muted">Images are generated using your configured provider and saved locally for easy reuse.</small>
+    </div>
+</div>
+
+<!-- Product Wizard Modal -->
+<div id="productWizard" class="modal-overlay" style="display:none;" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-content" style="max-width:720px; width:95vw;">
+        <button class="modal-close-btn" id="closeProductWizard" aria-label="Close product wizard">×</button>
+        <h2 style="margin-bottom:0.5rem;">Create Product</h2>
+        <ol id="pw-steps" style="display:flex; gap:0.75rem; list-style:none; padding:0; margin:0 0 1rem 0;">
+            <li class="pw-step" data-step="1">1. Image</li>
+            <li class="pw-step" data-step="2">2. Materials</li>
+            <li class="pw-step" data-step="3">3. Suggest</li>
+            <li class="pw-step" data-step="4">4. Review</li>
+        </ol>
+        <div id="pw-body">
+            <!-- Step 1: Image -->
+            <section class="pw-panel" data-step="1">
+                <div class="form-group">
+                    <label>Upload image</label>
+                    <input type="file" id="pw-upload" accept="image/*" class="form-input" />
+                </div>
+                <div class="form-group">
+                    <label>Or generate with DALL·E</label>
+                    <div style="display:flex; gap:0.5rem;">
+                        <input type="text" id="pw-gen-prompt" class="form-input" placeholder="e.g., retro astronaut neon style for t-shirt" />
+                        <button class="btn btn-secondary" id="pw-generate">Generate</button>
+                    </div>
+                    <small class="text-muted">Requires OPENAI_API_KEY to be configured.</small>
+                </div>
+                <div id="pw-image-preview" style="margin-top:0.75rem; display:none;">
+                    <img id="pw-image" src="" alt="preview" style="max-width:100%; border-radius:8px;" />
+                </div>
+            </section>
+            <!-- Step 2: Materials & Packaging -->
+            <section class="pw-panel hidden" data-step="2">
+                <div class="form-group">
+                    <label>Materials (select one or more)</label>
+                    <div id="pw-materials" class="list-scroll" style="max-height:180px; overflow:auto; border:1px solid #ddd; border-radius:8px; padding:0.5rem;"></div>
+                </div>
+                <div class="form-group">
+                    <label>Packaging (optional)</label>
+                    <div id="pw-packaging" class="list-scroll" style="max-height:140px; overflow:auto; border:1px solid #ddd; border-radius:8px; padding:0.5rem;"></div>
+                </div>
+            </section>
+            <!-- Step 3: AI Suggestion -->
+            <section class="pw-panel hidden" data-step="3">
+                <div class="form-group">
+                    <label>Product type (optional)</label>
+                    <input type="text" id="pw-type" class="form-input" placeholder="e.g., T-Shirt" />
+                </div>
+                <div class="form-group">
+                    <label>Hints (optional)</label>
+                    <input type="text" id="pw-hints" class="form-input" placeholder="Any naming hints" />
+                </div>
+                <div class="form-actions">
+                    <button class="btn" id="pw-suggest">Suggest Name/Price/SKU</button>
+                </div>
+                <div id="pw-suggestion" style="display:none; margin-top:0.75rem;">
+                    <div class="form-group"><label>Name</label><input type="text" id="pw-name" class="form-input" /></div>
+                    <div class="form-row" style="display:flex; gap:0.5rem;">
+                        <div class="form-group" style="flex:1"><label>Price</label><input type="number" step="0.01" id="pw-price" class="form-input" /></div>
+                        <div class="form-group" style="flex:1"><label>SKU</label><input type="text" id="pw-sku" class="form-input" /></div>
+                    </div>
+                    <div class="form-group"><label>Quantity</label><input type="number" id="pw-qty" class="form-input" value="10" /></div>
+                </div>
+            </section>
+            <!-- Step 4: Review & Create -->
+            <section class="pw-panel hidden" data-step="4">
+                <div id="pw-review"></div>
+                <div class="form-actions" style="margin-top:0.75rem;">
+                    <button class="btn btn-primary" id="pw-create">Create Product</button>
+                </div>
+            </section>
+        </div>
+        <div class="form-actions" style="margin-top:1rem; display:flex; justify-content:space-between;">
+            <button class="btn" id="pw-prev">Back</button>
+            <button class="btn btn-primary" id="pw-next">Next</button>
+        </div>
+    </div>
+    </div>
 
 <script>
 // Enhanced AI Assistant JavaScript
@@ -220,6 +420,64 @@ const form = document.getElementById('ai-form');
 const input = document.getElementById('ai-input');
 const chatHistory = document.getElementById('ai-chat-history');
 const sendBtn = document.getElementById('sendBtn');
+// Settings modal elements
+const settingsModal = document.getElementById('settingsModal');
+const openSettingsBtn = document.getElementById('openSettingsBtn');
+const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+// Image generator modal elements
+const imageGenModal = document.getElementById('imageGenModal');
+const openGenBtn = document.getElementById('openGenBtn');
+const closeImageGenBtn = document.getElementById('closeImageGenBtn');
+const imageGenForm = document.getElementById('imageGenForm');
+const genDescription = document.getElementById('genDescription');
+const genProduct = document.getElementById('genProduct');
+
+function openSettings() {
+    if (!settingsModal) return;
+    settingsModal.style.display = 'flex';
+    settingsModal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('no-scroll');
+}
+
+function closeSettings() {
+    if (!settingsModal) return;
+    settingsModal.style.display = 'none';
+    settingsModal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('no-scroll');
+}
+
+if (openSettingsBtn) openSettingsBtn.addEventListener('click', openSettings);
+if (closeSettingsBtn) closeSettingsBtn.addEventListener('click', closeSettings);
+if (settingsModal) settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) closeSettings(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && settingsModal && settingsModal.style.display !== 'none') closeSettings(); });
+
+function openImageGen() {
+    if (!imageGenModal) return;
+    imageGenModal.style.display = 'flex';
+    imageGenModal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('no-scroll');
+    setTimeout(() => genDescription && genDescription.focus(), 50);
+}
+function closeImageGen() {
+    if (!imageGenModal) return;
+    imageGenModal.style.display = 'none';
+    imageGenModal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('no-scroll');
+}
+if (openGenBtn) openGenBtn.addEventListener('click', openImageGen);
+if (closeImageGenBtn) closeImageGenBtn.addEventListener('click', closeImageGen);
+if (imageGenModal) imageGenModal.addEventListener('click', (e) => { if (e.target === imageGenModal) closeImageGen(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && imageGenModal && imageGenModal.style.display !== 'none') closeImageGen(); });
+
+if (imageGenForm) imageGenForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const desc = (genDescription?.value || '').trim();
+    const prod = (genProduct?.value || '').trim();
+    if (!desc) return;
+    const phrase = `generate design mockup for ${desc}${prod ? ' ' + prod : ''}`;
+    closeImageGen();
+    submitMessage(phrase);
+});
 // Stable client id for chat history
 const clientId = (() => {
     try {
@@ -300,10 +558,12 @@ async function submitMessage(prompt) {
     addThinkingMessage();
 
     try {
+        const payload = { textPart: prompt, clientId };
+        if (window.__attachedImageB64) payload.imagePart = window.__attachedImageB64;
         const res = await fetch('/ai/co-pilot', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ textPart: prompt, clientId })
+            body: JSON.stringify(payload)
         });
         if (!res.ok) { throw new Error(`HTTP ${res.status}`); }
         const data = await res.json();
@@ -322,8 +582,20 @@ async function submitMessage(prompt) {
             responseText = JSON.stringify(data, null, 2);
         }
 
-        addMessageToChat('ai', responseText);
+        // If disambiguation options exist, render them as clickable chips that send the suggested text
+        let renderedWithOptions = false;
+        if (Array.isArray(data.options) && data.options.length) {
+            addMessageToChat('ai', responseText + renderOptionsChips(data.options));
+            renderedWithOptions = true;
+        } else {
+            addMessageToChat('ai', responseText);
+        }
         if (data.action) addActionCard(data.action);
+
+        // Handle UI commands like opening the Product Wizard
+        if (data.uiCommand && data.uiCommand.type === 'openProductWizard') {
+            try { if (window.openProductWizard) window.openProductWizard(); } catch {}
+        }
 
     } catch (error) {
         console.error('AI request failed:', error);
@@ -336,6 +608,8 @@ async function submitMessage(prompt) {
         input.disabled = false;
         updateInputState(); // Properly update button state
         input.focus();
+        // Clear attachment after send
+        clearAttachment();
     }
 }
 
@@ -400,6 +674,51 @@ function triggerCapability(capability) {
         showToast(`Activating ${capability} capability...`, 'info');
         submitMessage(message);
     }
+}
+
+// Image attachment handlers
+const attachBtn = document.getElementById('attachBtn');
+const imageInput = document.getElementById('imageInput');
+const attachmentPreview = document.getElementById('attachmentPreview');
+window.__attachedImageB64 = null;
+
+if (attachBtn && imageInput) {
+    attachBtn.addEventListener('click', () => imageInput.click());
+    imageInput.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            const result = reader.result; // data URL
+            if (typeof result === 'string') {
+                // Store base64 portion for backend; also render preview
+                window.__attachedImageB64 = result.split(',')[1];
+                renderAttachmentChip(result);
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+function renderAttachmentChip(dataUrl) {
+    if (!attachmentPreview) return;
+    attachmentPreview.innerHTML = '';
+    const chip = document.createElement('div');
+    chip.className = 'attachment-chip';
+    chip.innerHTML = `<img src="${dataUrl}" alt="attachment" /><button type="button" class="remove-attachment" aria-label="Remove image">✕</button>`;
+    attachmentPreview.appendChild(chip);
+    attachmentPreview.style.display = 'block';
+    const btn = chip.querySelector('.remove-attachment');
+    btn.addEventListener('click', clearAttachment);
+}
+
+function clearAttachment() {
+    window.__attachedImageB64 = null;
+    if (attachmentPreview) {
+        attachmentPreview.style.display = 'none';
+        attachmentPreview.innerHTML = '';
+    }
+    if (imageInput) imageInput.value = '';
 }
 
 // Voice recording functions
@@ -501,6 +820,55 @@ function addMessageToChat(sender, message) {
     }
 }
 
+// Render option chips (for disambiguation)
+function renderOptionsChips(options) {
+    try {
+        const html = options.map((opt, idx) => `<button class="chip option-chip" data-send="${(opt.send||opt.label||'').replace(/"/g,'&quot;')}">${opt.label || opt.send}</button>`).join(' ');
+        // Attach a temporary container id to bind events after insertion
+        setTimeout(() => {
+            document.querySelectorAll('.option-chip').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const toSend = btn.getAttribute('data-send') || btn.textContent;
+                    submitMessage(toSend);
+                });
+            });
+        }, 0);
+        return `<div class="options-wrap" style="margin-top:.5rem; display:flex; flex-wrap:wrap; gap:.5rem;">${html}</div>`;
+    } catch { return ''; }
+}
+
+// Side panel tab switching
+document.addEventListener('DOMContentLoaded', () => {
+    const tabs = document.querySelectorAll('.panel-tab');
+    const panels = document.querySelectorAll('[data-panel]');
+    const brandCard = document.getElementById('brand-card');
+    const brandDismiss = document.getElementById('brand-dismiss');
+    const brandKey = 'easly.brandCard.hidden';
+    try {
+        const hidden = localStorage.getItem(brandKey) === '1';
+        if (hidden && brandCard) brandCard.parentElement.classList.add('hidden');
+    } catch (_) {}
+
+    if (brandDismiss) {
+        brandDismiss.addEventListener('click', () => {
+            const sec = document.getElementById('brand-card-section');
+            if (sec) sec.classList.add('hidden');
+            try { localStorage.setItem(brandKey, '1'); } catch (_) {}
+        });
+    }
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            const active = tab.getAttribute('data-tab');
+            panels.forEach(p => {
+                p.classList.toggle('hidden', p.getAttribute('data-panel') !== active);
+            });
+        });
+    });
+});
+
 function stripHtml(html) {
     const tmp = document.createElement('div');
     tmp.innerHTML = html;
@@ -567,11 +935,9 @@ function applySetting(key, value) {
             });
             break;
         case 'autoSuggestions':
-            // Toggle quick action buttons visibility
-            const quickActions = document.querySelector('.quick-actions');
-            if (quickActions) {
-                quickActions.style.display = value ? 'flex' : 'none';
-            }
+            // Toggle all quick action groups visibility (main input + side panel)
+            const qaGroups = document.querySelectorAll('.quick-actions');
+            qaGroups.forEach(el => { el.style.display = value ? 'flex' : 'none'; });
             break;
         case 'voiceResponses':
             // This is handled in the TTS function
@@ -806,4 +1172,145 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 // Enhanced AI Assistant initialization complete
+
+// --- Product Wizard Logic ---
+(function(){
+    const wiz = document.getElementById('productWizard');
+    const openBtn = document.getElementById('openProductWizardBtn');
+    const closeBtn = document.getElementById('closeProductWizard');
+    const nextBtn = document.getElementById('pw-next');
+    const prevBtn = document.getElementById('pw-prev');
+    const steps = Array.from(document.querySelectorAll('.pw-panel'));
+    const stepDots = Array.from(document.querySelectorAll('.pw-step'));
+    let cur = 1;
+    const state = { imageUrl: '', materialsIds: [], packagingId: '', suggestion: null };
+
+    function setStep(n){
+        cur = Math.max(1, Math.min(4, n));
+        steps.forEach(s => s.classList.toggle('hidden', Number(s.getAttribute('data-step')) !== cur));
+        stepDots.forEach(d => d.classList.toggle('active', Number(d.getAttribute('data-step')) === cur));
+        prevBtn.disabled = cur === 1; nextBtn.style.display = cur === 4 ? 'none' : 'inline-block';
+    }
+    function open(){ wiz.style.display = 'flex'; wiz.setAttribute('aria-hidden','false'); document.body.classList.add('no-scroll'); setStep(1); }
+    function close(){ wiz.style.display = 'none'; wiz.setAttribute('aria-hidden','true'); document.body.classList.remove('no-scroll'); }
+    // Expose globally for AI uiCommand
+    window.openProductWizard = open;
+    window.closeProductWizard = close;
+    if (openBtn) openBtn.addEventListener('click', open);
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    if (wiz) wiz.addEventListener('click', e => { if (e.target === wiz) close(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && wiz && wiz.style.display !== 'none') close(); });
+
+    // Step 1: Image upload or generate
+    const up = document.getElementById('pw-upload');
+    const genBtn = document.getElementById('pw-generate');
+    const genPrompt = document.getElementById('pw-gen-prompt');
+    const imgPrevWrap = document.getElementById('pw-image-preview');
+    const imgPrev = document.getElementById('pw-image');
+    if (up) up.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0]; if (!file) return;
+        const rd = new FileReader();
+        rd.onload = async () => {
+            const dataUrl = rd.result; const b64 = String(dataUrl).split(',')[1];
+            try {
+                const r = await fetch('/inventory/api/images/upload', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ imageBase64: dataUrl }) });
+                const j = await r.json(); if (!r.ok) throw new Error(j.error||('HTTP '+r.status));
+                state.imageUrl = j.imageUrl; imgPrev.src = j.imageUrl; imgPrevWrap.style.display='block';
+            } catch(err){ showToast('Upload failed: '+(err.message||err), 'error'); }
+        };
+        rd.readAsDataURL(file);
+    });
+    if (genBtn) genBtn.addEventListener('click', async () => {
+        const p = (genPrompt?.value||'').trim(); if (!p) return;
+        genBtn.disabled = true; try {
+            const r = await fetch('/ai/generate-image', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ prompt: p }) });
+            const j = await r.json(); if (!r.ok) throw new Error(j.error||('HTTP '+r.status));
+            state.imageUrl = j.url; imgPrev.src = j.url; imgPrevWrap.style.display='block';
+            showToast('Image generated', 'success');
+        } catch(err){ showToast('Generation failed: '+(err.message||err), 'error'); } finally { genBtn.disabled = false; }
+    });
+
+    // Step 2: Materials & packaging
+    const domMats = document.getElementById('pw-materials');
+    const domPkg = document.getElementById('pw-packaging');
+    async function loadInventory() {
+        try {
+            const r = await fetch('/inventory/api'); const items = await r.json();
+            const mats = (items||[]).filter(i => /materials?/i.test(String(i.category||'')));
+            const pkgs = (items||[]).filter(i => /^packing\s*materials?/i.test(String(i.category||'')));
+            renderList(domMats, mats, true);
+            renderList(domPkg, pkgs, false);
+        } catch {}
+    }
+    function renderList(container, items, multi) {
+        if (!container) return; container.innerHTML = '';
+        items.forEach(it => {
+            const id = 'it_'+it.id; const row = document.createElement('label'); row.className='pw-row'; row.style.display='flex'; row.style.alignItems='center'; row.style.gap='0.5rem'; row.style.padding='0.25rem 0';
+            row.innerHTML = `<input type="${multi?'checkbox':'radio'}" name="${multi?'pw-mats':'pw-pkg'}" value="${it.id}" /> <span>${it.name} <small style="opacity:.7">(${it.sku})</small></span> <span style="margin-left:auto; opacity:.7">$${Number(it.price||0).toFixed(2)} | ${Number(it.stock||0)}</span>`;
+            container.appendChild(row);
+        });
+    }
+
+    // Step 3: Suggest
+    const btnSuggest = document.getElementById('pw-suggest');
+    const inputType = document.getElementById('pw-type');
+    const inputHints = document.getElementById('pw-hints');
+    const wrapSuggest = document.getElementById('pw-suggestion');
+    const inputName = document.getElementById('pw-name');
+    const inputPrice = document.getElementById('pw-price');
+    const inputSku = document.getElementById('pw-sku');
+    const inputQty = document.getElementById('pw-qty');
+
+    if (btnSuggest) btnSuggest.addEventListener('click', async () => {
+        collectSelections();
+        btnSuggest.disabled = true; try {
+            const body = { imageUrl: state.imageUrl, materialsIds: state.materialsIds, packagingId: state.packagingId, productType: (inputType?.value||'').trim(), hints: (inputHints?.value||'').trim() };
+            const r = await fetch('/ai/suggest-product', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+            const j = await r.json(); if (!r.ok) throw new Error(j.error||('HTTP '+r.status));
+            state.suggestion = j; wrapSuggest.style.display='block';
+            inputName.value = j.name || '';
+            inputPrice.value = Number(j.price||0).toFixed(2);
+            inputSku.value = (j.sku||'').toUpperCase();
+        } catch(err){ showToast('Suggestion failed: '+(err.message||err), 'error'); } finally { btnSuggest.disabled = false; }
+    });
+
+    // Step 4: Review & Create
+    const review = document.getElementById('pw-review');
+    const btnCreate = document.getElementById('pw-create');
+    if (btnCreate) btnCreate.addEventListener('click', async () => {
+        collectSelections();
+        const name = (inputName?.value||'').trim(); const price = Number(inputPrice?.value||0); const qty = Number(inputQty?.value||0);
+        if (!name || !Number.isFinite(price)) { showToast('Name and price are required', 'error'); return; }
+        try {
+            const r = await fetch('/inventory/api/initiate-product', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, price, quantity: qty, materialsIds: state.materialsIds, packagingId: state.packagingId, category: 'Products', imageUrl: state.imageUrl }) });
+            const j = await r.json(); if (!r.ok) throw new Error(j.error||('HTTP '+r.status));
+            showToast(`Created ${j.name} (${j.sku})`, 'success');
+            close();
+        } catch(err){ showToast('Create failed: '+(err.message||err), 'error'); }
+    });
+
+    function collectSelections(){
+        const mats = Array.from(document.querySelectorAll('input[name="pw-mats"]:checked')).map(el => el.value);
+        state.materialsIds = mats;
+        const pkg = document.querySelector('input[name="pw-pkg"]:checked');
+        state.packagingId = pkg ? pkg.value : '';
+        // Update review
+        if (review) {
+            const listM = mats.length ? mats.map(id => `<li>${id}</li>`).join('') : '<li>(none)</li>';
+            const list = `<div><strong>Image:</strong> ${state.imageUrl?`<a href="${state.imageUrl}" target="_blank">link</a>`:'(none)'} </div>
+                                     <div><strong>Materials:</strong><ul>${listM}</ul></div>
+                                     <div><strong>Packaging:</strong> ${state.packagingId||'(none)'} </div>`;
+            review.innerHTML = list;
+        }
+    }
+
+    if (nextBtn) nextBtn.addEventListener('click', async () => {
+        if (cur === 1 && !state.imageUrl) { showToast('Please upload or generate an image first', 'info'); return; }
+        if (cur === 2) collectSelections();
+        if (cur === 2 && !domMats.hasChildNodes()) await loadInventory();
+        if (cur === 3 && wrapSuggest && wrapSuggest.style.display !== 'block') { showToast('Click Suggest to populate fields', 'info'); }
+        setStep(cur + 1);
+    });
+    if (prevBtn) prevBtn.addEventListener('click', () => setStep(cur - 1));
+})();
 </script>

@@ -1,6 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const { collections, createDocument, getAllDocuments, updateDocument, deleteDocument } = require('../config/firebase');
+const { generateOrderNumber } = require('../utils/orderNumber');
+
+// Helpers to classify inventory categories
+function isMaterialsCat(c) { return /^(materials|raw\s*materials?)$/i.test(String(c||'')); }
+function isPackingCat(c) { return /^packing\s*materials?$/i.test(String(c||'')); }
 
 // Basic validation helper
 function validateOrderPayload(body, { partial = false } = {}) {
@@ -122,16 +127,27 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    // Validate product exists in inventory and is a finished good
+    const inventoryItems = await getAllDocuments('inventory', 500);
+    const invMatch = inventoryItems.find(i => String(i.name).toLowerCase() === String(product).toLowerCase());
+    if (!invMatch) {
+      return res.status(400).json({ error: 'Selected product not found in inventory' });
+    }
+    if (isMaterialsCat(invMatch.category) || isPackingCat(invMatch.category)) {
+      return res.status(400).json({ error: 'Only finished Products can be ordered (not Materials or Packing Materials)' });
+    }
+
+    const orderNumber = await generateOrderNumber();
     const orderData = {
       customerName: customerName.trim(),
-      product: product.trim(),
+      product: invMatch.name.trim(),
       quantity: parseInt(quantity),
-
-      price: price ? parseFloat(price) : null,
+      // Default price from inventory item if not provided
+      price: price ? parseFloat(price) : (Number.isFinite(Number(invMatch.price)) ? Number(invMatch.price) : null),
       status: status || 'Pending',
       notes: notes ? notes.trim() : '',
       date: new Date().toISOString().split('T')[0],
-      orderNumber: `ORD-${Date.now()}`,
+      orderNumber,
     };
 
     const docRef = await createDocument('orders', orderData);
@@ -167,20 +183,14 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Edit/Update order
+const { editOrder } = require('../utils/ordersService');
 router.put('/:id', async (req, res) => {
   try {
-    const { errors, data } = validateOrderPayload(req.body, { partial: true });
-    if (errors.length) return res.status(400).json({ errors });
-
-    if (Object.keys(data).length === 0) {
-      return res.status(400).json({ error: 'No valid fields provided for update' });
-    }
-
-    await updateDocument('orders', req.params.id, data);
-    res.json({ ok: true });
+    const applied = await editOrder(req.params.id, req.body || {});
+    res.json({ ok: true, applied });
   } catch (error) {
     console.error('Error updating order:', error);
-    res.status(500).json({ error: error.message });
+    res.status(400).json({ error: error.message });
   }
 });
 

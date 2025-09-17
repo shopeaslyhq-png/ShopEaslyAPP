@@ -9,7 +9,7 @@
   </div>
   <div class="header-actions">
     <button class="btn btn-secondary" onclick="location.reload()">↻ Refresh</button>
-    <button class="btn btn-primary" onclick="openInventoryModal('add')">＋ New Item</button>
+    <button class="btn btn-primary" onclick="openProductModal('add')">＋ New Product</button>
   </div>
 </section>
 
@@ -22,23 +22,33 @@
       <div class="stats-grid">
         <div class="metric-card">
           <div class="metric-label">Total SKUs</div>
-          <div class="metric-value">—</div>
+          <div class="metric-value" id="metric-total-skus">—</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">Low Stock</div>
-          <div class="metric-value">—</div>
+          <div class="metric-value" id="metric-low-stock">—</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">Out of Stock</div>
-          <div class="metric-value">—</div>
+          <div class="metric-value" id="metric-out-of-stock">—</div>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Inventory Alerts (global) -->
   <div class="dashboard-card" style="grid-column: 1 / -1;">
     <div class="card-header">
-      <h3 class="card-title">Items</h3>
+      <h3 class="card-title">Inventory Alerts</h3>
+    </div>
+    <div class="card-body">
+      <div id="inv-alerts" class="alerts-container" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <div class="dashboard-card" style="grid-column: 1 / -1;">
+    <div class="card-header">
+  <h3 class="card-title">Products</h3>
       <div class="card-actions">
         <input type="search" class="form-input" style="max-width: 280px;" placeholder="Search inventory...">
       </div>
@@ -46,9 +56,9 @@
     <div class="card-body">
       <div id="inventory-empty" class="empty-state">
         <div class="empty-icon">📦</div>
-        <h4>No inventory items yet</h4>
-        <p style="color: var(--text-secondary);">Add items to begin tracking your inventory.</p>
-        <button class="btn btn-primary" onclick="openInventoryModal('add')">Add your first item</button>
+  <h4>No products yet</h4>
+  <p style="color: var(--text-secondary);">Create products and link them to materials and packaging.</p>
+  <button class="btn btn-primary" onclick="openProductModal('add')">Add your first product</button>
       </div>
       <div id="inventory-list" class="table-wrapper" style="display:none;">
         <table>
@@ -68,67 +78,256 @@
       </div>
     </div>
   </div>
+
+  <!-- Materials Section -->
+  <div class="dashboard-card" style="grid-column: 1 / -1;">
+    <div class="card-header">
+      <h3 class="card-title">Materials</h3>
+      <div class="card-actions">
+  <button class="btn btn-secondary" onclick="openMaterialModal('add')">＋ New Material</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="materials-empty" class="empty-state" style="display:none;">
+        <div class="empty-icon">🧪</div>
+        <h4>No materials yet</h4>
+        <p style="color: var(--text-secondary);">Track inks, film, vinyl, blanks, and other production inputs.</p>
+      </div>
+      <div id="materials-list" class="table-wrapper" style="display:none;">
+        <table>
+          <thead>
+            <tr>
+              <th>Material</th>
+              <th>SKU</th>
+              <th>Stock</th>
+              <th>Price</th>
+              <th>Status</th>
+              <th class="actions-cell">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="materials-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Packing Materials Section -->
+  <div class="dashboard-card" style="grid-column: 1 / -1;">
+    <div class="card-header">
+      <h3 class="card-title">Packing Materials</h3>
+      <div class="card-actions">
+  <button class="btn btn-secondary" onclick="openPackingModal('add')">＋ New Packing Material</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="packing-empty" class="empty-state" style="display:none;">
+        <div class="empty-icon">📦</div>
+        <h4>No packing materials yet</h4>
+        <p style="color: var(--text-secondary);">Boxes, mailers, bubble wrap, tape, labels, and shipping supplies.</p>
+      </div>
+      <div id="packing-list" class="table-wrapper" style="display:none;">
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>SKU</th>
+              <th>Stock</th>
+              <th>Price</th>
+              <th>Status</th>
+              <th class="actions-cell">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="packing-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 
 </div>
 
 
-<!-- Inventory Add/Edit Modal -->
-<div id="inventory-modal" class="modal-overlay hidden" aria-hidden="true">
-  <div class="modal-content" role="dialog" aria-labelledby="inventory-modal-title">
-    <button class="modal-close-btn" onclick="closeInventoryModal()" aria-label="Close">✕</button>
-    <h2 id="inventory-modal-title">Add Item</h2>
-    <form id="inventory-form">
-      <input type="hidden" id="inventory-id">
+<!-- Product Modal -->
+<div id="product-modal" class="modal-overlay hidden" aria-hidden="true">
+  <div class="modal-content" role="dialog" aria-labelledby="product-modal-title">
+    <button class="modal-close-btn" onclick="closeProductModal()" aria-label="Close">✕</button>
+    <h2 id="product-modal-title">Add Product</h2>
+    <form id="product-form">
+      <input type="hidden" id="product-id">
 
       <div class="form-row">
         <div class="form-group">
-          <label for="inventory-name">Product Name</label>
-          <input id="inventory-name" class="form-input" type="text" placeholder="e.g., Premium Tee" required>
+          <label for="product-name">Product Name</label>
+          <input id="product-name" class="form-input" type="text" placeholder="e.g., Premium Tee" required>
         </div>
         <div class="form-group">
-          <label for="inventory-sku">SKU</label>
-          <input id="inventory-sku" class="form-input" type="text" placeholder="e.g., TEE-PRM-BLK-S" required>
+          <label for="product-sku">SKU</label>
+          <input id="product-sku" class="form-input" type="text" placeholder="e.g., TEE-PRM-BLK-S" required>
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-group">
-          <label for="inventory-stock">Stock</label>
-          <input id="inventory-stock" class="form-input" type="number" min="0" placeholder="0" required>
+          <label for="product-stock">Stock</label>
+          <input id="product-stock" class="form-input" type="number" min="0" placeholder="0" required>
         </div>
         <div class="form-group">
-          <label for="inventory-price">Price ($)</label>
-          <input id="inventory-price" class="form-input" type="number" min="0" step="0.01" placeholder="0.00" required>
+          <label for="product-price">Price ($)</label>
+          <input id="product-price" class="form-input" type="number" min="0" step="0.01" placeholder="0.00" required>
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-group">
-          <label for="inventory-status">Status</label>
-          <select id="inventory-status" class="form-input">
+          <label for="product-status">Status</label>
+          <select id="product-status" class="form-input">
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
         </div>
         <div class="form-group">
-          <label for="inventory-threshold">Low Stock Threshold</label>
-          <input id="inventory-threshold" class="form-input" type="number" min="0" placeholder="5">
+          <label for="product-threshold">Low Stock Threshold</label>
+          <input id="product-threshold" class="form-input" type="number" min="0" placeholder="5">
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="inventory-category">Category</label>
-        <input id="inventory-category" class="form-input" type="text" placeholder="e.g., Apparel">
+      <div class="form-row">
+        <div class="form-group" style="flex:1;">
+          <label for="product-category">Category</label>
+          <input id="product-category" class="form-input" type="text" placeholder="e.g., Apparel">
+        </div>
+        <div class="form-group" id="product-group-packaging" style="flex:1;">
+          <label for="product-packaging">Packaging</label>
+          <select id="product-packaging" class="form-input">
+            <option value="">— Select packaging —</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group" id="product-group-materials">
+        <label for="product-materials">Materials</label>
+        <select id="product-materials" class="form-input" multiple size="4" title="Hold Ctrl/Command to multi-select">
+        </select>
+        <small style="color: var(--text-secondary);">Choose the materials required to make this product.</small>
       </div>
 
       <div class="form-group">
-        <label for="inventory-description">Description</label>
-        <textarea id="inventory-description" class="form-input" rows="3" placeholder="Short description..."></textarea>
+        <label for="product-description">Description</label>
+        <textarea id="product-description" class="form-input" rows="3" placeholder="Short description..."></textarea>
       </div>
 
       <div class="form-actions">
-        <button type="button" class="btn btn-secondary" onclick="closeInventoryModal()">Cancel</button>
+        <button type="button" class="btn btn-secondary" onclick="closeProductModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">
+          <span class="btn-text">Save</span>
+          <span class="spinner" aria-hidden="true"></span>
+        </button>
+      </div>
+    </form>
+  </div>
+ </div>
+
+<!-- Material Modal -->
+<div id="material-modal" class="modal-overlay hidden" aria-hidden="true">
+  <div class="modal-content" role="dialog" aria-labelledby="material-modal-title">
+    <button class="modal-close-btn" onclick="closeMaterialModal()" aria-label="Close">✕</button>
+    <h2 id="material-modal-title">Add Material</h2>
+    <form id="material-form">
+      <input type="hidden" id="material-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="material-name">Material Name</label>
+          <input id="material-name" class="form-input" type="text" placeholder="e.g., DTF Film Sheets" required>
+        </div>
+        <div class="form-group">
+          <label for="material-sku">SKU</label>
+          <input id="material-sku" class="form-input" type="text" placeholder="e.g., MAT-DTF-FILM" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="material-stock">Stock</label>
+          <input id="material-stock" class="form-input" type="number" min="0" placeholder="0" required>
+        </div>
+        <div class="form-group">
+          <label for="material-price">Cost ($)</label>
+          <input id="material-price" class="form-input" type="number" min="0" step="0.01" placeholder="0.00" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="material-status">Status</label>
+          <select id="material-status" class="form-input">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="material-threshold">Low Stock Threshold</label>
+          <input id="material-threshold" class="form-input" type="number" min="0" placeholder="5">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="material-description">Description</label>
+        <textarea id="material-description" class="form-input" rows="3" placeholder="Short description..."></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeMaterialModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">
+          <span class="btn-text">Save</span>
+          <span class="spinner" aria-hidden="true"></span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Packing Material Modal -->
+<div id="packing-modal" class="modal-overlay hidden" aria-hidden="true">
+  <div class="modal-content" role="dialog" aria-labelledby="packing-modal-title">
+    <button class="modal-close-btn" onclick="closePackingModal()" aria-label="Close">✕</button>
+    <h2 id="packing-modal-title">Add Packing Material</h2>
+    <form id="packing-form">
+      <input type="hidden" id="packing-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="packing-name">Item Name</label>
+          <input id="packing-name" class="form-input" type="text" placeholder="e.g., 6x9 Poly Mailer" required>
+        </div>
+        <div class="form-group">
+          <label for="packing-sku">SKU</label>
+          <input id="packing-sku" class="form-input" type="text" placeholder="e.g., PKG-POLY-6X9" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="packing-stock">Stock</label>
+          <input id="packing-stock" class="form-input" type="number" min="0" placeholder="0" required>
+        </div>
+        <div class="form-group">
+          <label for="packing-price">Cost ($)</label>
+          <input id="packing-price" class="form-input" type="number" min="0" step="0.01" placeholder="0.00" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="packing-status">Status</label>
+          <select id="packing-status" class="form-input">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="packing-threshold">Low Stock Threshold</label>
+          <input id="packing-threshold" class="form-input" type="number" min="0" placeholder="5">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="packing-description">Description</label>
+        <textarea id="packing-description" class="form-input" rows="3" placeholder="Short description..."></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="closePackingModal()">Cancel</button>
         <button type="submit" class="btn btn-primary">
           <span class="btn-text">Save</span>
           <span class="spinner" aria-hidden="true"></span>
@@ -141,45 +340,136 @@
 <script>
 (() => {
   const state = { items: [], mode: 'add' };
-  const modal = document.getElementById('inventory-modal');
-  const form = document.getElementById('inventory-form');
+  // Product modal elements
+  const productModal = document.getElementById('product-modal');
+  const productForm = document.getElementById('product-form');
+  // Material modal elements
+  const materialModal = document.getElementById('material-modal');
+  const materialForm = document.getElementById('material-form');
+  // Packing modal elements
+  const packingModal = document.getElementById('packing-modal');
+  const packingForm = document.getElementById('packing-form');
 
   function $(id) { return document.getElementById(id); }
 
-  async function loadItems() {
-    try {
-      const res = await fetch('/inventory/api');
-      if (!res.ok) throw new Error('Failed to load inventory');
-      state.items = await res.json();
-      renderList();
-    } catch (e) {
-      console.error(e);
-      if (window.showToast) window.showToast('Failed to load inventory', 'error');
+  // Helpers to detect category types
+  const isMaterialsCat = (c) => /^(materials|raw\s*materials?)$/i.test(String(c||''));
+  const isPackingCat = (c) => /^packing\s*materials?$/i.test(String(c||''));
+  // Product-only dependent fields handled by separate modal; materials/packing have no product relations
+
+  // Compute low/out-of-stock alerts
+  function computeInventoryAlerts(items, defaultThreshold = 5) {
+    const low = [];
+    const out = [];
+    (items || []).forEach(it => {
+      const stock = Number(it?.stock ?? 0) || 0;
+      const threshold = it?.threshold != null ? Number(it.threshold) || 0 : defaultThreshold;
+      const row = { id: it.id, name: it.name, sku: it.sku, stock, threshold, category: it.category };
+      if (stock <= 0) out.push(row);
+      else if (stock <= threshold) low.push(row);
+    });
+    return { low, out };
+  }
+
+  // Render alerts UI and update overview metrics
+  function renderAlerts() {
+    const container = document.getElementById('inv-alerts');
+    if (!container) return;
+    const { low, out } = computeInventoryAlerts(state.items, 5);
+
+    // Update overview metrics if present
+    const elTotal = document.getElementById('metric-total-skus'); if (elTotal) elTotal.textContent = String(state.items.length || 0);
+    const elLow = document.getElementById('metric-low-stock'); if (elLow) elLow.textContent = String(low.length || 0);
+    const elOut = document.getElementById('metric-out-of-stock'); if (elOut) elOut.textContent = String(out.length || 0);
+
+    if ((low.length + out.length) === 0) {
+      container.innerHTML = '<div class="empty-state-small"><p>No alerts right now.</p></div>';
+      return;
     }
+    const listItem = (it, icon) => `<li>${icon} <strong>${it.name || 'Unnamed'}</strong> (${it.sku || 'N/A'}) — stock: ${it.stock}${it.threshold != null ? ` (threshold: ${it.threshold})` : ''}</li>`;
+    const outHtml = out.length ? `
+      <div class="status error" style="margin-bottom:.5rem;"><strong>${out.length}</strong> item(s) out of stock</div>
+      <ul class="list-unstyled" style="margin-bottom:1rem;">
+        ${out.slice(0,8).map(it => listItem(it, '❌')).join('')}
+      </ul>
+    ` : '';
+    const lowHtml = low.length ? `
+      <div class="status warning" style="margin-bottom:.5rem;"><strong>${low.length}</strong> item(s) low on stock</div>
+      <ul class="list-unstyled">
+        ${low.slice(0,8).map(it => listItem(it, '⚠️')).join('')}
+      </ul>
+    ` : '';
+    container.innerHTML = outHtml + lowHtml;
   }
 
-  function resetForm() {
-    $('inventory-id').value = '';
-    $('inventory-name').value = '';
-    $('inventory-sku').value = '';
-    $('inventory-stock').value = '';
-    $('inventory-price').value = '';
-    $('inventory-status').value = 'active';
-    $('inventory-threshold').value = '';
-    $('inventory-category').value = '';
-    $('inventory-description').value = '';
+
+  function resetProductForm() {
+    $('product-id').value = '';
+    $('product-name').value = '';
+    $('product-sku').value = '';
+    $('product-stock').value = '';
+    $('product-price').value = '';
+    $('product-status').value = 'active';
+    $('product-threshold').value = '';
+    $('product-category').value = '';
+    $('product-description').value = '';
+    $('product-materials').innerHTML = '';
+    $('product-packaging').value = '';
+  }
+  function resetMaterialForm() {
+    $('material-id').value = '';
+    $('material-name').value = '';
+    $('material-sku').value = '';
+    $('material-stock').value = '';
+    $('material-price').value = '';
+    $('material-status').value = 'active';
+    $('material-threshold').value = '';
+    $('material-description').value = '';
+  }
+  function resetPackingForm() {
+    $('packing-id').value = '';
+    $('packing-name').value = '';
+    $('packing-sku').value = '';
+    $('packing-stock').value = '';
+    $('packing-price').value = '';
+    $('packing-status').value = 'active';
+    $('packing-threshold').value = '';
+    $('packing-description').value = '';
   }
 
-  function fillForm(item) {
-    $('inventory-id').value = item.id;
-    $('inventory-name').value = item.name || '';
-    $('inventory-sku').value = item.sku || '';
-    $('inventory-stock').value = item.stock ?? '';
-    $('inventory-price').value = item.price ?? '';
-    $('inventory-status').value = item.status || 'active';
-    $('inventory-threshold').value = item.threshold ?? '';
-    $('inventory-category').value = item.category || '';
-    $('inventory-description').value = item.description || '';
+  function fillProductForm(item) {
+    $('product-id').value = item.id;
+    $('product-name').value = item.name || '';
+    $('product-sku').value = item.sku || '';
+    $('product-stock').value = item.stock ?? '';
+    $('product-price').value = item.price ?? '';
+    $('product-status').value = item.status || 'active';
+    $('product-threshold').value = item.threshold ?? '';
+    $('product-category').value = item.category || '';
+    $('product-description').value = item.description || '';
+    const mats = Array.isArray(item.materials) ? item.materials : [];
+    Array.from($('product-materials').options).forEach(opt => { opt.selected = mats.includes(opt.value); });
+    $('product-packaging').value = item.packagingId || '';
+  }
+  function fillMaterialForm(item) {
+    $('material-id').value = item.id;
+    $('material-name').value = item.name || '';
+    $('material-sku').value = item.sku || '';
+    $('material-stock').value = item.stock ?? '';
+    $('material-price').value = item.price ?? '';
+    $('material-status').value = item.status || 'active';
+    $('material-threshold').value = item.threshold ?? '';
+    $('material-description').value = item.description || '';
+  }
+  function fillPackingForm(item) {
+    $('packing-id').value = item.id;
+    $('packing-name').value = item.name || '';
+    $('packing-sku').value = item.sku || '';
+    $('packing-stock').value = item.stock ?? '';
+    $('packing-price').value = item.price ?? '';
+    $('packing-status').value = item.status || 'active';
+    $('packing-threshold').value = item.threshold ?? '';
+    $('packing-description').value = item.description || '';
   }
 
   function renderList() {
@@ -196,7 +486,7 @@
     emptyEl.style.display = 'none';
     listEl.style.display = 'block';
 
-    tbody.innerHTML = state.items.map(item => `
+    const renderRows = (arr) => arr.map(item => `
       <tr>
         <td>${item.name}</td>
         <td>${item.sku}</td>
@@ -209,97 +499,307 @@
         </td>
       </tr>
     `).join('');
+
+  // Filter products: exclude Materials and Packing Materials from the main Products table
+  const products = state.items.filter(i => !(isMaterialsCat(i.category) || isPackingCat(i.category)));
+
+    // Full list shows products
+    tbody.innerHTML = renderRows(products);
+
+    // Grouped: Materials and Packing Materials
+    const materials = state.items.filter(i => isMaterialsCat(i.category));
+    const packing = state.items.filter(i => isPackingCat(i.category));
+
+    const mEmpty = $('materials-empty');
+    const mList = $('materials-list');
+    const mBody = $('materials-tbody');
+    if (!materials.length) { mEmpty.style.display = 'block'; mList.style.display = 'none'; }
+    else { mEmpty.style.display = 'none'; mList.style.display = 'block'; mBody.innerHTML = renderRows(materials); }
+
+    const pEmpty = $('packing-empty');
+    const pList = $('packing-list');
+    const pBody = $('packing-tbody');
+    if (!packing.length) { pEmpty.style.display = 'block'; pList.style.display = 'none'; }
+    else { pEmpty.style.display = 'none'; pList.style.display = 'block'; pBody.innerHTML = renderRows(packing); }
   }
 
-  window.openInventoryModal = function(mode = 'add', itemId = null) {
+  window.openProductModal = function(mode = 'add', itemId = null) {
     state.mode = mode;
-    resetForm();
-    const title = document.getElementById('inventory-modal-title');
-    title.textContent = mode === 'add' ? 'Add Item' : 'Edit Item';
-
+    resetProductForm();
+    document.getElementById('product-modal-title').textContent = mode === 'add' ? 'Add Product' : 'Edit Product';
     if (mode === 'edit' && itemId) {
       const item = state.items.find(i => i.id === itemId);
-      if (item) fillForm(item);
+      if (item) {
+        populateRelationships();
+        fillProductForm(item);
+      }
+    } else {
+      populateRelationships();
     }
-
-    modal.classList.remove('hidden');
+    productModal.classList.remove('hidden');
     document.body.classList.add('no-scroll');
-    modal.setAttribute('aria-hidden', 'false');
+    productModal.setAttribute('aria-hidden', 'false');
   }
 
-  window.closeInventoryModal = function() {
-    modal.classList.add('hidden');
+  window.openMaterialModal = function(mode = 'add', itemId = null) {
+    state.mode = mode;
+    resetMaterialForm();
+    document.getElementById('material-modal-title').textContent = mode === 'add' ? 'Add Material' : 'Edit Material';
+    if (mode === 'edit' && itemId) {
+      const item = state.items.find(i => i.id === itemId);
+      if (item) fillMaterialForm(item);
+    }
+    materialModal.classList.remove('hidden');
+    document.body.classList.add('no-scroll');
+    materialModal.setAttribute('aria-hidden', 'false');
+  }
+
+  window.openPackingModal = function(mode = 'add', itemId = null) {
+    state.mode = mode;
+    resetPackingForm();
+    document.getElementById('packing-modal-title').textContent = mode === 'add' ? 'Add Packing Material' : 'Edit Packing Material';
+    if (mode === 'edit' && itemId) {
+      const item = state.items.find(i => i.id === itemId);
+      if (item) fillPackingForm(item);
+    }
+    packingModal.classList.remove('hidden');
+    document.body.classList.add('no-scroll');
+    packingModal.setAttribute('aria-hidden', 'false');
+  }
+
+  // Close helpers
+  window.closeProductModal = function() {
+    productModal.classList.add('hidden');
     document.body.classList.remove('no-scroll');
-    modal.setAttribute('aria-hidden', 'true');
+    productModal.setAttribute('aria-hidden', 'true');
+  }
+  window.closeMaterialModal = function() {
+    materialModal.classList.add('hidden');
+    document.body.classList.remove('no-scroll');
+    materialModal.setAttribute('aria-hidden', 'true');
+  }
+  window.closePackingModal = function() {
+    packingModal.classList.add('hidden');
+    document.body.classList.remove('no-scroll');
+    packingModal.setAttribute('aria-hidden', 'true');
   }
 
-  window.editInventoryItem = function(id) { window.openInventoryModal('edit', id); }
+  // Removed legacy closeInventoryModal in favor of type-specific close functions
+
+  window.editInventoryItem = function(id) {
+    const item = state.items.find(i => i.id === id);
+    if (!item) return;
+    if (isMaterialsCat(item.category)) return window.openMaterialModal('edit', id);
+    if (isPackingCat(item.category)) return window.openPackingModal('edit', id);
+    return window.openProductModal('edit', id);
+  }
 
   window.deleteInventoryItem = async function(id) {
     try {
       const res = await fetch(`/inventory/api/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Delete failed');
-      state.items = state.items.filter(i => i.id !== id);
-      renderList();
-      if (window.showToast) window.showToast('Item deleted', 'info');
+  state.items = state.items.filter(i => i.id !== id);
+  renderList();
+  populateRelationships();
+  renderAlerts();
+  if (window.showToast) window.showToast('Deleted', 'info');
     } catch (e) {
       console.error(e);
       if (window.showToast) window.showToast('Failed to delete item', 'error');
     }
   }
 
-  form.addEventListener('submit', async (e) => {
+  // Product form submit
+  productForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    form.setAttribute('data-loading', 'true');
+    productForm.setAttribute('data-loading', 'true');
 
     const payload = {
-      name: $('inventory-name').value.trim(),
-      sku: $('inventory-sku').value.trim(),
-      stock: Number($('inventory-stock').value || 0),
-      price: Number($('inventory-price').value || 0),
-      status: $('inventory-status').value,
-      threshold: Number($('inventory-threshold').value || 0),
-      category: $('inventory-category').value.trim(),
-      description: $('inventory-description').value.trim(),
+      name: $('product-name').value.trim(),
+      sku: $('product-sku').value.trim(),
+      stock: Number($('product-stock').value || 0),
+      price: Number($('product-price').value || 0),
+      status: $('product-status').value,
+      threshold: Number($('product-threshold').value || 0),
+      category: $('product-category').value.trim(),
+      description: $('product-description').value.trim(),
+      materials: Array.from($('product-materials').selectedOptions).map(o => o.value),
+      packagingId: $('product-packaging').value
     };
 
+    // Enforce separation: Materials and Packing shouldn't carry product relationships
+    // For products, relationships are allowed
+
     if (!payload.name || !payload.sku) {
-      form.removeAttribute('data-loading');
+      productForm.removeAttribute('data-loading');
       if (window.showToast) window.showToast('Name and SKU are required', 'error');
       return;
     }
 
     try {
-      if (state.mode === 'add' && !$('inventory-id').value) {
+      if (state.mode === 'add' && !$('product-id').value) {
         const res = await fetch('/inventory/api', {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
         });
         if (!res.ok) throw new Error('Create failed');
         const created = await res.json();
         state.items.unshift(created);
-        if (window.showToast) window.showToast('Item added', 'success');
+        if (window.showToast) window.showToast('Saved', 'success');
       } else {
-        const id = $('inventory-id').value;
+        const id = $('product-id').value;
         const res = await fetch(`/inventory/api/${id}`, {
           method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
         });
         if (!res.ok) throw new Error('Update failed');
         const idx = state.items.findIndex(i => i.id === id);
         if (idx !== -1) state.items[idx] = { id, ...payload };
-        if (window.showToast) window.showToast('Item updated', 'success');
+        if (window.showToast) window.showToast('Saved', 'success');
       }
       renderList();
-      window.closeInventoryModal();
+      populateRelationships();
+  renderAlerts();
+      window.closeProductModal();
     } catch (err) {
       console.error(err);
       if (window.showToast) window.showToast('Save failed', 'error');
     } finally {
-      form.removeAttribute('data-loading');
+      productForm.removeAttribute('data-loading');
     }
   });
 
-  modal.addEventListener('click', (e) => { if (e.target === modal) window.closeInventoryModal(); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.classList.contains('hidden')) window.closeInventoryModal(); });
+  // Material form submit
+  materialForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    materialForm.setAttribute('data-loading', 'true');
+    const payload = {
+      name: $('material-name').value.trim(),
+      sku: $('material-sku').value.trim(),
+      stock: Number($('material-stock').value || 0),
+      price: Number($('material-price').value || 0),
+      status: $('material-status').value,
+      threshold: Number($('material-threshold').value || 0),
+      category: 'Materials',
+      description: $('material-description').value.trim(),
+      materials: [],
+      packagingId: ''
+    };
+    if (!payload.name || !payload.sku) {
+      materialForm.removeAttribute('data-loading');
+      if (window.showToast) window.showToast('Name and SKU are required', 'error');
+      return;
+    }
+    try {
+      if (state.mode === 'add' && !$('material-id').value) {
+        const res = await fetch('/inventory/api', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!res.ok) throw new Error('Create failed');
+        const created = await res.json();
+        state.items.unshift(created);
+        if (window.showToast) window.showToast('Saved', 'success');
+      } else {
+        const id = $('material-id').value;
+        const res = await fetch(`/inventory/api/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!res.ok) throw new Error('Update failed');
+        const idx = state.items.findIndex(i => i.id === id);
+        if (idx !== -1) state.items[idx] = { id, ...payload };
+        if (window.showToast) window.showToast('Saved', 'success');
+      }
+      renderList();
+      populateRelationships();
+  renderAlerts();
+      window.closeMaterialModal();
+    } catch (err) {
+      console.error(err);
+      if (window.showToast) window.showToast('Save failed', 'error');
+    } finally {
+      materialForm.removeAttribute('data-loading');
+    }
+  });
+
+  // Packing form submit
+  packingForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    packingForm.setAttribute('data-loading', 'true');
+    const payload = {
+      name: $('packing-name').value.trim(),
+      sku: $('packing-sku').value.trim(),
+      stock: Number($('packing-stock').value || 0),
+      price: Number($('packing-price').value || 0),
+      status: $('packing-status').value,
+      threshold: Number($('packing-threshold').value || 0),
+      category: 'Packing Materials',
+      description: $('packing-description').value.trim(),
+      materials: [],
+      packagingId: ''
+    };
+    if (!payload.name || !payload.sku) {
+      packingForm.removeAttribute('data-loading');
+      if (window.showToast) window.showToast('Name and SKU are required', 'error');
+      return;
+    }
+    try {
+      if (state.mode === 'add' && !$('packing-id').value) {
+        const res = await fetch('/inventory/api', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!res.ok) throw new Error('Create failed');
+        const created = await res.json();
+        state.items.unshift(created);
+        if (window.showToast) window.showToast('Saved', 'success');
+      } else {
+        const id = $('packing-id').value;
+        const res = await fetch(`/inventory/api/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!res.ok) throw new Error('Update failed');
+        const idx = state.items.findIndex(i => i.id === id);
+        if (idx !== -1) state.items[idx] = { id, ...payload };
+        if (window.showToast) window.showToast('Saved', 'success');
+      }
+      renderList();
+      populateRelationships();
+  renderAlerts();
+      window.closePackingModal();
+    } catch (err) {
+      console.error(err);
+      if (window.showToast) window.showToast('Save failed', 'error');
+    } finally {
+      packingForm.removeAttribute('data-loading');
+    }
+  });
+
+  // Close on overlay click or Escape
+  [productModal, materialModal, packingModal].forEach(mdl => {
+    mdl.addEventListener('click', (e) => { if (e.target === mdl) mdl.querySelector('.modal-close-btn').click(); });
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (!productModal.classList.contains('hidden')) closeProductModal();
+      if (!materialModal.classList.contains('hidden')) closeMaterialModal();
+      if (!packingModal.classList.contains('hidden')) closePackingModal();
+    }
+  });
+
+  // Populate materials and packaging dropdowns based on current inventory list
+  function populateRelationships() {
+    const matsSel = $('product-materials');
+    const pkgSel = $('product-packaging');
+    const isMaterials = (c) => /^(materials|raw\s*materials?)$/i.test(String(c||''));
+    const isPacking = (c) => /^packing\s*materials?$/i.test(String(c||''));
+    const materials = state.items.filter(i => isMaterials(i.category));
+    const packing = state.items.filter(i => isPacking(i.category));
+    matsSel.innerHTML = materials.map(m => `<option value="${m.id}">${m.name} (${m.sku})</option>`).join('');
+    pkgSel.innerHTML = `<option value="">— Select packaging —</option>` + packing.map(p => `<option value="${p.id}">${p.name} (${p.sku})</option>`).join('');
+  }
+
+  async function loadItems() {
+    try {
+      const res = await fetch('/inventory/api');
+      if (!res.ok) throw new Error('Failed to load inventory');
+      state.items = await res.json();
+      renderList();
+      populateRelationships();
+  renderAlerts();
+    } catch (e) {
+      console.error(e);
+      if (window.showToast) window.showToast('Failed to load inventory', 'error');
+    }
+  }
 
   loadItems();
 })();
