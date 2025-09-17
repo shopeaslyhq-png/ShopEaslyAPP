@@ -1,0 +1,13 @@
+{
+  "name": "shopeasly-local-home",
+  "version": "1.0.0",
+  "description": "Google Home Local Home SDK app for ShopEasly smart home integration.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "actions-on-google": "^3.0.0",
+    "mdns": "^2.7.2"
+  }
+}
