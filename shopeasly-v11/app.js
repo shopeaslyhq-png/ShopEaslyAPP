@@ -17,6 +17,10 @@ const ordersRoutes = require('./routes/orders');
 const ideasRoutes = require('./routes/ideas');
 const dashboardRoutes = require('./routes/dashboard');
 
+// OAuth and Google Actions routes
+const oauthRoutes = require('./routes/oauth');
+const googleActionsEnhancedRoutes = require('./routes/googleActionsEnhanced');
+
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 // EJS layout middleware
@@ -34,6 +38,10 @@ app.use('/easly', easlyRoutes);
 app.use('/orders', ordersRoutes);
 app.use('/ideas', ideasRoutes);
 app.use('/', dashboardRoutes);
+
+// Mount OAuth and Google Actions routes
+app.use('/oauth', oauthRoutes);
+app.use('/voice/google-actions', googleActionsEnhancedRoutes);
 
 // Google Smart Home fulfillment endpoint for Google Home Mini integration
 app.post('/smarthome', async (req, res) => {
