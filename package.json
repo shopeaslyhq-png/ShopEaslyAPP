@@ -27,6 +27,7 @@
     "@google/generative-ai": "^0.24.1",
     "dompurify": "^3.2.6",
     "dotenv": "^17.2.2",
+    "ejs-mate": "^4.0.0",
     "express": "^5.1.0",
     "express-ejs-layouts": "^2.5.1",
     "marked": "^16.2.1",
