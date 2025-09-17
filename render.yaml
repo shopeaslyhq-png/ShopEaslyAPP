@@ -6,7 +6,7 @@ services:
     env: node
     plan: free
     runtime: nodejs:20
-    start: npm start
+    start: node server.js
     env:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
