@@ -1,40 +1,14 @@
-// Device discovery using mDNS for Google Local Home SDK
-// This module exports a function to discover smart home devices on the local network
-
-const mdns = require('mdns');
-
-function discoverDevices(serviceType = '_http._tcp') {
-  return new Promise((resolve, reject) => {
-    const discovered = [];
-    const browser = mdns.createBrowser(mdns.tcp(serviceType));
-
-    browser.on('serviceUp', service => {
-      discovered.push({
-        id: service.name,
-        address: service.addresses[0],
-        port: service.port,
-        fullname: service.fullname,
-        txtRecord: service.txtRecord
-      });
-    });
-
-    browser.on('error', err => {
-      browser.stop();
-      reject(err);
-    });
-
-    browser.on('serviceDown', service => {
-      // Optionally handle device going offline
-    });
-
-    browser.start();
-
-    // Stop discovery after 3 seconds and return results
-    setTimeout(() => {
-      browser.stop();
-      resolve(discovered);
-    }, 3000);
-  });
+// Static device discovery for development (no mDNS)
+function discoverDevices() {
+  return Promise.resolve([
+    {
+      id: 'WORKSHOP speaker',
+      address: '192.168.4.24', // Example IP, not used in this mock
+      port: 3001,
+      fullname: 'Workshop Speaker',
+      txtRecord: {}
+    }
+  ]);
 }
 
 module.exports = { discoverDevices };
