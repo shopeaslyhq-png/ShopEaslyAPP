@@ -130,6 +130,7 @@ const inventory = require('./routes/inventory');
 const dialogflowRoute = require('./easly/dialogflowRoute');
 const googleActions = require('./routes/googleActionsEnhanced');
 const oauthRouter = require('./routes/oauth');
+const fulfillmentRouter = require('./routes/fulfillment');
 
 // Route mounting
 app.use('/', dashboard);  // Dashboard at root
@@ -144,6 +145,7 @@ app.use('/inventory', inventory);
 app.use('/voice/dialogflow', dialogflowRoute);
 app.use('/voice/google-actions', googleActions);
 app.use('/oauth', oauthRouter);
+app.use('/fulfillment', fulfillmentRouter);
 
 // Serve only app-local static files to avoid conflicts with workspace root assets
 // This prevents accidental CSS/JS overrides from ../public or ../src

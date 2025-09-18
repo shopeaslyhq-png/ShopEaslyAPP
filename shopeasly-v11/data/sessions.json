@@ -26,5 +26,14 @@
     },
     "expiresAt": 1758046524771,
     "updatedAt": "2025-09-16T18:05:24.772Z"
+  },
+  "cli_3g93djlye7o": {
+    "lastInventory": {
+      "id": "local-1758165852790-1uzmr6",
+      "name": "6x9 poly mailer",
+      "sku": "PKG-6X9-POLY-MAILER"
+    },
+    "expiresAt": 1758166452795,
+    "updatedAt": "2025-09-18T03:24:12.795Z"
   }
 }

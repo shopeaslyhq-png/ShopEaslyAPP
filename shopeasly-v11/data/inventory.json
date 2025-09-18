@@ -1,5 +1,22 @@
 [
   {
+    "id": "local-1758165852790-1uzmr6",
+    "name": "6x9 poly mailer",
+    "sku": "PKG-6X9-POLY-MAILER",
+    "stock": 0,
+    "price": 0,
+    "status": "active",
+    "threshold": 5,
+    "category": "Packing Materials",
+    "description": "",
+    "dimensions": "6",
+    "materials": [],
+    "packagingId": "",
+    "dateAdded": "2025-09-18",
+    "createdAt": "2025-09-18T03:24:12.790Z",
+    "updatedAt": "2025-09-18T03:24:12.790Z"
+  },
+  {
     "id": "local-1758045254056-uyfg6m",
     "name": "space t-shirt",
     "sku": "SPACE-T-SHIRT",
@@ -34,40 +51,6 @@
     "updatedAt": "2025-09-16T17:54:13.961Z"
   },
   {
-    "id": "local-1758045253874-zvthif",
-    "name": "6x9 poly mailer",
-    "sku": "PKG-6X9-POLY-MAILER-001",
-    "stock": 0,
-    "price": 0,
-    "status": "active",
-    "threshold": 5,
-    "category": "Packing Materials",
-    "description": "",
-    "dimensions": "6",
-    "materials": [],
-    "packagingId": "",
-    "dateAdded": "2025-09-16",
-    "createdAt": "2025-09-16T17:54:13.874Z",
-    "updatedAt": "2025-09-16T17:54:13.874Z"
-  },
-  {
-    "id": "local-1758045190771-5u3vsl",
-    "name": "6x9 poly mailer",
-    "sku": "PKG-6X9-POLY-MAILER",
-    "stock": 0,
-    "price": 25,
-    "status": "active",
-    "threshold": 5,
-    "category": "Packing Materials",
-    "description": "",
-    "dimensions": "6",
-    "materials": [],
-    "packagingId": "",
-    "dateAdded": "2025-09-16",
-    "createdAt": "2025-09-16T17:53:10.770Z",
-    "updatedAt": "2025-09-16T17:53:36.907Z"
-  },
-  {
     "id": "local-1758043589837-7mxlac",
     "name": "Batman Shirt",
     "sku": "BLK-BTM-001",
@@ -100,22 +83,6 @@
     "dateAdded": "2025-09-16",
     "createdAt": "2025-09-16T17:25:19.448Z",
     "updatedAt": "2025-09-16T17:25:19.448Z"
-  },
-  {
-    "id": "local-1758043400024-qildw7",
-    "name": "Tap",
-    "sku": "TAP-000",
-    "stock": 20,
-    "price": 1,
-    "status": "active",
-    "threshold": 5,
-    "category": "Packing Materials",
-    "description": "packing tap for shipping",
-    "materials": [],
-    "packagingId": "",
-    "dateAdded": "2025-09-16",
-    "createdAt": "2025-09-16T17:23:20.023Z",
-    "updatedAt": "2025-09-16T17:23:20.023Z"
   },
   {
     "id": "local-seed-1",
