@@ -42,7 +42,7 @@ router.get('/authorize', (req, res) => {
 // POST /oauth/token
 // Exchange code for tokens, or refresh.
 router.post('/token', (req, res) => {
-  const { grant_type } = req.body;
+  const { grant_type, code, refresh_token } = req.body;
 
   // Basic auth or body creds
   let clientId = req.body.client_id;

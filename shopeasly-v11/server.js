@@ -140,6 +140,7 @@ app.use('/voice-commands', voiceCommands);
 app.use('/ai', ai);
 app.use('/orders', orders);
 app.use('/inventory', inventory);
+app.use('/oauth', oauthRouter); // Mounting the OAuth route
 
 // Dialogflow webhook for Google Home integration
 app.use('/voice/dialogflow', dialogflowRoute);
@@ -173,6 +174,46 @@ app.use((err, req, res, next) => {
 // 404 handler
 app.use((req, res) => {
     res.status(404).render('404', { title: 'Page Not Found' });
+});
+
+app.post('/oauth/token', async (req, res) => {
+  const { grant_type, code, refresh_token, client_id, client_secret, redirect_uri } = req.body;
+
+  // Validate input
+  if (!grant_type || !client_id || !client_secret) {
+    return res.status(400).json({ error: 'invalid_request' });
+  }
+
+  try {
+    if (grant_type === 'authorization_code') {
+      // TODO: Implement real validation for the authorization code
+      // Example: Verify the code and client_id against your database
+      const accessToken = generateAccessToken(); // Implement secure token generation
+      const refreshToken = generateRefreshToken(); // Implement secure token generation
+
+      res.json({
+        token_type: 'Bearer',
+        access_token: accessToken,
+        refresh_token: refreshToken,
+        expires_in: 3600
+      });
+    } else if (grant_type === 'refresh_token') {
+      // TODO: Implement real validation for the refresh token
+      // Example: Verify the refresh_token against your database
+      const newAccessToken = generateAccessToken(); // Implement secure token generation
+
+      res.json({
+        token_type: 'Bearer',
+        access_token: newAccessToken,
+        expires_in: 3600
+      });
+    } else {
+      res.status(400).json({ error: 'unsupported_grant_type' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'server_error' });
+  }
 });
 
 const PORT = process.env.PORT || 3001;
