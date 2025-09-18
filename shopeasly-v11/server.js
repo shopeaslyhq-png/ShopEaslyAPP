@@ -127,6 +127,11 @@ const ai = require('./routes/ai');
 const orders = require('./routes/orders');
 const inventory = require('./routes/inventory');
 
+// Health check endpoint for Render
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+});
+
 const dialogflowRoute = require('./easly/dialogflowRoute');
 const googleActions = require('./routes/googleActionsEnhanced');
 const oauthRouter = require('./routes/oauth');
@@ -216,7 +221,7 @@ app.post('/oauth/token', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
     console.log(`ShopEasly server running on port ${PORT}`);
     console.log(`Visit http://localhost:${PORT} to access the application`);
