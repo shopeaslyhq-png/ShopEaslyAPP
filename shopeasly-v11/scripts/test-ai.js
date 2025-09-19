@@ -31,9 +31,13 @@ function postJSON(url, body) {
 
 (async () => {
   try {
-    const res = await postJSON('http://localhost:3001/ai/co-pilot', { textPart: 'Show me inventory summary', clientId: 'cli_test' });
+  const res = await postJSON('http://localhost:10000/easly/co-pilot', { textPart: 'Show me inventory summary', clientId: 'cli_test' });
     console.log('Status:', res.status);
     console.log('Response:', JSON.stringify(res.json || res.text, null, 2));
+
+  const res2 = await postJSON('http://localhost:10000/easly/co-pilot', { textPart: 'create an order for John Smith product Premium T-Shirt qty 2 price 25 and add it to inventory', clientId: 'cli_test' });
+  console.log('Status2:', res2.status);
+  console.log('Response2:', JSON.stringify(res2.json || res2.text, null, 2));
   } catch (e) {
     console.error('Request failed:', e.message);
     process.exit(1);

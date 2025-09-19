@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const handleAICoPilot = require('../easly/aiHandler');
+// Use enhanced AI handler to support direct actions (orders/inventory)
+const handleAICoPilot = require('../easly/aiHandlerEnhanced');
 
 // Easly AI routes
 router.get('/', (req, res) => {

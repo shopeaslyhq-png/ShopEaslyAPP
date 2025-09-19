@@ -896,12 +896,15 @@ async function handleLocalIntents(prompt, autoExecute = false, clientId = undefi
   }
 
   // Create order (pattern: create order for John Smith product Wireless Headphones qty 2 price 149.99)
-  m = q.match(/create\s+(?:an?\s+)?order\s+for\s+(.+?)(?:\s+product\s+(.+?))?(?:\s+qty\s+(\d+))?(?:\s+price\s+(\d+(?:\.\d+)?))?$/i);
+  // Allow trailing add-on like "and add it to inventory"
+  m = q.match(/create\s+(?:an?\s+)?order\s+for\s+(.+?)(?:\s+product\s+(.+?))?(?:\s+qty\s+(\d+))?(?:\s+price\s+(\d+(?:\.\d+)?))?(?:\s+.*)?$/i);
   if (m) {
     const customerName = (m[1]||'').trim();
     const product = (m[2]||'Custom Item').trim();
     const quantity = Number(m[3]||1);
     const price = Number(m[4]||0);
+    // If the user asked to also add to inventory in the same breath
+    const wantsInventory = /\b(?:and\s+)?(?:also\s+)?(?:add|put)\s+(?:it|that\s+item|this\s+item|the\s+item|the\s+product)?\s*(?:to|into|in)\s+inventory\b/.test(q);
     
     const action = { 
       type: 'create_order', 
@@ -909,14 +912,40 @@ async function handleLocalIntents(prompt, autoExecute = false, clientId = undefi
       endpoint: '/orders',
       method: 'POST'
     };
-    
+
+    // If user wants inventory addition as well, perform both actions (auto-execute)
+    if (wantsInventory) {
+      // Try to merge with existing inventory; otherwise create new
+      const items = await getAllDocuments('inventory', 1000).catch(()=>[]);
+      const existing = items.find(i => String(i.name||'').toLowerCase() === product.toLowerCase());
+      let invAction, invResult;
+      if (existing) {
+        invAction = { type: 'increment_inventory_stock', payload: { id: existing.id, delta: quantity, sku: existing.sku }, endpoint: `/inventory/api/${existing.id}`, method: 'PUT' };
+      } else {
+        const sku = guessSku(product);
+        const category = guessCategory(product);
+        const threshold = guessThreshold(quantity || 1);
+        invAction = { type: 'create_inventory', payload: { name: product, sku, stock: quantity || 1, price: price || guessPrice(product), status: 'active', threshold, category }, endpoint: '/inventory/api', method: 'POST' };
+      }
+      invResult = await executeInventoryAction(invAction);
+      if (clientId && invResult && invResult.success) {
+        const sku = invAction.payload.sku || (existing ? existing.sku : undefined) || 'N/A';
+        const name = existing ? existing.name : product;
+        const id = invResult.id || (existing ? existing.id : undefined);
+        if (id) setSession(clientId, { lastInventory: { id, name, sku }, expiresAt: Date.now() + 10*60*1000 });
+      }
+      const ordResult = await executeOrderAction(action);
+      const msg = [invResult?.message, ordResult?.message].filter(Boolean).join('  ');
+      return { text: msg || '✅ Added to inventory and created order.', executed: true, action, extra: { invAction } };
+    }
+
     if (autoExecute || q.includes('execute') || q.includes('confirm') || q.includes('do it')) {
       const result = await executeOrderAction(action);
       return { text: result.message, executed: true, action };
     }
     
     return {
-      text: `📝 I can create an order for **${customerName}**: ${quantity} × ${product} at $${price} each. Say "execute" or "confirm" to create.`,
+      text: `📝 I can create an order for **${customerName}**: ${quantity} × ${product} at $${price} each.${' '}Say "execute" or "confirm" to create.${ wantsInventory ? ' I will also add it to inventory.' : ''}`,
       action,
       confirmation: true
     };
