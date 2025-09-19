@@ -11,6 +11,7 @@ dotenv.config();
 
 const app = express();
 const { getAllDocuments } = require('./config/firebase');
+const { hmacVerify, firebaseAuthVerify, idempotencyCheck, emitEvent } = require('./utils/securityMiddleware');
 
 // View engine and middleware
 const ejsMate = require('ejs-mate');
@@ -81,6 +82,13 @@ app.use(helmet({
 app.use(morgan('combined'));
 
 // Parse request bodies
+// Capture raw body for HMAC if needed
+app.use((req, res, next) => {
+    let data = '';
+    req.on('data', chunk => { data += chunk; });
+    req.on('end', () => { req.rawBody = data; next(); });
+    if (req.readableEnded) next();
+});
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -140,18 +148,20 @@ const fulfillmentRouter = require('./routes/fulfillment');
 // Route mounting
 app.use('/', dashboard);  // Dashboard at root
 app.use('/dashboard', dashboard);
-app.use('/easly', easly);
+// Secure AI, orders, inventory, fulfillment routes if enabled
+const secureMiddlewares = [hmacVerify, firebaseAuthVerify, idempotencyCheck];
+app.use('/easly', ...secureMiddlewares, easly);
+app.use('/ai', ...secureMiddlewares, ai);
+app.use('/orders', ...secureMiddlewares, orders);
+app.use('/inventory', ...secureMiddlewares, inventory);
+app.use('/fulfillment', ...secureMiddlewares, fulfillmentRouter);
 app.use('/voice-commands', voiceCommands);
-app.use('/ai', ai);
-app.use('/orders', orders);
-app.use('/inventory', inventory);
 app.use('/oauth', oauthRouter); // Mounting the OAuth route
 
 // Dialogflow webhook for Google Home integration
 app.use('/voice/dialogflow', dialogflowRoute);
 app.use('/voice/google-actions', googleActions);
 app.use('/oauth', oauthRouter);
-app.use('/fulfillment', fulfillmentRouter);
 
 // Serve only app-local static files to avoid conflicts with workspace root assets
 // This prevents accidental CSS/JS overrides from ../public or ../src
