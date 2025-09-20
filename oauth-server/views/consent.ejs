@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title><%= brand %> Consent</title>
+  <style>body{font-family:sans-serif;margin:2em;}form{max-width:400px;margin:auto;}h1{color:#2a7ae2;}button{margin-right:1em;}</style>
+</head>
+<body>
+  <h1><%= brand %> Account Linking</h1>
+  <p><strong><%= user.name %></strong>, <%= brand %> would like to access your Google Home account with the following permissions:</p>
+  <ul>
+    <% scope.forEach(function(s) { %>
+      <li><%= s %></li>
+    <% }); %>
+  </ul>
+  <form method="POST" action="/authorize">
+    <input type="hidden" name="client_id" value="<%= client_id %>">
+    <input type="hidden" name="redirect_uri" value="<%= redirect_uri %>">
+    <input type="hidden" name="scope" value="<%= scope.join(' ') %>">
+    <input type="hidden" name="state" value="<%= state %>">
+    <button type="submit" name="approve" value="1">Allow</button>
+    <button type="submit" name="deny" value="1" formnovalidate>Cancel</button>
+  </form>
+</body>
+</html>
