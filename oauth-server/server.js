@@ -1,39 +1,70 @@
 
-// ShopEasly OAuth 2.0 Authorization Server for Google Home Account Linking (Production)
-require('dotenv').config();
-const express = require('express');
-const session = require('express-session');
-const path = require('path');
-const { v4: uuidv4 } = require('uuid');
-const admin = require('firebase-admin');
-const { OAuth2Client } = require('google-auth-library');
+
+// ShopEasly OAuth 2.0 Authorization Server for Google Home Account Linking (Production, ESM)
+import 'dotenv/config';
+import express from 'express';
+import session from 'express-session';
+import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
+import admin from 'firebase-admin';
+import { OAuth2Client } from 'google-auth-library';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
+app.set('trust proxy', 1);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+const isProd = (process.env.NODE_ENV || 'production') === 'production';
 app.use(session({
-  secret: process.env.SESSION_SECRET,
+  secret: process.env.SESSION_SECRET || 'change_me',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: true, sameSite: 'lax' }
+  cookie: {
+    secure: isProd, // requires HTTPS on Render
+    sameSite: 'lax'
+  }
 }));
 
-// Firebase Admin SDK initialization
+// Firebase Admin SDK initialization (env or file)
+let firebaseCred = null;
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+  // JSON string in env
+  firebaseCred = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+} else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+  const p = process.env.GOOGLE_APPLICATION_CREDENTIALS.startsWith('.')
+    ? path.join(__dirname, process.env.GOOGLE_APPLICATION_CREDENTIALS)
+    : process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  firebaseCred = JSON.parse(fs.readFileSync(p, 'utf8'));
+} else {
+  // default to local file
+  const localPath = path.join(__dirname, 'serviceAccountKey.json');
+  firebaseCred = JSON.parse(fs.readFileSync(localPath, 'utf8'));
+}
 admin.initializeApp({
-  credential: admin.credential.cert(require('./serviceAccountKey.json')),
+  credential: admin.credential.cert(firebaseCred),
 });
 const db = admin.firestore();
 
-// Google OAuth2 client for login
-const GOOGLE_CLIENT_ID = '235888572191-cd8r19flvdbn5mb41trikfke7forjpma.apps.googleusercontent.com';
-const GOOGLE_REDIRECT_URI = 'https://shopeaslyapp.onrender.com/oauth/callback';
-const GOOGLE_SCOPES = ['profile', 'email'];
-const CLIENT_ID = GOOGLE_CLIENT_ID;
-const CLIENT_SECRET = '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';
-const REDIRECT_URI = GOOGLE_REDIRECT_URI;
-const ALLOWED_SCOPES = GOOGLE_SCOPES;
+// Base URL for this OAuth server (Render assigns HTTPS)
+const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
+
+// Google login (user authentication) configuration
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+const GOOGLE_SCOPES = (process.env.GOOGLE_SCOPES || 'profile email').split(/\s+/);
+const GOOGLE_REDIRECT_URI = `${BASE_URL.replace(/\/$/, '')}/oauth/callback`;
+
+// OAuth client (used by Google Home to call our /authorize and /token)
+const OAUTH_CLIENT_ID = process.env.OAUTH_CLIENT_ID;
+const OAUTH_CLIENT_SECRET = process.env.OAUTH_CLIENT_SECRET;
+const OAUTH_REDIRECT_URI = process.env.OAUTH_REDIRECT_URI || `${BASE_URL.replace(/\/$/, '')}/oauth/callback`;
+const ALLOWED_SCOPES = (process.env.OAUTH_SCOPES || 'profile email').split(/\s+/);
 
 function isAuthenticated(req) {
   return req.session && req.session.user;
@@ -42,7 +73,7 @@ function isAuthenticated(req) {
 // Google login endpoint (redirects to Google)
 app.get('/login', (req, res) => {
   const state = req.query.state || '';
-  const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}` +
+  const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(GOOGLE_CLIENT_ID)}` +
     `&redirect_uri=${encodeURIComponent(GOOGLE_REDIRECT_URI)}` +
     `&response_type=code&scope=${encodeURIComponent(GOOGLE_SCOPES.join(' '))}` +
     `&access_type=offline&state=${encodeURIComponent(state)}`;
@@ -54,7 +85,7 @@ app.get('/oauth/callback', async (req, res) => {
   const { code, state } = req.query;
   if (!code) return res.status(400).send('Missing code');
   try {
-    const { tokens } = await (new OAuth2Client(GOOGLE_CLIENT_ID, CLIENT_SECRET, GOOGLE_REDIRECT_URI))
+    const { tokens } = await (new OAuth2Client(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI))
       .getToken(code);
     const ticket = await (new OAuth2Client()).verifyIdToken({
       idToken: tokens.id_token,
@@ -76,7 +107,7 @@ app.get('/oauth/callback', async (req, res) => {
 // OAuth 2.0 /authorize endpoint
 app.get('/authorize', async (req, res) => {
   const { client_id, redirect_uri, scope, state, response_type } = req.query;
-  if (client_id !== CLIENT_ID || redirect_uri !== REDIRECT_URI) {
+  if (client_id !== OAUTH_CLIENT_ID || redirect_uri !== OAUTH_REDIRECT_URI) {
     return res.status(400).json({ error: 'invalid_request', error_description: 'Invalid client_id or redirect_uri' });
   }
   const requestedScopes = (scope || '').split(/\s+/);
@@ -127,7 +158,7 @@ app.post('/authorize', async (req, res) => {
 // OAuth 2.0 /token endpoint
 app.post('/token', async (req, res) => {
   const { grant_type, code, redirect_uri, client_id, client_secret } = req.body;
-  if (client_id !== CLIENT_ID || client_secret !== CLIENT_SECRET || redirect_uri !== REDIRECT_URI) {
+  if (client_id !== OAUTH_CLIENT_ID || client_secret !== OAUTH_CLIENT_SECRET || redirect_uri !== OAUTH_REDIRECT_URI) {
     return res.status(400).json({ error: 'invalid_client' });
   }
   if (grant_type !== 'authorization_code') {
@@ -158,6 +189,9 @@ app.post('/token', async (req, res) => {
 // Consent and login views
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.listen(3000, () => {
-  console.log('OAuth 2.0 server running at https://shopeaslyapp.onrender.com');
+app.get('/health', (req, res) => res.json({ ok: true }));
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`OAuth 2.0 server running on ${BASE_URL} (PORT=${PORT})`);
 });
