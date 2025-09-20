@@ -1,11 +1,10 @@
 # ShopEasly - AI-Powered Inventory Management System
 
 ## Overview
-ShopEasly is a modern inventory management system powered by Google's Gemini AI. It provides intelligent assistance for order processing, inventory tracking, and business insights through both web interface and voice commands.
+ShopEasly is a modern inventory management system powered by Google's Gemini AI. It provides intelligent assistance for order processing, inventory tracking, and business insights through the web interface.
 
 ## Features
 - 🤖 **AI Assistant**: Powered by Google Gemini for intelligent inventory management
-- 🎤 **Voice Commands**: Process orders and queries using voice input
 - 📊 **Dashboard**: Real-time overview of orders, inventory, and business metrics
 - 📦 **Order Management**: Create, track, and manage orders efficiently
 - 🔍 **Smart Insights**: AI-driven analytics and recommendations
@@ -19,7 +18,6 @@ shopeasly-v11/
 ├── routes/                # Express route handlers
 │   ├── dashboard.js       # Dashboard routes
 │   ├── easly.js          # AI assistant routes
-│   ├── voiceCommands.js  # Voice command processing
 │   ├── ai.js             # AI co-pilot routes
 │   └── orders.js         # Order management routes
 ├── views/                 # EJS templates
@@ -85,7 +83,6 @@ NODE_ENV=development
 - Use the AI co-pilot for intelligent assistance
 - Process natural language queries about inventory
 
-### Voice Commands
 - Access voice features at `http://localhost:3000/voice-commands`
 - Use voice input for hands-free operation
 - Process orders and queries using speech
@@ -95,8 +92,7 @@ NODE_ENV=development
 - `GET /dashboard` - Dashboard (alternative route)
 - `GET /easly` - AI assistant interface
 - `POST /easly/co-pilot` - AI co-pilot processing
-- `GET /voice-commands` - Voice commands interface
-- `POST /voice-commands/process` - Process voice commands
+// Google Home/voice command integration has been removed due to platform deprecation.
 - `POST /ai/co-pilot` - AI co-pilot API
 - `GET /orders` - Order management
 

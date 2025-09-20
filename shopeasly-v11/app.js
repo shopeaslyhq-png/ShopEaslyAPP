@@ -11,15 +11,11 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 const aiRoutes = require('./routes/ai');
-const voiceCommandRoutes = require('./routes/voiceCommands');
 const easlyRoutes = require('./routes/easly');
 const ordersRoutes = require('./routes/orders');
 const ideasRoutes = require('./routes/ideas');
 const dashboardRoutes = require('./routes/dashboard');
-
-// OAuth and Google Actions routes
-const oauthRoutes = require('./routes/oauth');
-const googleActionsEnhancedRoutes = require('./routes/googleActionsEnhanced');
+// (Google Home/voice integrations removed)
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -33,90 +29,13 @@ app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
 
 app.use('/ai', aiRoutes);
 // Mount voice routes at plural path to match UI links (/voice-commands)
-app.use('/voice-commands', voiceCommandRoutes);
 app.use('/easly', easlyRoutes);
 app.use('/orders', ordersRoutes);
 app.use('/ideas', ideasRoutes);
 app.use('/', dashboardRoutes);
+// (Google Home/voice integrations removed)
 
-// Mount OAuth and Google Actions routes
-app.use('/oauth', oauthRoutes);
-app.use('/voice/google-actions', googleActionsEnhancedRoutes);
-
-// Google Smart Home fulfillment endpoint for Google Home Mini integration
-app.post('/smarthome', async (req, res) => {
-  const body = req.body;
-  const intent = body.inputs && body.inputs[0] && body.inputs[0].intent;
-  const requestId = body.requestId || '';
-
-  switch (intent) {
-    case 'action.devices.SYNC':
-      // SYNC: Report available devices
-      res.json({
-        requestId,
-        payload: {
-          agentUserId: 'user-123',
-          devices: [
-            {
-              id: 'WORKSHOP speaker',
-              type: 'action.devices.types.SPEAKER',
-              traits: ['action.devices.traits.OnOff'],
-              name: {
-                defaultNames: ['Workshop Speaker'],
-                name: 'WORKSHOP speaker',
-                nicknames: ['Workshop Speaker']
-              },
-              willReportState: true,
-              otherDeviceIds: [{ deviceId: 'WORKSHOP speaker' }],
-              deviceInfo: {
-                manufacturer: 'ShopEasly',
-                model: 'Mini',
-                hwVersion: '1.0',
-                swVersion: '1.0'
-              }
-            }
-          ]
-        }
-      });
-      break;
-    case 'action.devices.QUERY':
-      // QUERY: Report device state
-      res.json({
-        requestId,
-        payload: {
-          devices: {
-            'WORKSHOP speaker': {
-              on: true,
-              online: true
-            }
-          }
-        }
-      });
-      break;
-    case 'action.devices.EXECUTE':
-      // EXECUTE: Handle commands (e.g., turn on/off)
-      // You can add logic here to control your device/webapp
-      res.json({
-        requestId,
-        payload: {
-          commands: [
-            {
-              ids: ['WORKSHOP speaker'],
-              status: 'SUCCESS',
-              states: {
-                on: true,
-                online: true
-              }
-            }
-          ]
-        }
-      });
-      break;
-    default:
-      res.status(400).json({ error: 'Unknown intent' });
-      break;
-  }
-});
+// (Google Home/voice integrations removed)
 
 // TODO: Add other routes (dashboard, orders, etc.)
 

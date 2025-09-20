@@ -83,12 +83,6 @@ app.use(morgan('combined'));
 
 // Parse request bodies
 // Capture raw body for HMAC if needed
-app.use((req, res, next) => {
-    let data = '';
-    req.on('data', chunk => { data += chunk; });
-    req.on('end', () => { req.rawBody = data; next(); });
-    if (req.readableEnded) next();
-});
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -130,7 +124,6 @@ app.use((req, res, next) => {
 // Routes
 const dashboard = require('./routes/dashboard');
 const easly = require('./routes/easly');
-const voiceCommands = require('./routes/voiceCommands');
 const ai = require('./routes/ai');
 const orders = require('./routes/orders');
 const inventory = require('./routes/inventory');
@@ -140,8 +133,7 @@ app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok' });
 });
 
-const dialogflowRoute = require('./easly/dialogflowRoute');
-const googleActions = require('./routes/googleActionsEnhanced');
+// (Google Home/voice/Dialogflow integrations removed)
 const oauthRouter = require('./routes/oauth');
 const fulfillmentRouter = require('./routes/fulfillment');
 
@@ -155,13 +147,8 @@ app.use('/ai', ...secureMiddlewares, ai);
 app.use('/orders', ...secureMiddlewares, orders);
 app.use('/inventory', ...secureMiddlewares, inventory);
 app.use('/fulfillment', ...secureMiddlewares, fulfillmentRouter);
-app.use('/voice-commands', voiceCommands);
 app.use('/oauth', oauthRouter); // Mounting the OAuth route
-
-// Dialogflow webhook for Google Home integration
-app.use('/voice/dialogflow', dialogflowRoute);
-app.use('/voice/google-actions', googleActions);
-app.use('/oauth', oauthRouter);
+// (Google Home/voice/Dialogflow integrations removed)
 
 // Serve only app-local static files to avoid conflicts with workspace root assets
 // This prevents accidental CSS/JS overrides from ../public or ../src

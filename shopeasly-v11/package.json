@@ -18,11 +18,9 @@
   "description": "ShopEasly V11 - AI-powered inventory management system",
   "dependencies": {
     "googleapis": "^137.0.0",
-    "@google-cloud/dialogflow": "^7.2.0",
     "@google/generative-ai": "^0.24.1",
     "axios": "^1.6.0",
     "compression": "^1.8.1",
-    "dialogflow": "^1.2.0",
     "dotenv": "^16.3.1",
     "ejs": "^3.1.9",
     "ejs-mate": "^4.0.0",
