@@ -149,27 +149,24 @@
         </div>
     </div>
     <div class="charts-grid">
-        <div class="chart-card"><h3>📈 Sales Trend</h3><canvas id="salesTrendChart"></canvas></div>
+    <!-- Sales Trend chart removed for no-scroll layout -->
         <div class="chart-card"><h3>📊 Order Status</h3><p class="chart-subtitle" style="color: var(--text-secondary); margin: 0.25rem 0 0.5rem;"><span id="totalOrdersCount">0 orders</span></p><canvas id="orderStatusChart"></canvas></div>
         <div class="chart-card"><h3>🏆 Top Products</h3><p class="chart-subtitle" style="color: var(--text-secondary); margin: 0.25rem 0 0.5rem;"><span id="topProductsCount">0 products</span></p><canvas id="topProductsChart"></canvas></div>
-        <div class="chart-card"><h3>💰 Revenue</h3><p class="chart-subtitle" style="color: var(--text-secondary); margin: 0.25rem 0 0.5rem;"><span id="totalRevenue">$0</span></p><canvas id="revenueChart"></canvas></div>
+    <!-- Revenue chart removed for no-scroll layout -->
     </div>
 </section>
 
 <!-- PERFORMANCE METRICS -->
 <section class="metrics-section">
-    <div class="section-header">
-        <h2>⚡ Performance Metrics</h2>
-        <div class="metrics-summary">
-            <span class="metric-badge good"><span>📈</span> Growth: +12%</span>
-            <span class="metric-badge warning"><span>⚠️</span> Low Stock: 3 items</span>
-        </div>
+    <div class="section-header" style="margin-bottom:0.5rem;">
+        <h2 style="font-size:1.2rem; margin:0;">⚡ Key Metrics</h2>
     </div>
-    <div class="kpi-grid">
-        <div class="kpi-card"><h4>Average Order Value</h4><div id="avgOrderValue">$0</div></div>
-        <div class="kpi-card"><h4>Conversion Rate</h4><div id="conversionRate">0%</div></div>
-        <div class="kpi-card"><h4>Processing Time</h4><div id="processingTime">0h</div></div>
-        <div class="kpi-card"><h4>Customer Satisfaction</h4><div id="customerSat">0%</div></div>
+    <div style="display:flex;gap:1.5rem;flex-wrap:wrap;align-items:center;justify-content:space-between;padding:0.5rem 0 1rem 0;">
+        <span style="font-weight:600;">Low Stock: <span id="lowStockCount"><%= stats?.inventory?.lowStockCount ?? 0 %></span></span>
+        <span style="font-weight:600;">Out of Stock: <span id="outOfStockCount"><%= stats?.inventory?.outOfStockCount ?? 0 %></span></span>
+        <span style="font-weight:600;">Pending Orders: <span id="pendingOrders"><%= stats?.pendingOrders ?? 0 %></span></span>
+        <span style="font-weight:600;">Processing: <span id="processingOrders"><%= stats?.processingOrders ?? 0 %></span></span>
+        <span style="font-weight:600;">Delivered: <span id="deliveredOrders"><%= stats?.deliveredOrders ?? 0 %></span></span>
     </div>
 </section>
 </div>
@@ -200,93 +197,11 @@ class DashboardAnalytics {
     }
 
     setupCharts() {
-        // Sales Trend Chart
-        this.createSalesTrendChart();
+    // Order Status Distribution Chart
+    this.createOrderStatusChart();
 
-        // Order Status Distribution Chart
-        this.createOrderStatusChart();
-
-        // Top Products Chart
-        this.createTopProductsChart();
-
-        // Revenue Chart
-        this.createRevenueChart();
-    }
-
-    createSalesTrendChart() {
-        const ctx = document.getElementById('salesTrendChart').getContext('2d');
-
-        // Generate sample data for the last 30 days
-        const days = [];
-        const revenue = [];
-        const orderCounts = [];
-
-        for (let i = 29; i >= 0; i--) {
-            const date = new Date();
-            date.setDate(date.getDate() - i);
-            days.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-
-            // Simulate revenue data
-            revenue.push(Math.floor(Math.random() * 2000) + 500);
-            orderCounts.push(Math.floor(Math.random() * 20) + 5);
-        }
-
-        this.charts.salesTrend = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: days,
-                datasets: [{
-                    label: 'Revenue ($)',
-                    data: revenue,
-                    borderColor: 'rgb(99, 102, 241)',
-                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    yAxisID: 'y'
-                }, {
-                    label: 'Orders',
-                    data: orderCounts,
-                    borderColor: 'rgb(34, 197, 94)',
-                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    yAxisID: 'y1'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        type: 'linear',
-                        display: true,
-                        position: 'left',
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.1)'
-                        }
-                    },
-                    y1: {
-                        type: 'linear',
-                        display: true,
-                        position: 'right',
-                        grid: {
-                            drawOnChartArea: false,
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    createOrderStatusChart() {
-        const ctx = document.getElementById('orderStatusChart').getContext('2d');
-
-        // Calculate order status distribution
+    // Top Products Chart
+    this.createTopProductsChart();
         const statusCounts = {
             'Pending': 0,
             'Processing': 0,
@@ -394,57 +309,6 @@ class DashboardAnalytics {
         const elTop = document.getElementById('topProductsCount'); if (elTop) elTop.textContent = `${Object.keys(productCounts).length} products`;
     }
 
-    createRevenueChart() {
-        const ctx = document.getElementById('revenueChart').getContext('2d');
-
-        // Generate monthly revenue data
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-        const revenueData = months.map(() => Math.floor(Math.random() * 15000) + 5000);
-        const totalRevenue = revenueData.reduce((sum, val) => sum + val, 0);
-
-        this.charts.revenue = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: months,
-                datasets: [{
-                    label: 'Revenue',
-                    data: revenueData,
-                    backgroundColor: 'rgba(34, 197, 94, 0.8)',
-                    borderColor: 'rgb(34, 197, 94)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.1)'
-                        },
-                        ticks: {
-                            callback: function(value) {
-                                return '$' + value.toLocaleString();
-                            }
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
-                }
-            }
-        });
-
-        const elRev = document.getElementById('totalRevenue'); if (elRev) elRev.textContent = '$' + totalRevenue.toLocaleString();
-    }
 
     updateMetrics() {
         // Calculate and update KPI metrics
