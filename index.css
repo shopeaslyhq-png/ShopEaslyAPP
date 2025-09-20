@@ -1,0 +1,14 @@
+.dashboard-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.dashboard-table th, .dashboard-table td {
+  padding: 8px;
+  text-align: left;
+  font-size: 14px;
+}
+
+.dashboard-table th {
+  background-color: #f2f2f2;
+}
