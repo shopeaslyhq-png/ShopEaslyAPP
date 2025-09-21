@@ -1,5 +1,5 @@
 
-import { GoogleGenAI, Type, GenerateContentResponse, Chat } from "@google/genai";
+import { GoogleGenAI, Type, Chat } from "@google/genai";
 import * as XLSX from "xlsx";
 import DOMPurify from "dompurify";
 import { marked } from "marked";
@@ -96,9 +96,8 @@ export class ShopEaslyApp {
         const body = document.body;
 
         // Use event delegation for dynamically added content and robustness
-        body.addEventListener('click', (e) => {
+        body.addEventListener('click', (e: MouseEvent) => {
             const target = e.target as HTMLElement;
-            
             // Sidebar toggle
             if (target.closest('#sidebar-toggle-btn')) {
                 this.app?.classList.toggle('sidebar-open');
@@ -204,16 +203,18 @@ export class ShopEaslyApp {
             this.app?.classList.remove('sidebar-open');
         }
 
-                    // Offline AI toggle button
-                    if (target.closest('#offline-ai-toggle-btn')) {
-                        this.showOfflineAIModal();
-                        return;
-                    }
-                    // Offline AI modal close button or overlay
-                    if (target.closest('#offline-ai-close-btn') || target.closest('#offline-ai-modal') && target.id === 'offline-ai-modal') {
-                        this.hideOfflineAIModal();
-                        return;
-                    }
+        // Offline AI modal toggles (move to a click event handler)
+        document.body.addEventListener('click', (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            if (target.closest('#offline-ai-toggle-btn')) {
+                this.showOfflineAIModal();
+                return;
+            }
+            if (target.closest('#offline-ai-close-btn') || (target.closest('#offline-ai-modal') && target.id === 'offline-ai-modal')) {
+                this.hideOfflineAIModal();
+                return;
+            }
+        });
         appState.currentView = viewId;
 
         // Define which views belong inside the main app panel
@@ -276,7 +277,9 @@ export class ShopEaslyApp {
     // Hide the offline AI modal
     hideOfflineAIModal() {
         const modal = document.getElementById('offline-ai-modal');
-        if (modal) modal.classList.add('hidden');
+        if (modal && modal.classList) {
+            modal.classList.add('hidden');
+        }
     }
         }
 
@@ -750,7 +753,7 @@ export class ShopEaslyApp {
                 model: 'gemini-2.5-flash',
                 contents: `As an e-commerce expert, generate some ideas based on this prompt: "${prompt}". Please format the response as markdown.`
             });
-            const markdown = await this.safeMarkdown(response.text);
+            const markdown = await this.safeMarkdown(response.text ?? '');
             if (this.brainstormResults) {
                 this.brainstormResults.innerHTML = markdown;
                 this.brainstormResults.classList.remove('hidden');
@@ -807,15 +810,24 @@ export class ShopEaslyApp {
                 }
             });
 
-            const base64Image = response.generatedImages[0].image.imageBytes;
-            const imageUrl = `data:image/jpeg;base64,${base64Image}`;
-            if (this.imageOutputContainer) {
-                this.imageOutputContainer.innerHTML = `<img src="${imageUrl}" alt="Generated design">`;
+            if (
+                response.generatedImages &&
+                response.generatedImages[0] &&
+                response.generatedImages[0].image &&
+                response.generatedImages[0].image.imageBytes
+            ) {
+                const base64Image = response.generatedImages[0].image.imageBytes;
+                const imageUrl = `data:image/jpeg;base64,${base64Image}`;
+                if (this.imageOutputContainer) {
+                    this.imageOutputContainer.innerHTML = `<img src="${imageUrl}" alt="Generated design">`;
+                }
+                this.saveDesignSection?.classList.remove('hidden');
+                if (this.designName) this.designName.value = '';
+                
+                appState.generatedImageData = { url: imageUrl, prompt: promptText };
+            } else {
+                throw new Error('No image was generated.');
             }
-            this.saveDesignSection?.classList.remove('hidden');
-            if (this.designName) this.designName.value = '';
-            
-            appState.generatedImageData = { url: imageUrl, prompt: promptText };
 
         } catch (error) {
             console.error(error);
@@ -874,7 +886,7 @@ export class ShopEaslyApp {
                 model: 'gemini-2.5-flash',
                 contents: `Create a professional document based on the following topic. Format it clearly using markdown, with headings, lists, and bold text for readability. Topic: "${prompt}"`
             });
-            if (this.creatorOutput) this.creatorOutput.innerHTML = await this.safeMarkdown(response.text);
+            if (this.creatorOutput) this.creatorOutput.innerHTML = await this.safeMarkdown(response.text ?? '');
         } catch (error) {
             console.error(error);
             if (this.creatorOutput) this.creatorOutput.innerHTML = '<div class="error-text">Failed to generate document.</div>';
@@ -997,6 +1009,8 @@ export class ShopEaslyApp {
     async processVoiceCommand(command: string) {
         if (!appState.aiChat) return;
         try {
+            // Restrict Easly AI to shop and dashboard operations only
+            const allowedEntities = ['product', 'material', 'packaging', 'order', 'inventory', 'dashboard', 'report', 'products', 'orders', 'materials', 'packagings', 'reports'];
             const responseSchema = {
                 type: Type.OBJECT,
                 properties: {
@@ -1019,12 +1033,24 @@ export class ShopEaslyApp {
                 config: { responseMimeType: "application/json", responseSchema } 
             });
             const jsonText = response.text.trim();
-            const actionData = JSON.parse(jsonText);
+            let actionData;
+            try {
+                actionData = JSON.parse(jsonText);
+            } catch (err) {
+                actionData = { action: 'unknown' };
+            }
+
+            // If the action or entity is not allowed, respond with the restricted message
+            if (!actionData.entity || !allowedEntities.includes(actionData.entity.toLowerCase()) || actionData.action === 'unknown') {
+                await this.addMessageToChat('model', 'I’m only able to assist with shop and dashboard operations.');
+                return;
+            }
+
             await this.executeAICommand(actionData);
 
         } catch (error) {
             console.error("AI Command Error:", error);
-            await this.addMessageToChat('model', "Sorry, I had trouble understanding that. Could you try again?");
+            await this.addMessageToChat('model', "I’m only able to assist with shop and dashboard operations.");
         } finally {
             this.setMicState('idle');
         }
@@ -1034,13 +1060,13 @@ export class ShopEaslyApp {
         const { action, entity, parameters } = data;
         let responseMessage = "I'm not sure how to do that. Please try another command.";
 
+        // Always use a polite, professional, admin-aware tone
         switch(action) {
-            case 'create':
-                const typeSingular = entity; // product, material
-                const typePlural = `${entity}s`; // products, materials
-                
+            case 'create': {
+                const typeSingular = entity;
+                const typePlural = `${entity}s`;
                 if (appState[typePlural]) {
-                     const newItem: any = {
+                    const newItem: any = {
                         id: `${typeSingular.slice(0,1)}${Date.now()}`,
                         name: parameters.name || `New ${entity}`,
                         stock: parameters.stock || 0,
@@ -1049,38 +1075,44 @@ export class ShopEaslyApp {
                     appState[typePlural].push(newItem);
                     this.renderAllTables();
                     this.updateAllStats();
-                    responseMessage = `OK. I've created a new ${entity} called "${newItem.name}".`;
+                    responseMessage = `The new ${entity} “${newItem.name}” has been added. Would you like to review or update its details?`;
                     this.toggleAIModal(false);
                     this.openModalFor(`edit-${entity}`, newItem.id);
                 }
                 break;
-            case 'update':
+            }
+            case 'update': {
                 if (entity === 'order' && parameters.id && parameters.status) {
                     const order = this.findItemById('orders', parameters.id);
                     if (order) {
                         order.status = parameters.status.charAt(0).toUpperCase() + parameters.status.slice(1);
                         this.renderAllTables();
                         this.updateAllStats();
-                        responseMessage = `OK. I've updated order #${parameters.id} to '${order.status}'.`;
+                        responseMessage = `Order #${parameters.id} status is now “${order.status}.” The dashboard reflects this update.`;
                     } else {
-                        responseMessage = `I couldn't find order #${parameters.id}.`;
+                        responseMessage = `Order #${parameters.id} was not found. No changes were made.`;
                     }
                 }
                 break;
-             case 'navigate':
+            }
+            case 'navigate': {
                 const viewMap: { [key: string]: string } = {
                     'orders': 'orders-view',
                     'products': 'finished-goods-view',
                     'materials': 'materials-view',
                     'dashboard': 'dashboard-view',
-                    'ideas': 'ideas-view'
+                    'ideas': 'ideas-view',
+                    'reports': 'dashboard-view',
                 };
                 if (viewMap[entity]) {
                     this.navigateTo(viewMap[entity]);
-                    responseMessage = `Navigating to the ${entity} page.`;
+                    responseMessage = `You’re now viewing the ${entity} page. Let me know if you need further assistance.`;
                     setTimeout(() => this.toggleAIModal(false), 1000);
                 }
                 break;
+            }
+            default:
+                responseMessage = "I’m only able to assist with shop and dashboard operations.";
         }
 
         await this.addMessageToChat('model', responseMessage);

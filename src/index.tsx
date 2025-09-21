@@ -1,7 +1,10 @@
 
-import React from "react";
-import { createRoot } from "react-dom/client";
 
+import * as React from "react";
+import { createRoot } from "react-dom/client";
+import EaslyAIEventFeed from "./EaslyAIEventFeed";
+import EaslyOfflineAI from "./EaslyOfflineAI";
+import { firestore } from "./firebase";
 import ProductDescriptionGenerator from "./ProductDescriptionGenerator";
 
 // TODO: Replace with actual user authentication logic

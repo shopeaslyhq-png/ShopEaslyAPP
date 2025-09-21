@@ -69,48 +69,116 @@ router.get('/', async (req, res) => {
 });
 
 router.get('/new', (req, res) => {
+  // Render create order page to match the modal
   res.render('layout', {
     body: `
       <h1>Create New Order</h1>
       <div class="card">
         <div class="card-body">
-          <form method="POST" action="/orders">
-            <div class="form-group">
-              <label class="form-label">Customer Name</label>
-              <input type="text" name="customerName" class="form-input" required>
+          <form method="POST" action="/orders" id="orderForm" autocomplete="off">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Customer Name *</label>
+                <input type="text" name="customerName" class="form-input" required>
+              </div>
+              <div class="form-group">
+                <label>Order Number</label>
+                <input type="text" name="orderNumber" class="form-input" placeholder="Auto-generated">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Product *</label>
+                <select name="product" class="form-input" id="productSelect" required>
+                  <option value="">— Select product —</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Quantity *</label>
+                <input type="number" name="quantity" class="form-input" min="1" required>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Price ($)</label>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span id="price-display" style="font-weight: bold;">$<span id="price-value">0.00</span></span>
+                  <button type="button" class="btn btn-secondary" id="update-price-btn">Update Price</button>
+                  <input type="hidden" name="price" id="hidden-price-input" value="0.00" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Status</label>
+                <select name="status" class="form-input">
+                  <option value="Pending">Pending</option>
+                  <option value="Processing">Processing</option>
+                  <option value="Shipped">Shipped</option>
+                  <option value="Delivered">Delivered</option>
+                </select>
+              </div>
             </div>
             <div class="form-group">
-              <label class="form-label">Product</label>
-              <input type="text" name="product" class="form-input" required>
+              <label>Notes</label>
+              <textarea name="notes" class="form-input" rows="3" placeholder="Optional notes about this order..."></textarea>
             </div>
-            <div class="form-group">
-              <label class="form-label">Quantity</label>
-              <input type="number" name="quantity" class="form-input" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Status</label>
-              <select name="status" class="form-input">
-                <option value="Pending">Pending</option>
-                <option value="Processing">Processing</option>
-                <option value="Shipped">Shipped</option>
-                <option value="Delivered">Delivered</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Price ($)</label>
-              <input type="number" name="price" class="form-input" min="0" step="0.01">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Notes (Optional)</label>
-              <textarea name="notes" class="form-input" rows="3"></textarea>
-            </div>
-            <div class="mt-3">
-              <button type="submit" class="btn btn-primary">Create Order</button>
+            <div class="form-actions">
               <a href="/orders" class="btn btn-secondary">Cancel</a>
+              <button type="submit" class="btn btn-primary">Create Order</button>
             </div>
           </form>
         </div>
       </div>
+      <script>
+      // JS to populate product select and handle price display, matching modal
+      document.addEventListener('DOMContentLoaded', function() {
+        var products = window.products || [];
+        var select = document.getElementById('productSelect');
+        var priceValue = document.getElementById('price-value');
+        var hiddenPriceInput = document.getElementById('hidden-price-input');
+        if (select && products.length) {
+          products.forEach(function(p) {
+            var opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = p.name + ' - $' + Number(p.price).toFixed(2);
+            opt.setAttribute('data-price', p.price);
+            select.appendChild(opt);
+          });
+        }
+        function updatePriceDisplay() {
+          if (!select || !priceValue) return;
+          var selectedOption = select.options[select.selectedIndex];
+          var price = selectedOption ? (selectedOption.getAttribute('data-price') || '0.00') : '0.00';
+          priceValue.textContent = parseFloat(price).toFixed(2);
+          if (hiddenPriceInput) hiddenPriceInput.value = priceValue.textContent;
+        }
+        function showUpdatePricePrompt() {
+          if (!priceValue) return;
+          var currentPrice = priceValue.textContent;
+          var newPrice = prompt('Enter new price for this product:', currentPrice);
+          if (newPrice !== null && !isNaN(parseFloat(newPrice))) {
+            priceValue.textContent = parseFloat(newPrice).toFixed(2);
+            if (hiddenPriceInput) hiddenPriceInput.value = priceValue.textContent;
+          }
+        }
+        if (select) {
+          select.addEventListener('change', updatePriceDisplay);
+          updatePriceDisplay();
+        }
+        var updatePriceBtn = document.getElementById('update-price-btn');
+        if (updatePriceBtn) {
+          updatePriceBtn.addEventListener('click', showUpdatePricePrompt);
+        }
+        // Sync price before submit
+        var orderForm = document.getElementById('orderForm');
+        if (orderForm) {
+          orderForm.addEventListener('submit', function() {
+            if (hiddenPriceInput && priceValue) {
+              hiddenPriceInput.value = priceValue.textContent;
+            }
+          });
+        }
+      });
+      </script>
     `
   });
 });
