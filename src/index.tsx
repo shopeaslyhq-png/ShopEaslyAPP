@@ -1,9 +1,8 @@
 
 import React from "react";
 import { createRoot } from "react-dom/client";
-import EaslyOfflineAI from "./EaslyOfflineAI";
-import EaslyAIEventFeed from "./EaslyAIEventFeed";
-import { firestore } from "./firebase";
+
+import ProductDescriptionGenerator from "./ProductDescriptionGenerator";
 
 // TODO: Replace with actual user authentication logic
 const userUid = "demo-user"; // Replace with the real authenticated user's UID
@@ -17,7 +16,11 @@ root.render(
       <div style={{ width: "100%", overflowX: "auto", whiteSpace: "nowrap", display: "flex", gap: 16, padding: "16px 0 8px 0", alignItems: "flex-start", borderBottom: "1px solid #eee" }}>
         <EaslyAIEventFeed uid={userUid} firestore={firestore} />
       </div>
-      {/* Main dashboard content would go here */}
+      {/* Product Description Generator below event cards */}
+      <div style={{ marginTop: 24, display: "flex", justifyContent: "center" }}>
+        <ProductDescriptionGenerator />
+      </div>
+      {/* Offline AI below generator */}
       <div style={{ marginTop: 24 }}>
         <EaslyOfflineAI />
       </div>
