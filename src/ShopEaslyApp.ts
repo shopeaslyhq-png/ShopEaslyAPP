@@ -37,6 +37,22 @@ if (SpeechRecognition) {
 
 // --- MAIN APPLICATION CLASS ---
 export class ShopEaslyApp {
+
+    updateDashboardGiantBtns(): void {
+        if (this.giantProductsCount) this.giantProductsCount.textContent = String(appState.products.length);
+        if (this.giantMaterialsCount) this.giantMaterialsCount.textContent = String(appState.materials.length);
+        if (this.giantPackagingCount) this.giantPackagingCount.textContent = String(appState.packaging.length);
+        if (this.giantOrdersList) {
+            const orders = appState.orders.slice(0, 3).map((o: any) => {
+                const items = (o.items || []).map((i: any) => {
+                    const p = this.findItemById('products', i.productId);
+                    return p ? p.name : 'Item';
+                }).join(', ');
+                return `<div>${o.customer}: ${items} <span style='color:#888;'>[${o.status}]</span></div>`;
+            }).join('');
+            this.giantOrdersList.innerHTML = orders || '<div style="color:#aaa;">No orders</div>';
+        }
+    }
     // A subset of critical DOM Elements for easy access
     [key: string]: HTMLElement | any;
 
@@ -64,6 +80,7 @@ export class ShopEaslyApp {
         this.navigateTo(appState.currentView, true);
         this.updateAllStats();
         this.renderAllTables();
+        this.updateDashboardGiantBtns();
         console.log('ShopEasly App Initialized Successfully.');
     }
 
@@ -81,7 +98,8 @@ export class ShopEaslyApp {
             'item-modal-overlay', 'close-modal-btn', 'modal-title', 'item-form', 'item-id', 'item-type', 'item-name', 'item-name-label', 'item-sku', 'price-form-group', 'item-price', 'item-stock', 'item-stock-threshold', 'item-supplier', 'item-notes',
             'order-modal-overlay', 'close-order-modal-btn', 'order-modal-title', 'order-form', 'order-id', 'order-customer-name', 'order-status', 'order-items-container', 'add-order-item-btn', 'order-total-price', 'order-notes',
             'ai-fab-btn', 'ai-assistant-modal', 'ai-modal-close-btn', 'ai-chat-history', 'ai-text-input', 'ai-voice-btn', 'ai-send-btn', 'ai-status-text', 'ai-guide-btn', 'ai-guide-modal', 'ai-guide-close-btn',
-            'toast-notification', 'file-input-excel'
+            'toast-notification', 'file-input-excel',
+            'giant-products-count', 'giant-materials-count', 'giant-packaging-count', 'giant-orders-list'
         ];
         ids.forEach(id => {
             this[id.replace(/-./g, m => m[1].toUpperCase())] = document.getElementById(id);
@@ -121,7 +139,7 @@ export class ShopEaslyApp {
                 return;
             }
 
-            // Navigation (Sidebar, Hub Cards, Widgets)
+            // Navigation (Giant Dashboard Buttons, Sidebar, Hub Cards, Widgets)
             const navTarget = target.closest('[data-view]');
             if (navTarget) {
                 this.navigateTo(navTarget.getAttribute('data-view')!);
@@ -736,9 +754,9 @@ export class ShopEaslyApp {
         }
 
         try {
-            // Strictly allow only shop/dashboard/product brainstorms
-            const allowed = /product|shop|inventory|order|material|marketing|improvement/i;
-            if (!allowed.test(prompt)) {
+            // Loosen filter: allow any prompt that isn't clearly off-topic
+            const offTopic = /(weather|joke|movie|music|celebrity|politics|sports|news|recipe|travel|game|roleplay|story|fanfic|fiction|poem|song|lyrics|astrology|horoscope|dating|relationship|personal|therapy|medical|legal|finance|investment|crypto|stock|betting|gambling|adult|nsfw|inappropriate)/i;
+            if (offTopic.test(prompt)) {
                 if (this.brainstormResults) {
                     this.brainstormResults.innerHTML = 'I’m only able to assist with shop and dashboard operations.';
                     this.brainstormResults.style.display = 'block';
@@ -747,10 +765,10 @@ export class ShopEaslyApp {
                 return;
             }
 
-            // Step 1: Brainstorm product idea
+            // Step 1: Brainstorm product idea (short, direct)
             const response = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
-                contents: `Brainstorm a new product idea for an e-commerce shop. Give a short name and a one-sentence description. Format as: Name: ...\nDescription: ...` 
+                contents: `Suggest a new product for an e-commerce shop. Reply with: Name: ...\nDescription: ...` 
             });
             let idea = response.text || '';
             let nameMatch = idea.match(/Name:\s*(.+)/i);
@@ -781,20 +799,20 @@ export class ShopEaslyApp {
     renderBrainstormConversation() {
         if (!this.brainstormResults || !this.brainstormState) return;
         const s = this.brainstormState;
-        let html = `<div style='margin-bottom:0.5rem;'><strong>Idea:</strong> ${s.name}<br><span style='color:#666;'>${s.description}</span></div>`;
+        let html = `<div style='margin-bottom:0.5rem;'><strong>${s.name}</strong><br><span style='color:#666;'>${s.description}</span></div>`;
         if (!s.saved) {
             html += `<form id='brainstorm-product-form' style='display:flex;flex-direction:column;gap:0.5rem;'>`;
-            html += `<input class='form-input' id='brainstorm-material' placeholder='Material (e.g. 100% Cotton)' maxlength='40' value='${s.material || ''}' required>`;
+            html += `<input class='form-input' id='brainstorm-material' placeholder='Material' maxlength='40' value='${s.material || ''}' required>`;
             html += `<input class='form-input' id='brainstorm-image' placeholder='Image URL or description' maxlength='120' value='${s.image || ''}' required>`;
-            html += `<input class='form-input' id='brainstorm-price' type='number' min='0' step='0.01' placeholder='Price (USD)' value='${s.price || ''}' required>`;
-            html += `<input class='form-input' id='brainstorm-qty' type='number' min='1' step='1' placeholder='Quantity' value='${s.qty || ''}' required>`;
+            html += `<input class='form-input' id='brainstorm-price' type='number' min='0' step='0.01' placeholder='Price' value='${s.price || ''}' required>`;
+            html += `<input class='form-input' id='brainstorm-qty' type='number' min='1' step='1' placeholder='Qty' value='${s.qty || ''}' required>`;
             html += `<div style='display:flex;gap:0.5rem;'>`;
-            html += `<button type='submit' class='btn btn-primary'>Save Product</button>`;
-            html += `<button type='button' class='btn btn-secondary' id='brainstorm-update-btn'>Update Fields</button>`;
+            html += `<button type='submit' class='btn btn-primary'>Save</button>`;
+            html += `<button type='button' class='btn btn-secondary' id='brainstorm-update-btn'>Update</button>`;
             html += `</div></form>`;
         } else {
-            html += `<div class='success-text' style='margin-bottom:0.5rem;'>Product saved!</div>`;
-            html += `<button class='btn btn-secondary' id='brainstorm-create-order-btn'>Create Order for this Product</button>`;
+            html += `<div class='success-text' style='margin-bottom:0.5rem;'>Saved.</div>`;
+            html += `<button class='btn btn-secondary' id='brainstorm-create-order-btn'>Create Order</button>`;
         }
         this.brainstormResults.innerHTML = html;
         this.brainstormResults.style.display = 'block';
@@ -829,7 +847,7 @@ export class ShopEaslyApp {
                         this.updateAllStats();
                         s.saved = true;
                         s.productId = newProduct.id;
-                        this.showToast('Product saved! You can now create an order.', 'success');
+                        this.showToast('Saved.', 'success');
                         this.renderBrainstormConversation();
                     };
                 }
@@ -841,7 +859,7 @@ export class ShopEaslyApp {
                         s.image = (document.getElementById('brainstorm-image') as HTMLInputElement).value.trim();
                         s.price = (document.getElementById('brainstorm-price') as HTMLInputElement).value.trim();
                         s.qty = (document.getElementById('brainstorm-qty') as HTMLInputElement).value.trim();
-                        this.showToast('Fields updated. You can now save or continue editing.', 'info');
+                        this.showToast('Updated.', 'info');
                         this.renderBrainstormConversation();
                     };
                 }
@@ -1000,7 +1018,7 @@ export class ShopEaslyApp {
                         systemInstruction: `You are "Easly", an AI assistant for the ShopEasly e-commerce management app. Your goal is to help the user manage their store by voice. When the user gives a command, you MUST respond ONLY with a JSON object following the provided schema. Do not add any conversational text or markdown formatting. The action must be one of the following: 'create', 'update', 'find', 'navigate', or 'unknown'. For 'create' or 'update', the entity must be one of 'product', 'material', 'packaging', or 'order'. The parameters object should contain all extracted information. If a parameter is missing, omit it from the object. If you cannot understand the command, respond with action: 'unknown'.`,
                     },
                 });
-                await this.addMessageToChat('model', 'Hello! How can I help you manage your shop?');
+                await this.addMessageToChat('model', 'Welcome! I’m Easly AI. How can I help you today?');
             }
         } else {
             this.aiAssistantModal?.classList.add('hidden');

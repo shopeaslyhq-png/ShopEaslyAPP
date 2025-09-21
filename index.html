@@ -23,33 +23,35 @@
     <!-- Main App Wrapper -->
     <div id="app-wrapper">
         <div id="app" class="app-container">
-            <!-- Sidebar -->
-            <nav class="sidebar">
-                <div class="sidebar-header">
-                    <div class="logo">
-                       <img src="/images/shopeasly-logo.png" alt="ShopEasly Logo" class="logo-img">
-                       <span>ShopEasly</span>
-                    </div>
-                </div>
-                <div class="sidebar-profile" id="user-profile">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="avatar"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                    <span>Authenticated User</span>
-                </div>
-                <ul class="sidebar-nav">
-                    <li><button id="nav-dashboard" data-view="dashboard-view" class="nav-btn active" aria-current="page">Dashboard</button></li>
-                    <li><button id="nav-orders" data-view="orders-view" class="nav-btn">Orders</button></li>
-                    <li><button id="nav-products" data-view="finished-goods-view" class="nav-btn">Products</button></li>
-                    <li><button id="nav-materials" data-view="materials-view" class="nav-btn">Materials</button></li>
-                    <li><button id="nav-packaging" data-view="packaging-view" class="nav-btn">Packaging</button></li>
-                    <li><button id="nav-ideas" data-view="ideas-view" class="nav-btn">Ideas Hub</button></li>
-                </ul>
-                <div class="sidebar-footer">
-                    <div class="theme-picker">
-                        <button class="theme-btn" data-theme="light" aria-label="Switch to light theme" aria-pressed="false"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></button>
-                        <button class="theme-btn active" data-theme="dark" aria-label="Switch to dark theme" aria-pressed="true"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></button>
-                    </div>
-                </div>
-            </nav>
+            <!-- Dashboard Giant Buttons -->
+            <div class="dashboard-giant-btns" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:2rem;padding:2.5rem 1rem 1rem 1rem;">
+                <button class="giant-btn" data-view="finished-goods-view" style="font-size:1.5rem;padding:2.5rem 1rem;border-radius:1.5rem;background:var(--surface);box-shadow:0 4px 24px #0001;display:flex;flex-direction:column;align-items:center;">
+                    <div style="font-size:2.5rem;">📦</div>
+                    <div>Inventory</div>
+                    <div style="font-size:1rem;color:#888;margin-top:0.5rem;">Products: <span id="giant-products-count">0</span> | Materials: <span id="giant-materials-count">0</span> | Packaging: <span id="giant-packaging-count">0</span></div>
+                </button>
+                <button class="giant-btn" data-view="orders-view" style="font-size:1.5rem;padding:2.5rem 1rem;border-radius:1.5rem;background:var(--surface);box-shadow:0 4px 24px #0001;display:flex;flex-direction:column;align-items:center;">
+                    <div style="font-size:2.5rem;">📝</div>
+                    <div>Orders</div>
+                    <div id="giant-orders-list" style="font-size:1rem;color:#888;margin-top:0.5rem;text-align:center;"></div>
+                </button>
+                <button class="giant-btn" data-view="materials-view" style="font-size:1.5rem;padding:2.5rem 1rem;border-radius:1.5rem;background:var(--surface);box-shadow:0 4px 24px #0001;display:flex;flex-direction:column;align-items:center;">
+                    <div style="font-size:2.5rem;">🧵</div>
+                    <div>Materials</div>
+                </button>
+                <button class="giant-btn" data-view="packaging-view" style="font-size:1.5rem;padding:2.5rem 1rem;border-radius:1.5rem;background:var(--surface);box-shadow:0 4px 24px #0001;display:flex;flex-direction:column;align-items:center;">
+                    <div style="font-size:2.5rem;">📦</div>
+                    <div>Packaging</div>
+                </button>
+                <button class="giant-btn" data-view="ideas-view" style="font-size:1.5rem;padding:2.5rem 1rem;border-radius:1.5rem;background:var(--surface);box-shadow:0 4px 24px #0001;display:flex;flex-direction:column;align-items:center;">
+                    <div style="font-size:2.5rem;">💡</div>
+                    <div>Ideas Hub</div>
+                </button>
+                <button class="giant-btn" id="ai-fab-btn" style="font-size:1.5rem;padding:2.5rem 1rem;border-radius:1.5rem;background:var(--primary);color:#fff;box-shadow:0 4px 24px #0002;display:flex;flex-direction:column;align-items:center;">
+                    <div style="font-size:2.5rem;">🤖</div>
+                    <div>AI Assistant</div>
+                </button>
+            </div>
 
                         <!-- Main Content -->
                         <main id="main-content">
