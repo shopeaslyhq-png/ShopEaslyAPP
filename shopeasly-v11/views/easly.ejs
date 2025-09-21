@@ -530,7 +530,7 @@
         <div class="bulk-creation-tabs">
             <div class="tab-headers">
                 <button class="tab-header active" data-tab="templates">🎯 Templates</button>
-                <button class="tab-header" data-tab="csv">📊 CSV Import</button>
+                <button class="tab-header" data-tab="csv">📊 CSV/Excel Import</button>
                 <button class="tab-header" data-tab="ai-batch">🤖 AI Batch</button>
             </div>
             
@@ -596,27 +596,30 @@
                 </div>
             </div>
             
-            <!-- CSV Import Tab -->
+            <!-- CSV/Excel Import Tab -->
             <div class="tab-content" data-tab="csv">
                 <div class="tab-section">
-                    <h3>CSV Import</h3>
-                    <p>Upload a CSV file with product data to create multiple products at once</p>
+                    <h3>CSV & Excel Import</h3>
+                    <p>Upload a CSV or Excel file with product data to create multiple products at once</p>
                     
                     <div class="csv-upload-area">
                         <div class="upload-section">
                             <div class="upload-dropzone" id="csvDropzone">
                                 <div class="upload-content">
                                     <div class="upload-icon">📊</div>
-                                    <h4>Drop CSV file here or click to browse</h4>
-                                    <p>Maximum file size: 5MB</p>
+                                    <h4>Drop CSV or Excel file here or click to browse</h4>
+                                    <p>Supports .csv, .xlsx, .xls • Maximum file size: 10MB</p>
                                     <button class="btn btn-secondary" id="csvFileBtn">Choose File</button>
-                                    <input type="file" id="csvFileInput" accept=".csv" style="display:none;">
+                                    <input type="file" id="csvFileInput" accept=".csv,.xlsx,.xls" style="display:none;">
                                 </div>
                             </div>
                             
                             <div class="csv-actions">
                                 <button class="btn btn-outline" id="downloadTemplate">
-                                    📥 Download Template
+                                    📥 Download CSV Template
+                                </button>
+                                <button class="btn btn-outline" id="downloadExcelTemplate">
+                                    📥 Download Excel Template
                                 </button>
                                 <button class="btn btn-outline" id="csvPreview" disabled>
                                     👀 Preview Data
@@ -625,12 +628,14 @@
                         </div>
                         
                         <div class="csv-requirements">
-                            <h4>CSV Format Requirements</h4>
+                            <h4>File Format Requirements</h4>
                             <ul>
                                 <li><strong>Required columns:</strong> name, category, price, stock</li>
                                 <li><strong>Optional columns:</strong> description, sku, imageUrl, materials</li>
                                 <li><strong>Example:</strong> "Cool T-Shirt", "Apparel", "25.00", "50", "Amazing design"</li>
                                 <li><strong>Materials:</strong> Separate multiple materials with semicolons</li>
+                                <li><strong>Excel support:</strong> Data should be in the first worksheet</li>
+                                <li><strong>Formats:</strong> CSV (.csv), Excel 2007+ (.xlsx), Excel 97-2003 (.xls)</li>
                             </ul>
                         </div>
                         
@@ -750,6 +755,9 @@
         </div>
     </div>
     </div>
+
+<!-- SheetJS Library for Excel file support -->
+<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <script>
 // Enhanced AI Assistant JavaScript
@@ -2775,17 +2783,33 @@ function applyTemplateDefaults(templateType) {
 The Product Wizard is now pre-configured with these settings!`);
 }
 
-// CSV handling
-function handleCSVUpload(file) {
+// CSV/Excel handling
+function handleFileUpload(file) {
     if (!file) return;
     
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        showToast('CSV file must be less than 5MB', 'error');
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        showToast('File must be less than 10MB', 'error');
         return;
     }
     
-    bulkCreationState.csvFile = file;
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+    const supportedFormats = ['csv', 'xlsx', 'xls'];
     
+    if (!supportedFormats.includes(fileExtension)) {
+        showToast('Unsupported file format. Please use CSV, XLSX, or XLS files.', 'error');
+        return;
+    }
+    
+    bulkCreationState.uploadedFile = file;
+    
+    if (fileExtension === 'csv') {
+        handleCSVFile(file);
+    } else {
+        handleExcelFile(file);
+    }
+}
+
+function handleCSVFile(file) {
     const reader = new FileReader();
     reader.onload = (e) => {
         try {
@@ -2798,6 +2822,8 @@ function handleCSVUpload(file) {
             const previewBtn = document.getElementById('csvPreview');
             if (previewBtn) previewBtn.disabled = false;
             
+            showToast(`CSV file loaded successfully: ${parsedData.data.length} products found`, 'success');
+            
         } catch (error) {
             console.error('CSV parsing error:', error);
             showToast('Failed to parse CSV file. Please check the format.', 'error');
@@ -2805,6 +2831,60 @@ function handleCSVUpload(file) {
     };
     
     reader.readAsText(file);
+}
+
+function handleExcelFile(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const arrayBuffer = e.target.result;
+            const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+            
+            // Get the first worksheet
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            
+            // Convert to JSON
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            
+            if (jsonData.length < 2) {
+                throw new Error('Excel file must have at least a header row and one data row');
+            }
+            
+            // Parse Excel data into our format
+            const headers = jsonData[0].map(h => String(h || '').trim());
+            const data = [];
+            
+            for (let i = 1; i < jsonData.length; i++) {
+                const values = jsonData[i];
+                const row = {};
+                
+                headers.forEach((header, index) => {
+                    row[header] = String(values[index] || '').trim();
+                });
+                
+                // Skip empty rows
+                if (Object.values(row).some(val => val.trim())) {
+                    data.push(row);
+                }
+            }
+            
+            const parsedData = { headers, data };
+            bulkCreationState.csvData = parsedData;
+            displayCSVPreview(parsedData);
+            
+            const previewBtn = document.getElementById('csvPreview');
+            if (previewBtn) previewBtn.disabled = false;
+            
+            showToast(`Excel file loaded successfully: ${data.length} products found from worksheet "${sheetName}"`, 'success');
+            
+        } catch (error) {
+            console.error('Excel parsing error:', error);
+            showToast('Failed to parse Excel file. Please check the format and ensure data is in the first worksheet.', 'error');
+        }
+    };
+    
+    reader.readAsArrayBuffer(file);
 }
 
 function parseCSV(csvText) {
@@ -2847,7 +2927,49 @@ function downloadCSVTemplate() {
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
     
-    showToast('Template downloaded successfully', 'success');
+    showToast('CSV template downloaded successfully', 'success');
+}
+
+function downloadExcelTemplate() {
+    try {
+        // Create a new workbook
+        const wb = XLSX.utils.book_new();
+        
+        // Create sample data
+        const data = [
+            ['name', 'category', 'price', 'stock', 'description', 'sku', 'imageUrl', 'materials'],
+            ['Cool Space T-Shirt', 'Apparel', 25.00, 50, 'Amazing space-themed design', 'APP-COOL-001', '', 'Cotton T-Shirt;Fabric Paint'],
+            ['Galaxy Coffee Mug', 'Drinkware', 18.50, 30, 'Perfect for space lovers', 'DRK-GAL-002', '', 'Ceramic Mug'],
+            ['Retro Sticker Pack', 'Stickers', 8.99, 100, 'Vintage space stickers', 'STK-RET-003', '', 'Vinyl Sticker Paper']
+        ];
+        
+        // Create worksheet
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        
+        // Set column widths
+        ws['!cols'] = [
+            { wch: 20 }, // name
+            { wch: 12 }, // category
+            { wch: 8 },  // price
+            { wch: 8 },  // stock
+            { wch: 30 }, // description
+            { wch: 15 }, // sku
+            { wch: 20 }, // imageUrl
+            { wch: 25 }  // materials
+        ];
+        
+        // Add worksheet to workbook
+        XLSX.utils.book_append_sheet(wb, ws, 'Products');
+        
+        // Write file
+        XLSX.writeFile(wb, 'product-template.xlsx');
+        
+        showToast('Excel template downloaded successfully', 'success');
+        
+    } catch (error) {
+        console.error('Error creating Excel template:', error);
+        showToast('Failed to create Excel template', 'error');
+    }
 }
 
 // Event listeners for bulk creation
@@ -2880,17 +3002,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // CSV handling
+    // File handling (CSV/Excel)
     const csvFileBtn = document.getElementById('csvFileBtn');
     const csvFileInput = document.getElementById('csvFileInput');
     const csvDropzone = document.getElementById('csvDropzone');
     const downloadTemplateBtn = document.getElementById('downloadTemplate');
+    const downloadExcelTemplateBtn = document.getElementById('downloadExcelTemplate');
     
     if (csvFileBtn && csvFileInput) {
         csvFileBtn.addEventListener('click', () => csvFileInput.click());
         csvFileInput.addEventListener('change', (e) => {
             if (e.target.files[0]) {
-                handleCSVUpload(e.target.files[0]);
+                handleFileUpload(e.target.files[0]);
             }
         });
     }
@@ -2910,10 +3033,15 @@ document.addEventListener('DOMContentLoaded', () => {
             csvDropzone.classList.remove('dragover');
             
             const files = e.dataTransfer.files;
-            if (files[0] && files[0].type === 'text/csv') {
-                handleCSVUpload(files[0]);
-            } else {
-                showToast('Please drop a CSV file', 'error');
+            if (files[0]) {
+                const fileExtension = files[0].name.split('.').pop().toLowerCase();
+                const supportedFormats = ['csv', 'xlsx', 'xls'];
+                
+                if (supportedFormats.includes(fileExtension)) {
+                    handleFileUpload(files[0]);
+                } else {
+                    showToast('Please drop a CSV or Excel file (.csv, .xlsx, .xls)', 'error');
+                }
             }
         });
         
@@ -2924,6 +3052,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (downloadTemplateBtn) {
         downloadTemplateBtn.addEventListener('click', downloadCSVTemplate);
+    }
+    
+    if (downloadExcelTemplateBtn) {
+        downloadExcelTemplateBtn.addEventListener('click', downloadExcelTemplate);
     }
 });
 
