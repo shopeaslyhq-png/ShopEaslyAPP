@@ -46,17 +46,37 @@ async function editOrder(id, updates) {
     data.notes = String(updates.notes).trim();
   }
 
-  if (updates.product != null) {
-    const productName = String(updates.product).trim();
-    if (!productName) throw new Error('product cannot be empty');
-    // Validate that product exists and is a finished good
-    const inventoryItems = await getAllDocuments('inventory', 500);
-    const invMatch = inventoryItems.find(i => String(i.name).toLowerCase() === productName.toLowerCase());
+  // Product change: accept product, productId, or productSku
+  if (updates.product != null || updates.productId != null || updates.productSku != null) {
+    const inventoryItems = await getAllDocuments('inventory', 2000);
+    const byId = new Map(inventoryItems.map(i => [String(i.id), i]));
+    const bySku = new Map(inventoryItems.filter(i => i.sku).map(i => [String(i.sku).toUpperCase(), i]));
+    const byName = new Map(inventoryItems.filter(i => i.name).map(i => [String(i.name).toLowerCase(), i]));
+
+    let invMatch = null;
+    const prodId = updates.productId != null ? String(updates.productId).trim() : '';
+    const prodSku = updates.productSku != null ? String(updates.productSku).trim() : '';
+    const prodName = updates.product != null ? String(updates.product).trim() : '';
+
+    if (prodId && byId.has(prodId)) invMatch = byId.get(prodId);
+    if (!invMatch && prodSku && bySku.has(prodSku.toUpperCase())) invMatch = bySku.get(prodSku.toUpperCase());
+    if (!invMatch && prodName) {
+      if (byId.has(prodName)) invMatch = byId.get(prodName);
+      else if (bySku.has(prodName.toUpperCase())) invMatch = bySku.get(prodName.toUpperCase());
+      else if (byName.has(prodName.toLowerCase())) invMatch = byName.get(prodName.toLowerCase());
+    }
+
     if (!invMatch) throw new Error('Selected product not found in inventory');
     if (isMaterialsCat(invMatch.category) || isPackingCat(invMatch.category)) {
       throw new Error('Only finished Products can be ordered (not Materials or Packing Materials)');
     }
-    data.product = invMatch.name.trim();
+
+    // Keep existing `product` for compatibility but also set explicit product fields
+    data.product = String(invMatch.name || '').trim();
+    data.productId = invMatch.id;
+    data.productName = String(invMatch.name || '').trim();
+    data.productSku = invMatch.sku || null;
+
     // If caller cleared price explicitly to null/empty, default to inventory price
     if (updates.price === '' || updates.price === null) {
       const invPrice = Number(invMatch.price);

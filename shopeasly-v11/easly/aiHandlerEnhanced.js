@@ -268,6 +268,8 @@ async function executeInventoryAction(action) {
   }
 }
 
+const { generateOrderNumber } = require('../utils/orderNumber');
+
 async function executeOrderAction(action) {
   const { type, payload } = action;
   
@@ -278,18 +280,56 @@ async function executeOrderAction(action) {
         return { success: true, message: `✅ Updated order status to ${payload.status}` };
       
       case 'create_order':
+        // Resolve product by id/sku/name
+        if (!payload || !payload.customerName) throw new Error('customerName is required');
+        if (payload.quantity == null) throw new Error('quantity is required');
+        const qty = Number.parseInt(payload.quantity, 10);
+        if (!Number.isFinite(qty) || qty < 1) throw new Error('quantity must be an integer >= 1');
+
+        const items = await getAllDocuments('inventory', 2000);
+        const byId = new Map(items.map(i => [String(i.id), i]));
+        const bySku = new Map(items.filter(i => i.sku).map(i => [String(i.sku).toUpperCase(), i]));
+        const byName = new Map(items.filter(i => i.name).map(i => [String(i.name).toLowerCase(), i]));
+
+        const prodId = payload.productId != null ? String(payload.productId).trim() : '';
+        const prodSku = payload.productSku != null ? String(payload.productSku).trim() : '';
+        const prodStr = payload.product != null ? String(payload.product).trim() : '';
+        let invMatch = null;
+        if (prodId && byId.has(prodId)) invMatch = byId.get(prodId);
+        if (!invMatch && prodSku && bySku.has(prodSku.toUpperCase())) invMatch = bySku.get(prodSku.toUpperCase());
+        if (!invMatch && prodStr) {
+          if (byId.has(prodStr)) invMatch = byId.get(prodStr);
+          else if (bySku.has(prodStr.toUpperCase())) invMatch = bySku.get(prodStr.toUpperCase());
+          else if (byName.has(prodStr.toLowerCase())) invMatch = byName.get(prodStr.toLowerCase());
+        }
+        if (!invMatch) throw new Error('Selected product not found in inventory');
+        const cat = invMatch.category || '';
+        if (/^(materials|raw\s*materials?)$/i.test(cat) || /^packing\s*materials?$/i.test(cat)) {
+          throw new Error('Only finished Products can be ordered (not Materials or Packing Materials)');
+        }
+
+        const unitPrice = payload.price != null && String(payload.price) !== ''
+          ? Number.parseFloat(payload.price)
+          : (Number.isFinite(Number(invMatch.price)) ? Number(invMatch.price) : null);
+        const nowIso = new Date().toISOString();
+        const orderNumber = await generateOrderNumber();
         const newOrder = {
-          customerName: payload.customerName,
-          product: payload.product,
-          quantity: payload.quantity || 1,
-          price: payload.price || 0,
+          customerName: String(payload.customerName).trim(),
+          product: String(invMatch.name || '').trim(),
+          productId: invMatch.id,
+          productName: String(invMatch.name || '').trim(),
+          productSku: invMatch.sku || null,
+          quantity: qty,
+          price: unitPrice,
+          total: unitPrice != null ? Number((unitPrice * qty).toFixed(2)) : null,
           status: payload.status || 'Pending',
           notes: payload.notes || '',
-          date: new Date().toISOString().split('T')[0],
-          orderNumber: `ORD-${Date.now()}`
+          date: nowIso.split('T')[0],
+          createdAt: nowIso,
+          orderNumber
         };
         const docRef = await createDocument('orders', newOrder);
-        return { success: true, message: `✅ Created order ${newOrder.orderNumber} for ${payload.customerName}`, id: docRef.id, orderNumber: newOrder.orderNumber };
+        return { success: true, message: `✅ Created order ${newOrder.orderNumber} for ${newOrder.customerName}`, id: docRef.id, orderNumber: newOrder.orderNumber };
       
       case 'delete_order':
         await deleteDocument('orders', payload.id);

@@ -95,16 +95,20 @@ router.get('/new', (req, res) => {
               </div>
               <div class="form-group">
                 <label>Quantity *</label>
-                <input type="number" name="quantity" class="form-input" min="1" required>
+                <input type="number" name="quantity" id="quantityInput" class="form-input" min="1" value="1" required>
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
                 <label>Price ($)</label>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <span id="price-display" style="font-weight: bold;">$<span id="price-value">0.00</span></span>
+                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                  <span><strong>Unit:</strong> $<span id="unit-price-value">0.00</span></span>
+                  <span><strong>Total:</strong> $<span id="price-value">0.00</span></span>
                   <button type="button" class="btn btn-secondary" id="update-price-btn">Update Price</button>
+                  <!-- Backend expects 'price' to be unit price -->
                   <input type="hidden" name="price" id="hidden-price-input" value="0.00" />
+                  <!-- Also send total for reference (server will compute too) -->
+                  <input type="hidden" name="total" id="hidden-total-input" value="0.00" />
                 </div>
               </div>
               <div class="form-group">
@@ -133,8 +137,12 @@ router.get('/new', (req, res) => {
       document.addEventListener('DOMContentLoaded', function() {
         var products = window.products || [];
         var select = document.getElementById('productSelect');
-        var priceValue = document.getElementById('price-value');
-        var hiddenPriceInput = document.getElementById('hidden-price-input');
+        var qtyInput = document.getElementById('quantityInput');
+        var unitPriceSpan = document.getElementById('unit-price-value');
+        var totalPriceSpan = document.getElementById('price-value');
+        var hiddenUnitPrice = document.getElementById('hidden-price-input');
+        var hiddenTotalPrice = document.getElementById('hidden-total-input');
+        var unitPrice = 0.0;
         if (select && products.length) {
           products.forEach(function(p) {
             var opt = document.createElement('option');
@@ -144,25 +152,33 @@ router.get('/new', (req, res) => {
             select.appendChild(opt);
           });
         }
-        function updatePriceDisplay() {
-          if (!select || !priceValue) return;
+        function recalc() {
+          var qty = qtyInput ? parseInt(qtyInput.value || '1', 10) : 1;
+          if (!Number.isFinite(qty) || qty < 1) qty = 1;
+          var total = (Number(unitPrice) || 0) * qty;
+          if (unitPriceSpan) unitPriceSpan.textContent = (Number(unitPrice) || 0).toFixed(2);
+          if (totalPriceSpan) totalPriceSpan.textContent = total.toFixed(2);
+          if (hiddenUnitPrice) hiddenUnitPrice.value = (Number(unitPrice) || 0).toFixed(2);
+          if (hiddenTotalPrice) hiddenTotalPrice.value = total.toFixed(2);
+        }
+        function updateUnitPriceFromSelection() {
+          if (!select) return;
           var selectedOption = select.options[select.selectedIndex];
-          var price = selectedOption ? (selectedOption.getAttribute('data-price') || '0.00') : '0.00';
-          priceValue.textContent = parseFloat(price).toFixed(2);
-          if (hiddenPriceInput) hiddenPriceInput.value = priceValue.textContent;
+          var p = selectedOption ? (selectedOption.getAttribute('data-price') || '0.00') : '0.00';
+          unitPrice = parseFloat(p) || 0;
+          recalc();
         }
         function showUpdatePricePrompt() {
-          if (!priceValue) return;
-          var currentPrice = priceValue.textContent;
-          var newPrice = prompt('Enter new price for this product:', currentPrice);
+          var current = unitPriceSpan ? unitPriceSpan.textContent : (unitPrice.toFixed(2));
+          var newPrice = prompt('Enter new UNIT price for this product:', current);
           if (newPrice !== null && !isNaN(parseFloat(newPrice))) {
-            priceValue.textContent = parseFloat(newPrice).toFixed(2);
-            if (hiddenPriceInput) hiddenPriceInput.value = priceValue.textContent;
+            unitPrice = parseFloat(newPrice);
+            recalc();
           }
         }
         if (select) {
-          select.addEventListener('change', updatePriceDisplay);
-          updatePriceDisplay();
+          select.addEventListener('change', updateUnitPriceFromSelection);
+          updateUnitPriceFromSelection();
         }
         var updatePriceBtn = document.getElementById('update-price-btn');
         if (updatePriceBtn) {
@@ -172,11 +188,10 @@ router.get('/new', (req, res) => {
         var orderForm = document.getElementById('orderForm');
         if (orderForm) {
           orderForm.addEventListener('submit', function() {
-            if (hiddenPriceInput && priceValue) {
-              hiddenPriceInput.value = priceValue.textContent;
-            }
+            recalc();
           });
         }
+        if (qtyInput) qtyInput.addEventListener('input', recalc);
       });
       </script>
     `
@@ -189,15 +204,34 @@ router.get('/new', (req, res) => {
 // Create new order in local store
 router.post('/', async (req, res) => {
   try {
-    const { customerName, product, quantity, price, status, notes } = req.body;
+    const { customerName, product, productId, productSku, quantity, price, status, notes } = req.body || {};
 
-    if (!customerName || !product || !quantity) {
+    if (!customerName || (!product && !productId && !productSku) || quantity === undefined) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Validate product exists in inventory and is a finished good
-    const inventoryItems = await getAllDocuments('inventory', 500);
-    const invMatch = inventoryItems.find(i => String(i.name).toLowerCase() === String(product).toLowerCase());
+    const qty = Number.parseInt(quantity, 10);
+    if (!Number.isFinite(qty) || qty < 1) {
+      return res.status(400).json({ error: 'quantity must be an integer >= 1' });
+    }
+
+    // Resolve product by ID, SKU, or Name (case-insensitive)
+    const inventoryItems = await getAllDocuments('inventory', 2000);
+    const byId = new Map(inventoryItems.map(i => [String(i.id), i]));
+    const bySku = new Map(inventoryItems.filter(i => i.sku).map(i => [String(i.sku).toUpperCase(), i]));
+    const byName = new Map(inventoryItems.filter(i => i.name).map(i => [String(i.name).toLowerCase(), i]));
+
+    const productInput = product != null ? String(product).trim() : '';
+    let invMatch = null;
+    if (productId && byId.has(String(productId))) invMatch = byId.get(String(productId));
+    if (!invMatch && productSku && bySku.has(String(productSku).toUpperCase())) invMatch = bySku.get(String(productSku).toUpperCase());
+    if (!invMatch && productInput) {
+      // Try id → SKU → exact name
+      if (byId.has(productInput)) invMatch = byId.get(productInput);
+      else if (bySku.has(productInput.toUpperCase())) invMatch = bySku.get(productInput.toUpperCase());
+      else if (byName.has(productInput.toLowerCase())) invMatch = byName.get(productInput.toLowerCase());
+    }
+
     if (!invMatch) {
       return res.status(400).json({ error: 'Selected product not found in inventory' });
     }
@@ -206,15 +240,26 @@ router.post('/', async (req, res) => {
     }
 
     const orderNumber = await generateOrderNumber();
+    const unitPrice = price !== undefined && price !== null && String(price) !== ''
+      ? Number.parseFloat(price)
+      : (Number.isFinite(Number(invMatch.price)) ? Number(invMatch.price) : null);
+
+    const nowIso = new Date().toISOString();
     const orderData = {
-      customerName: customerName.trim(),
-      product: invMatch.name.trim(),
-      quantity: parseInt(quantity),
-      // Default price from inventory item if not provided
-      price: price ? parseFloat(price) : (Number.isFinite(Number(invMatch.price)) ? Number(invMatch.price) : null),
+      customerName: String(customerName).trim(),
+      // Keep original product field as name for backward-compatibility
+      product: String(invMatch.name || '').trim(),
+      // New explicit fields for robustness
+      productId: invMatch.id,
+      productName: String(invMatch.name || '').trim(),
+      productSku: invMatch.sku || null,
+      quantity: qty,
+      price: unitPrice,
+      total: unitPrice != null ? Number((unitPrice * qty).toFixed(2)) : null,
       status: status || 'Pending',
-      notes: notes ? notes.trim() : '',
-      date: new Date().toISOString().split('T')[0],
+      notes: notes ? String(notes).trim() : '',
+      date: nowIso.split('T')[0],
+      createdAt: nowIso,
       orderNumber,
     };
 
