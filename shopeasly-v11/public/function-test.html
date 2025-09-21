@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Function Test - Excel Upload</title>
+    <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+        
+        .test-container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+        }
+        
+        .test-section.success {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        
+        .test-section.error {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+        
+        .test-section.info {
+            border-color: #007bff;
+            background: #e3f2fd;
+        }
+        
+        .test-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: bold;
+        }
+        
+        .test-btn:hover {
+            background: #0056b3;
+        }
+        
+        .test-btn.success {
+            background: #28a745;
+        }
+        
+        .test-btn.danger {
+            background: #dc3545;
+        }
+        
+        .upload-area {
+            border: 3px dashed #007bff;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9fa;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area:hover {
+            border-color: #0056b3;
+            background: #e3f2fd;
+        }
+        
+        .upload-area.dragover {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        
+        .log {
+            background: #2d3748;
+            color: #68d391;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 15px 0;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .status-card {
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .status-card.pass {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #28a745;
+        }
+        
+        .status-card.fail {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #dc3545;
+        }
+        
+        .status-card.pending {
+            background: #fff3cd;
+            color: #856404;
+            border: 2px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Excel Upload Function Test Suite</h1>
+        <p>This page tests all Excel/CSV upload functionality to ensure it's working correctly.</p>
+        
+        <div class="status-grid" id="statusGrid">
+            <div class="status-card pending" id="status-xlsx">
+                <div>📚 XLSX Library</div>
+                <small>Loading...</small>
+            </div>
+            <div class="status-card pending" id="status-file">
+                <div>📄 Sample File</div>
+                <small>Testing...</small>
+            </div>
+            <div class="status-card pending" id="status-parse">
+                <div>🔍 File Parsing</div>
+                <small>Waiting...</small>
+            </div>
+            <div class="status-card pending" id="status-upload">
+                <div>📤 Upload Function</div>
+                <small>Ready to test</small>
+            </div>
+        </div>
+        
+        <div class="test-section info">
+            <h3>🚀 Quick Function Tests</h3>
+            <button class="test-btn" onclick="testXLSXLibrary()">Test XLSX Library</button>
+            <button class="test-btn" onclick="testSampleFile()">Test Sample File</button>
+            <button class="test-btn" onclick="testFileParser()">Test File Parser</button>
+            <button class="test-btn" onclick="runAllTests()">Run All Tests</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>📤 Live Upload Test</h3>
+            <p>Test the actual upload functionality with drag & drop or file selection:</p>
+            
+            <div class="upload-area" id="uploadArea">
+                <div style="font-size: 48px; margin-bottom: 15px;">📊</div>
+                <h3>Drop Excel/CSV files here or click to browse</h3>
+                <p>Supports .xlsx, .xls, .csv files • Max 10MB</p>
+                <button class="test-btn" id="uploadBtn">📁 Choose File</button>
+                <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display: none;">
+            </div>
+            
+            <div style="text-align: center; margin: 20px 0;">
+                <button class="test-btn success" onclick="downloadSampleExcel()">📥 Download Sample Excel</button>
+                <button class="test-btn success" onclick="downloadSampleCSV()">📥 Download Sample CSV</button>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>📋 Test Results</h3>
+            <div class="log" id="testLog">
+                🔄 Initializing tests...<br>
+            </div>
+        </div>
+        
+        <div id="uploadResults" style="display: none;"></div>
+    </div>
+
+    <script>
+        let testResults = {
+            xlsx: false,
+            file: false,
+            parse: false,
+            upload: false
+        };
+
+        // Log function
+        function log(message, type = 'info') {
+            const logEl = document.getElementById('testLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const colors = {
+                success: '#68d391',
+                error: '#fc8181',
+                warning: '#f6e05e',
+                info: '#63b3ed'
+            };
+            
+            logEl.innerHTML += `<span style="color: ${colors[type] || colors.info}">[${timestamp}] ${message}</span><br>`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        // Update status cards
+        function updateStatus(test, passed) {
+            const statusEl = document.getElementById(`status-${test}`);
+            if (statusEl) {
+                statusEl.className = `status-card ${passed ? 'pass' : 'fail'}`;
+                statusEl.querySelector('small').textContent = passed ? 'PASS ✅' : 'FAIL ❌';
+            }
+            testResults[test] = passed;
+        }
+
+        // Test XLSX library
+        function testXLSXLibrary() {
+            log('Testing XLSX library...', 'info');
+            
+            if (typeof XLSX !== 'undefined' && XLSX.version) {
+                log(`✅ XLSX library loaded successfully (v${XLSX.version})`, 'success');
+                updateStatus('xlsx', true);
+                return true;
+            } else {
+                log('❌ XLSX library not available', 'error');
+                updateStatus('xlsx', false);
+                return false;
+            }
+        }
+
+        // Test sample file accessibility
+        function testSampleFile() {
+            log('Testing sample file access...', 'info');
+            
+            fetch('/sample-products.xlsx')
+                .then(response => {
+                    if (response.ok) {
+                        log('✅ Sample Excel file is accessible', 'success');
+                        updateStatus('file', true);
+                        return response.arrayBuffer();
+                    } else {
+                        throw new Error(`HTTP ${response.status}: File not found`);
+                    }
+                })
+                .then(arrayBuffer => {
+                    log(`✅ File loaded successfully (${arrayBuffer.byteLength} bytes)`, 'success');
+                    window.testArrayBuffer = arrayBuffer; // Store for other tests
+                })
+                .catch(error => {
+                    log(`❌ Error accessing sample file: ${error.message}`, 'error');
+                    updateStatus('file', false);
+                });
+        }
+
+        // Test file parsing
+        function testFileParser() {
+            log('Testing file parsing...', 'info');
+            
+            if (!window.testArrayBuffer) {
+                log('❌ No sample file loaded. Run "Test Sample File" first.', 'error');
+                updateStatus('parse', false);
+                return;
+            }
+            
+            try {
+                const workbook = XLSX.read(window.testArrayBuffer, { type: 'array' });
+                log('✅ Workbook parsed successfully', 'success');
+                log(`📊 Worksheets found: ${workbook.SheetNames.join(', ')}`, 'info');
+                
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                
+                log(`✅ Data extracted: ${jsonData.length} rows`, 'success');
+                log(`📋 Headers: ${jsonData[0].join(', ')}`, 'info');
+                
+                // Validate data structure
+                const headers = jsonData[0];
+                const requiredColumns = ['name', 'category', 'price', 'stock'];
+                const hasRequired = requiredColumns.every(col => headers.includes(col));
+                
+                if (hasRequired) {
+                    log('✅ All required columns present', 'success');
+                    updateStatus('parse', true);
+                } else {
+                    log('❌ Missing required columns', 'error');
+                    updateStatus('parse', false);
+                }
+                
+            } catch (error) {
+                log(`❌ Parsing error: ${error.message}`, 'error');
+                updateStatus('parse', false);
+            }
+        }
+
+        // Test upload functionality
+        function testUploadFunction(file) {
+            log(`Testing upload with: ${file.name}`, 'info');
+            
+            const fileExtension = file.name.split('.').pop().toLowerCase();
+            const supportedFormats = ['csv', 'xlsx', 'xls'];
+            
+            if (!supportedFormats.includes(fileExtension)) {
+                log(`❌ Unsupported file format: ${fileExtension}`, 'error');
+                updateStatus('upload', false);
+                return;
+            }
+            
+            log(`✅ File format supported: ${fileExtension}`, 'success');
+            
+            if (fileExtension === 'csv') {
+                testCSVUpload(file);
+            } else {
+                testExcelUpload(file);
+            }
+        }
+
+        // Test CSV upload
+        function testCSVUpload(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const csvText = e.target.result;
+                    const lines = csvText.split('\n').filter(line => line.trim());
+                    
+                    if (lines.length < 2) {
+                        throw new Error('CSV must have at least a header and one data row');
+                    }
+                    
+                    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+                    const dataRows = lines.slice(1);
+                    
+                    log(`✅ CSV parsed: ${headers.length} columns, ${dataRows.length} rows`, 'success');
+                    displayUploadResults({ headers, data: dataRows.map(row => {
+                        const values = row.split(',').map(v => v.trim().replace(/"/g, ''));
+                        const obj = {};
+                        headers.forEach((h, i) => obj[h] = values[i] || '');
+                        return obj;
+                    })}, 'CSV');
+                    updateStatus('upload', true);
+                    
+                } catch (error) {
+                    log(`❌ CSV parsing error: ${error.message}`, 'error');
+                    updateStatus('upload', false);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Test Excel upload
+        function testExcelUpload(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const arrayBuffer = e.target.result;
+                    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                    
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    
+                    if (jsonData.length < 2) {
+                        throw new Error('Excel file must have at least a header row and one data row');
+                    }
+                    
+                    const headers = jsonData[0].map(h => String(h || '').trim());
+                    const data = [];
+                    
+                    for (let i = 1; i < jsonData.length; i++) {
+                        const values = jsonData[i];
+                        const row = {};
+                        headers.forEach((header, index) => {
+                            row[header] = String(values[index] || '').trim();
+                        });
+                        if (Object.values(row).some(val => val.trim())) {
+                            data.push(row);
+                        }
+                    }
+                    
+                    log(`✅ Excel parsed: ${headers.length} columns, ${data.length} rows from sheet "${sheetName}"`, 'success');
+                    displayUploadResults({ headers, data }, `Excel (${sheetName})`);
+                    updateStatus('upload', true);
+                    
+                } catch (error) {
+                    log(`❌ Excel parsing error: ${error.message}`, 'error');
+                    updateStatus('upload', false);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Display upload results
+        function displayUploadResults(parsedData, fileType) {
+            const { headers, data } = parsedData;
+            const resultsEl = document.getElementById('uploadResults');
+            
+            resultsEl.innerHTML = `
+                <div class="test-section success">
+                    <h3>✅ ${fileType} Upload Successful!</h3>
+                    <div style="display: flex; gap: 20px; margin: 15px 0;">
+                        <div style="background: #007bff; color: white; padding: 10px 15px; border-radius: 6px; font-weight: bold;">
+                            📊 ${data.length} products
+                        </div>
+                        <div style="background: #28a745; color: white; padding: 10px 15px; border-radius: 6px; font-weight: bold;">
+                            📋 ${headers.length} columns
+                        </div>
+                    </div>
+                    <p><strong>Headers:</strong> ${headers.join(', ')}</p>
+                    <details>
+                        <summary style="cursor: pointer; font-weight: bold; margin: 10px 0;">View Sample Data</summary>
+                        <table style="width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 14px;">
+                            <thead>
+                                <tr style="background: #f8f9fa;">
+                                    ${headers.map(h => `<th style="border: 1px solid #ddd; padding: 8px; text-align: left;">${h}</th>`).join('')}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.slice(0, 3).map(row => `
+                                    <tr>
+                                        ${headers.map(h => `<td style="border: 1px solid #ddd; padding: 8px;">${row[h] || ''}</td>`).join('')}
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </details>
+                </div>
+            `;
+            resultsEl.style.display = 'block';
+        }
+
+        // Run all tests
+        function runAllTests() {
+            log('🚀 Running comprehensive test suite...', 'info');
+            
+            testXLSXLibrary();
+            
+            setTimeout(() => {
+                testSampleFile();
+            }, 500);
+            
+            setTimeout(() => {
+                testFileParser();
+            }, 1500);
+            
+            setTimeout(() => {
+                const passed = Object.values(testResults).filter(Boolean).length;
+                const total = Object.keys(testResults).length;
+                
+                if (passed === total) {
+                    log('🎉 All tests passed! Upload functionality is working correctly.', 'success');
+                } else {
+                    log(`⚠️ ${passed}/${total} tests passed. Some issues detected.`, 'warning');
+                }
+            }, 3000);
+        }
+
+        // File input handlers
+        const uploadArea = document.getElementById('uploadArea');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files[0]) {
+                testUploadFunction(e.target.files[0]);
+            }
+        });
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files[0]) {
+                testUploadFunction(files[0]);
+            }
+        });
+
+        // Template downloads
+        function downloadSampleExcel() {
+            const wb = XLSX.utils.book_new();
+            const data = [
+                ['name', 'category', 'price', 'stock', 'description', 'sku', 'imageUrl', 'materials'],
+                ['Cool Space T-Shirt', 'Apparel', 25.00, 50, 'Amazing space-themed design', 'APP-COOL-001', '', 'Cotton T-Shirt;Fabric Paint'],
+                ['Galaxy Coffee Mug', 'Drinkware', 18.50, 30, 'Perfect for space lovers', 'DRK-GAL-002', '', 'Ceramic Mug'],
+                ['Retro Sticker Pack', 'Stickers', 8.99, 100, 'Vintage space stickers', 'STK-RET-003', '', 'Vinyl Sticker Paper']
+            ];
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            XLSX.utils.book_append_sheet(wb, ws, 'Products');
+            XLSX.writeFile(wb, 'test-products.xlsx');
+            log('📥 Sample Excel file downloaded', 'success');
+        }
+
+        function downloadSampleCSV() {
+            const template = `name,category,price,stock,description,sku,imageUrl,materials
+"Cool Space T-Shirt","Apparel","25.00","50","Amazing space-themed design","APP-COOL-001","","Cotton T-Shirt;Fabric Paint"
+"Galaxy Coffee Mug","Drinkware","18.50","30","Perfect for space lovers","DRK-GAL-002","","Ceramic Mug"
+"Retro Sticker Pack","Stickers","8.99","100","Vintage space stickers","STK-RET-003","","Vinyl Sticker Paper"`;
+            
+            const blob = new Blob([template], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'test-products.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+            log('📥 Sample CSV file downloaded', 'success');
+        }
+
+        // Auto-run basic tests on load
+        document.addEventListener('DOMContentLoaded', () => {
+            log('🔄 Page loaded. Running initial tests...', 'info');
+            setTimeout(testXLSXLibrary, 500);
+            setTimeout(testSampleFile, 1000);
+        });
+    </script>
+</body>
+</html>

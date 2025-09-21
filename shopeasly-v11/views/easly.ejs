@@ -96,7 +96,7 @@
             </div>
             <div style="margin-top:0.5rem; display:flex; gap:0.5rem;">
                 <button id="openProductWizardBtn" class="btn btn-primary" style="flex:1;">+ Product</button>
-                <button id="openBulkCreationBtn" class="btn btn-secondary" style="flex:1;" title="Create multiple products">📦 Bulk</button>
+                <button id="openBulkCreationBtn" class="btn btn-secondary" style="flex:1; font-weight: bold; border: 2px solid #007bff;" title="Create multiple products">📦 Bulk</button>
             </div>
         </div>
         <div class="panel-section">
@@ -121,6 +121,9 @@
                     📋 Pending Orders
                 </button>
                         <button class="quick-cmd-btn" onclick="sendQuickMessage('Generate inventory usage report')">📊 Inventory Usage</button>
+                        <button class="quick-cmd-btn" onclick="openBulkCreation()" style="background: linear-gradient(135deg, #007bff, #0056b3); color: white; font-weight: bold; border: 2px solid #007bff;">
+                            📊📂 Bulk Upload
+                        </button>
                         <button class="quick-cmd-btn" onclick="sendQuickMessage('Show low stock items')">⚠️ Low Stock Alert</button>
                         <button class="quick-cmd-btn" onclick="sendQuickMessage('Show packing materials low stock')">📦⚠️ Packing Low Stock</button>
                         <button class="quick-cmd-btn" onclick="sendQuickMessage('Start design brainstorm')">🎨 Start Brainstorm</button>
@@ -609,16 +612,18 @@
                                     <div class="upload-icon">📊</div>
                                     <h4>Drop CSV or Excel file here or click to browse</h4>
                                     <p>Supports .csv, .xlsx, .xls • Maximum file size: 10MB</p>
-                                    <button class="btn btn-secondary" id="csvFileBtn">Choose File</button>
+                                    <button class="btn btn-secondary" id="csvFileBtn" style="padding: 12px 24px; font-size: 16px; font-weight: bold; margin-top: 10px;">
+                                        📁 Choose File
+                                    </button>
                                     <input type="file" id="csvFileInput" accept=".csv,.xlsx,.xls" style="display:none;">
                                 </div>
                             </div>
                             
-                            <div class="csv-actions">
-                                <button class="btn btn-outline" id="downloadTemplate">
+                            <div class="csv-actions" style="margin-top: 20px;">
+                                <button class="btn btn-outline" id="downloadTemplate" style="margin-right: 10px;">
                                     📥 Download CSV Template
                                 </button>
-                                <button class="btn btn-outline" id="downloadExcelTemplate">
+                                <button class="btn btn-outline" id="downloadExcelTemplate" style="margin-right: 10px;">
                                     📥 Download Excel Template
                                 </button>
                                 <button class="btn btn-outline" id="csvPreview" disabled>
@@ -2972,6 +2977,166 @@ function downloadExcelTemplate() {
     }
 }
 
+// Display CSV/Excel preview
+function displayCSVPreview(parsedData) {
+    const { headers, data } = parsedData;
+    
+    // Update stats
+    const rowCountEl = document.getElementById('csvRowCount');
+    const validationEl = document.getElementById('csvValidation');
+    const previewSection = document.getElementById('csvPreviewSection');
+    const previewTable = document.getElementById('csvPreviewTable');
+    
+    if (rowCountEl) rowCountEl.textContent = `${data.length} products`;
+    
+    // Validate required columns
+    const requiredColumns = ['name', 'category', 'price', 'stock'];
+    const missingColumns = requiredColumns.filter(col => !headers.includes(col));
+    
+    if (missingColumns.length > 0) {
+        if (validationEl) {
+            validationEl.textContent = `Missing required columns: ${missingColumns.join(', ')}`;
+            validationEl.style.color = '#dc3545';
+        }
+        showToast(`Missing required columns: ${missingColumns.join(', ')}`, 'error');
+    } else {
+        if (validationEl) {
+            validationEl.textContent = 'All required columns present ✓';
+            validationEl.style.color = '#28a745';
+        }
+    }
+    
+    // Create preview table
+    if (previewTable && data.length > 0) {
+        let tableHTML = '<table style="width:100%; border-collapse:collapse; font-size:14px;">';
+        
+        // Headers
+        tableHTML += '<thead><tr>';
+        headers.forEach(header => {
+            const isRequired = requiredColumns.includes(header);
+            tableHTML += `<th style="border:1px solid #ddd; padding:8px; background:#f8f9fa; ${isRequired ? 'font-weight:bold; color:#007bff;' : ''}">${header}${isRequired ? ' *' : ''}</th>`;
+        });
+        tableHTML += '</tr></thead>';
+        
+        // Data rows (first 5 rows)
+        tableHTML += '<tbody>';
+        data.slice(0, 5).forEach(row => {
+            tableHTML += '<tr>';
+            headers.forEach(header => {
+                const value = row[header] || '';
+                tableHTML += `<td style="border:1px solid #ddd; padding:8px;">${value}</td>`;
+            });
+            tableHTML += '</tr>';
+        });
+        tableHTML += '</tbody>';
+        
+        if (data.length > 5) {
+            tableHTML += `<tfoot><tr><td colspan="${headers.length}" style="border:1px solid #ddd; padding:8px; text-align:center; font-style:italic; background:#f8f9fa;">... and ${data.length - 5} more rows</td></tr></tfoot>`;
+        }
+        
+        tableHTML += '</table>';
+        previewTable.innerHTML = tableHTML;
+    }
+    
+    // Show preview section
+    if (previewSection) {
+        previewSection.style.display = 'block';
+    }
+    
+    // Enable preview button
+    const previewBtn = document.getElementById('csvPreview');
+    if (previewBtn) {
+        previewBtn.disabled = false;
+        previewBtn.textContent = '👀 View Full Preview';
+    }
+}
+
+// Show detailed preview in a modal or expanded view
+function showDetailedPreview(parsedData) {
+    const { headers, data } = parsedData;
+    
+    // Create a modal for detailed preview
+    let previewModal = document.getElementById('detailedPreviewModal');
+    if (!previewModal) {
+        previewModal = document.createElement('div');
+        previewModal.id = 'detailedPreviewModal';
+        previewModal.className = 'modal-overlay';
+        previewModal.style.display = 'none';
+        previewModal.innerHTML = `
+            <div class="modal-content" style="max-width: 90vw; max-height: 90vh; overflow: auto;">
+                <button class="modal-close-btn" onclick="closeDetailedPreview()">×</button>
+                <h2>📊 Data Preview</h2>
+                <div class="preview-stats" style="margin: 15px 0; display: flex; gap: 15px;">
+                    <span class="stat-badge" style="background: #007bff; color: white; padding: 8px 12px; border-radius: 4px; font-weight: bold;">
+                        ${data.length} Products
+                    </span>
+                    <span class="stat-badge" style="background: #28a745; color: white; padding: 8px 12px; border-radius: 4px; font-weight: bold;">
+                        ${headers.length} Columns
+                    </span>
+                </div>
+                <div id="detailedPreviewTable" style="overflow: auto; max-height: 60vh;"></div>
+                <div class="modal-actions" style="margin-top: 20px; text-align: center;">
+                    <button class="btn btn-primary" onclick="proceedWithUpload()">✅ Proceed with Upload</button>
+                    <button class="btn btn-secondary" onclick="closeDetailedPreview()">Cancel</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(previewModal);
+    }
+    
+    // Populate the table
+    const tableContainer = previewModal.querySelector('#detailedPreviewTable');
+    const requiredColumns = ['name', 'category', 'price', 'stock'];
+    
+    let tableHTML = '<table style="width:100%; border-collapse:collapse; font-size:14px; margin: 10px 0;">';
+    
+    // Headers
+    tableHTML += '<thead><tr style="background: #f8f9fa;">';
+    headers.forEach(header => {
+        const isRequired = requiredColumns.includes(header);
+        tableHTML += `<th style="border:1px solid #ddd; padding:12px; text-align:left; ${isRequired ? 'background:#e3f2fd; font-weight:bold; color:#007bff;' : ''}">${header}${isRequired ? ' *' : ''}</th>`;
+    });
+    tableHTML += '</tr></thead>';
+    
+    // Data rows
+    tableHTML += '<tbody>';
+    data.forEach((row, index) => {
+        const bgColor = index % 2 === 0 ? '#fff' : '#f9f9f9';
+        tableHTML += `<tr style="background: ${bgColor};">`;
+        headers.forEach(header => {
+            const value = row[header] || '';
+            tableHTML += `<td style="border:1px solid #ddd; padding:10px;">${value}</td>`;
+        });
+        tableHTML += '</tr>';
+    });
+    tableHTML += '</tbody></table>';
+    
+    tableContainer.innerHTML = tableHTML;
+    
+    // Show modal
+    previewModal.style.display = 'flex';
+    document.body.classList.add('no-scroll');
+}
+
+// Close detailed preview
+function closeDetailedPreview() {
+    const modal = document.getElementById('detailedPreviewModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.classList.remove('no-scroll');
+    }
+}
+
+// Proceed with upload (placeholder for actual upload logic)
+function proceedWithUpload() {
+    closeDetailedPreview();
+    if (bulkCreationState.csvData && bulkCreationState.csvData.data.length > 0) {
+        showToast(`Ready to create ${bulkCreationState.csvData.data.length} products!`, 'success');
+        // Here you would typically call your API to create the products
+        // createBulkProducts(bulkCreationState.csvData.data);
+    }
+}
+
 // Event listeners for bulk creation
 document.addEventListener('DOMContentLoaded', () => {
     // Open/close bulk creation
@@ -3056,6 +3221,18 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (downloadExcelTemplateBtn) {
         downloadExcelTemplateBtn.addEventListener('click', downloadExcelTemplate);
+    }
+    
+    // CSV Preview button
+    const csvPreviewBtn = document.getElementById('csvPreview');
+    if (csvPreviewBtn) {
+        csvPreviewBtn.addEventListener('click', () => {
+            if (bulkCreationState.csvData) {
+                showDetailedPreview(bulkCreationState.csvData);
+            } else {
+                showToast('No data to preview. Please upload a file first.', 'warning');
+            }
+        });
     }
 });
 
