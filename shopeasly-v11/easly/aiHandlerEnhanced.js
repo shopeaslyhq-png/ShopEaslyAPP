@@ -188,7 +188,7 @@ function shouldUseLLM(s) {
   
   // Use external AI for general questions that don't match specific local intents
   const hasLocalIntent = (
-    /(inventory\s+summary|order\s+status|how\s+many|add\s+\d+|set\s+stock|delete|remove|create\s+order|mark\s+order|generate\s+design)/.test(q) ||
+    /(inventory\s+(summary|overview|report)|orders?\s+(status|overview)|how\s+many|how\s+much|stock\s+of|in\s+stock|available|on\s+hand|add\s+\d+|set\s+stock|delete|remove|create\s+order|mark\s+order|status\s+of\s+order|where\s+is\s+order|find\s+order|generate\s+design)/.test(q) ||
     /^\s*(add|create|put)\s+/.test(q) ||
     /(?:set|update)\s+stock/.test(q)
   );
@@ -475,7 +475,7 @@ async function handleLocalIntents(prompt, autoExecute = false, clientId = undefi
         if (packagingId) partsMsg.push('packaging attached');
         if (imageUrl) partsMsg.push('image linked');
         const extras = partsMsg.length ? ` (${partsMsg.join(', ')})` : '';
-        return { text: `✅ Created product "${created.name}" (SKU ${created.sku}) qty ${created.stock} at $${created.price.toFixed(2)}${extras}.`, executed: true, data: { id: created.id, sku: created.sku } };
+  return { text: `Created product: ${created.name} (SKU ${created.sku}) — qty ${created.stock} at $${created.price.toFixed(2)}${extras}.`, executed: true, data: { id: created.id, sku: created.sku } };
       }
 
       // Unknown pending type; clear
@@ -541,7 +541,7 @@ async function handleLocalIntents(prompt, autoExecute = false, clientId = undefi
       .sort((a,b) => Number(a.stock||0) - Number(b.stock||0))
       .slice(0, 5)
       .map(i => ({ name: i.name, sku: i.sku, stock: Number(i.stock||0), threshold: Number(i.threshold||0) }));
-    const text = `📦 **Inventory Summary:**\n- **Total SKUs:** ${totalSkus}\n- **Units in stock:** ${totalUnits}\n- **Low stock items:** ${lowStock}\n- **Out of stock:** ${outOfStock}\n- **Total inventory value:** $${inventoryValue.toFixed(2)}\n` + (topLow.length ? `\n⚠️ **Items at or below threshold:**\n` + topLow.map(i=>`• ${i.name} (${i.sku}) — ${i.stock} ≤ ${i.threshold}`).join('\n') : '');
+  const text = `Inventory summary:\n- SKUs: ${totalSkus}\n- Units: ${totalUnits}\n- Low stock: ${lowStock}\n- Out of stock: ${outOfStock}\n- Inventory value: $${inventoryValue.toFixed(2)}` + (topLow.length ? `\n\nAt/below threshold:\n` + topLow.map(i=>`- ${i.name} (${i.sku}) — ${i.stock} ≤ ${i.threshold}`).join('\n') : '') + `\n\n(source: ${items.length} inventory documents just now)`;
     return { text, data: { totalSkus, totalUnits, lowStock, outOfStock, inventoryValue, topLow } };
   }
 
@@ -553,7 +553,7 @@ async function handleLocalIntents(prompt, autoExecute = false, clientId = undefi
     const delivered = orders.filter(o => /delivered/i.test(o.status || ''));
     const head = (arr, n=5) => arr.slice(0,n);
     const top = head(pending).map(o => ({ orderNumber: o.orderNumber || o.id, id: o.id, customer: o.customerName || o.customer || 'N/A', total: o.total || o.price || 0 }));
-    const text = `📋 **Orders Overview:**\n- **Pending:** ${pending.length}\n- **Processing:** ${processing.length}\n- **Delivered:** ${delivered.length}\n` + (top.length ? `\n📄 **Top pending orders:**\n` + top.map(o=>`• ${o.orderNumber} — ${o.customer} — $${Number(o.total||0).toFixed(2)}`).join('\n') : '');
+  const text = `Orders overview:\n- Pending: ${pending.length}\n- Processing: ${processing.length}\n- Delivered: ${delivered.length}` + (top.length ? `\n\nTop pending:\n` + top.map(o=>`- ${o.orderNumber} — ${o.customer} — $${Number(o.total||0).toFixed(2)}`).join('\n') : '') + `\n\n(source: ${orders.length} orders scanned just now)`;
     return { text, data: { counts: { pending: pending.length, processing: processing.length, delivered: delivered.length }, topPending: top } };
   }
 
@@ -590,7 +590,7 @@ async function handleLocalIntents(prompt, autoExecute = false, clientId = undefi
       const price = pm[4] ? Number(pm[4]) : undefined;
       const created = await addPackingMaterial({ name, dimensions, stock, price });
       if (clientId) setSession(clientId, { lastInventory: { id: created.id, name: created.name, sku: created.sku }, expiresAt: Date.now() + 10*60*1000 });
-      return { text: `📦 Added packing material "${created.name}" (${created.sku}) — ${created.dimensions}, stock ${created.stock}.`, executed: true, data: { id: created.id, sku: created.sku } };
+  return { text: `Added packing material: ${created.name} (${created.sku}) — ${created.dimensions}, stock ${created.stock}.`, executed: true, data: { id: created.id, sku: created.sku } };
     } catch (e) {
       return { text: `❌ Failed to add packing material: ${e.message}` };
     }
@@ -606,7 +606,7 @@ async function handleLocalIntents(prompt, autoExecute = false, clientId = undefi
       const price = mm[3] ? Number(mm[3]) : undefined;
       const created = await addMaterial({ name, stock, price });
       if (clientId) setSession(clientId, { lastInventory: { id: created.id, name: created.name, sku: created.sku }, expiresAt: Date.now() + 10*60*1000 });
-      return { text: `🧩 Added material "${created.name}" (${created.sku}) with stock ${created.stock}.`, executed: true, data: { id: created.id, sku: created.sku } };
+  return { text: `Added material: ${created.name} (${created.sku}) — stock ${created.stock}.`, executed: true, data: { id: created.id, sku: created.sku } };
     } catch (e) {
       return { text: `❌ Failed to add material: ${e.message}` };
     }
@@ -686,7 +686,7 @@ async function handleLocalIntents(prompt, autoExecute = false, clientId = undefi
       if (packagingId) partsMsg.push('packaging attached');
       if (imageUrl) partsMsg.push('image linked');
       const extras = partsMsg.length ? ` (${partsMsg.join(', ')})` : '';
-      return { text: `✅ Created product "${created.name}" (SKU ${created.sku}) qty ${created.stock} at $${created.price.toFixed(2)}${extras}.`, executed: true, data: { id: created.id, sku: created.sku } };
+  return { text: `Created product: ${created.name} (SKU ${created.sku}) — qty ${created.stock} at $${created.price.toFixed(2)}${extras}.`, executed: true, data: { id: created.id, sku: created.sku } };
     } catch (e) {
       return { text: `❌ Failed to create product: ${e.message}` };
     }
@@ -867,6 +867,31 @@ async function handleLocalIntents(prompt, autoExecute = false, clientId = undefi
 
   // DIRECT ORDER ACTIONS
   
+  // Look up a specific order by order number or id: "what's order ORD-20250101-0003" / "status of order ORD-..."
+  let mOrd = q.match(/(?:what(?:'| i)s\s+)?(?:the\s+)?(?:status|details)\s+of\s+order\s+([a-z0-9\-]+)/i) || q.match(/\bfind\s+order\s+([a-z0-9\-]+)/i) || q.match(/\border\s+([a-z0-9\-]+)\b/i);
+  if (mOrd) {
+    const ord = mOrd[1].toUpperCase();
+    const orders = await getAllDocuments('orders', 1000);
+    const found = orders.find(o => (String(o.orderNumber||'').toUpperCase() === ord) || (String(o.id||'').toUpperCase() === ord));
+    if (!found) return { text: `❌ I couldn't find order ${ord}.` };
+    const orderNumber = found.orderNumber || found.id;
+    const status = found.status || 'Pending';
+    const customer = found.customerName || found.customer || 'N/A';
+    const qty = Number(found.quantity || found.qty || 0);
+    const unit = Number(found.price || 0);
+    const total = Number(found.total != null ? found.total : unit * qty);
+    const productName = found.productName || found.product || 'N/A';
+    const productSku = found.productSku || 'N/A';
+    const createdAt = found.createdAt ? new Date(found.createdAt).toLocaleString() : '—';
+    const text = `📦 Order ${orderNumber}
+• Status: ${status}
+• Customer: ${customer}
+• Product: ${productName} (${productSku})
+• Qty: ${qty} × $${unit.toFixed(2)} = $${total.toFixed(2)}
+• Created: ${createdAt}`;
+    return { text, data: { id: found.id, orderNumber, status, customer, productName, productSku, quantity: qty, price: unit, total, createdAt: found.createdAt || null } };
+  }
+
   // Mark/Update order status
   m = q.match(/(?:mark|update|set)\s+order\s+([a-z0-9\-]+)\s+(?:as\s+)?(?:status\s+)?(?:to\s+)?(pending|processing|shipped|delivered)/i);
   if (m) {
@@ -903,7 +928,7 @@ async function handleLocalIntents(prompt, autoExecute = false, clientId = undefi
       const subject = mImg[1].trim();
       const result = await generateDesignImage(`High-resolution printable design: ${subject}. Vector-like, clean edges, suitable for DTF printing.`);
       if (clientId) setSession(clientId, { lastDesign: { url: result.url, subject }, expiresAt: Date.now() + 10*60*1000 });
-      return { text: `🖼️ Generated design for "${subject}": ${result.url}\nThis is saved locally and ready for printing or upload to NinjaTransfer.`, data: { url: result.url } };
+  return { text: `Generated design for "${subject}": ${result.url}`, data: { url: result.url } };
     } catch (e) {
       return { text: `❌ Failed to generate image: ${e.message}` };
     }
@@ -1191,9 +1216,9 @@ ${recentHistory}\nUser: ${prompt}`;
         
   let aiText = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
         // Prevent fabricated summary/report content from LLM
-        const fabricatedReport = /(Inventory Summary|Orders Overview|Total SKUs|Units in stock|Low stock items|Out of stock|Top pending orders|Pending:|Processing:|Delivered:)/i;
+        const fabricatedReport = /(Inventory Summary|Orders Overview|Total SKUs?|Units?\s+in\s+stock|Low\s+stock\s+items?|Out\s+of\s+stock|Top\s+pending\s+orders|Pending:|Processing:|Delivered:|Orders?\s+snapshot|Inventory\s+report)/i;
         if (fabricatedReport.test(aiText)) {
-          aiText = 'I can pull live numbers from your database. Ask for "inventory summary" or "order status", or specify an item name/SKU (e.g., "how many black shirts do we have?").';
+          aiText = 'I only report real data from your shop. Ask for "inventory summary" or "order status", or specify an item/SKU (e.g., "how many black shirts do we have?").';
         }
         const maybeJson = extractJsonCandidate(aiText);
 
@@ -1271,9 +1296,9 @@ ${recentHistory}\nUser: ${prompt}`;
 
   let aiText = response.data?.choices?.[0]?.message?.content || '';
         // Prevent fabricated summary/report content from LLM
-        const fabricatedReport = /(Inventory Summary|Orders Overview|Total SKUs|Units in stock|Low stock items|Out of stock|Top pending orders|Pending:|Processing:|Delivered:)/i;
+        const fabricatedReport = /(Inventory Summary|Orders Overview|Total SKUs?|Units?\s+in\s+stock|Low\s+stock\s+items?|Out\s+of\s+stock|Top\s+pending\s+orders|Pending:|Processing:|Delivered:|Orders?\s+snapshot|Inventory\s+report)/i;
         if (fabricatedReport.test(aiText)) {
-          aiText = 'I can pull live numbers from your database. Ask for "inventory summary" or "order status", or specify an item name/SKU (e.g., "how many black shirts do we have?").';
+          aiText = 'I only report real data from your shop. Ask for "inventory summary" or "order status", or specify an item/SKU (e.g., "how many black shirts do we have?").';
         }
         const maybeJson = extractJsonCandidate(aiText);
 
