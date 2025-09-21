@@ -2634,5 +2634,301 @@ window.handleImageUpload = handleImageUpload;
 window.handleImageGeneration = handleImageGeneration;
 window.validateStep = validateStep;
 
+// ====== BULK CREATION FUNCTIONALITY ======
+
+let bulkCreationState = {
+    activeTab: 'templates',
+    csvData: null,
+    csvFile: null,
+    selectedTemplate: null,
+    batchResults: [],
+    selectedResults: []
+};
+
+function openBulkCreation() {
+    const modal = document.getElementById('bulkCreationModal');
+    if (!modal) return;
+    
+    modal.style.display = 'flex';
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('no-scroll');
+    
+    // Reset state
+    bulkCreationState = {
+        activeTab: 'templates',
+        csvData: null,
+        csvFile: null,
+        selectedTemplate: null,
+        batchResults: [],
+        selectedResults: []
+    };
+    
+    // Set active tab
+    switchBulkTab('templates');
+}
+
+function closeBulkCreation() {
+    const modal = document.getElementById('bulkCreationModal');
+    if (!modal) return;
+    
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('no-scroll');
+}
+
+function switchBulkTab(tabName) {
+    // Update tab headers
+    document.querySelectorAll('.tab-header').forEach(header => {
+        header.classList.remove('active');
+        if (header.getAttribute('data-tab') === tabName) {
+            header.classList.add('active');
+        }
+    });
+    
+    // Update tab content
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+        if (content.getAttribute('data-tab') === tabName) {
+            content.classList.add('active');
+        }
+    });
+    
+    bulkCreationState.activeTab = tabName;
+}
+
+// Template handling
+function handleTemplateSelection(templateType) {
+    bulkCreationState.selectedTemplate = templateType;
+    
+    // Show loading and start template creation
+    showToast(`Setting up ${templateType} template...`, 'info');
+    
+    // Open product wizard with template defaults
+    closeBulkCreation();
+    
+    setTimeout(() => {
+        openProductWizard();
+        applyTemplateDefaults(templateType);
+    }, 300);
+}
+
+function applyTemplateDefaults(templateType) {
+    const templates = {
+        apparel: {
+            category: 'Apparel',
+            priceRange: [15, 35],
+            defaultQuantity: 25,
+            suggestedMaterials: ['Cotton T-Shirt', 'Fabric Paint'],
+            hints: 'Apparel with size variants (S, M, L, XL, XXL)'
+        },
+        drinkware: {
+            category: 'Drinkware',
+            priceRange: [12, 28],
+            defaultQuantity: 20,
+            suggestedMaterials: ['Ceramic Mug', 'Vinyl'],
+            hints: 'Drinkware collection with custom designs'
+        },
+        stickers: {
+            category: 'Stickers',
+            priceRange: [3, 12],
+            defaultQuantity: 100,
+            suggestedMaterials: ['Vinyl Sticker Paper'],
+            hints: 'Sticker pack with multiple designs'
+        },
+        seasonal: {
+            category: 'Apparel',
+            priceRange: [18, 40],
+            defaultQuantity: 15,
+            suggestedMaterials: ['Cotton T-Shirt', 'Seasonal Design'],
+            hints: 'Limited edition seasonal collection'
+        }
+    };
+    
+    const template = templates[templateType];
+    if (!template) return;
+    
+    // Apply template to wizard state
+    if (typeof productWizardState !== 'undefined' && productWizardState) {
+        productWizardState.data.category = template.category;
+        productWizardState.data.quantity = template.defaultQuantity;
+        productWizardState.data.hints = template.hints;
+        
+        // Set category in form
+        const categorySelect = document.getElementById('pw-category');
+        if (categorySelect) categorySelect.value = template.category;
+        
+        // Set quantity in form
+        const quantityInput = document.getElementById('pw-qty-manual');
+        if (quantityInput) quantityInput.value = template.defaultQuantity;
+        
+        // Set hints
+        const hintsInput = document.getElementById('pw-hints');
+        if (hintsInput) hintsInput.value = template.hints;
+    }
+    
+    addMessageToChat('ai', `🎯 Applied **${templateType}** template:
+- **Category:** ${template.category}
+- **Suggested Quantity:** ${template.defaultQuantity}
+- **Price Range:** $${template.priceRange[0]}-${template.priceRange[1]}
+- **Materials:** ${template.suggestedMaterials.join(', ')}
+
+The Product Wizard is now pre-configured with these settings!`);
+}
+
+// CSV handling
+function handleCSVUpload(file) {
+    if (!file) return;
+    
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        showToast('CSV file must be less than 5MB', 'error');
+        return;
+    }
+    
+    bulkCreationState.csvFile = file;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const csvText = e.target.result;
+            const parsedData = parseCSV(csvText);
+            
+            bulkCreationState.csvData = parsedData;
+            displayCSVPreview(parsedData);
+            
+            const previewBtn = document.getElementById('csvPreview');
+            if (previewBtn) previewBtn.disabled = false;
+            
+        } catch (error) {
+            console.error('CSV parsing error:', error);
+            showToast('Failed to parse CSV file. Please check the format.', 'error');
+        }
+    };
+    
+    reader.readAsText(file);
+}
+
+function parseCSV(csvText) {
+    const lines = csvText.split('\n').filter(line => line.trim());
+    if (lines.length < 2) {
+        throw new Error('CSV must have at least a header and one data row');
+    }
+    
+    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+    const data = [];
+    
+    for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+        const row = {};
+        
+        headers.forEach((header, index) => {
+            row[header] = values[index] || '';
+        });
+        
+        data.push(row);
+    }
+    
+    return { headers, data };
+}
+
+function downloadCSVTemplate() {
+    const template = `name,category,price,stock,description,sku,imageUrl,materials
+"Cool Space T-Shirt","Apparel","25.00","50","Amazing space-themed design","APP-COOL-001","","Cotton T-Shirt;Fabric Paint"
+"Galaxy Coffee Mug","Drinkware","18.50","30","Perfect for space lovers","DRK-GAL-002","","Ceramic Mug"
+"Retro Sticker Pack","Stickers","8.99","100","Vintage space stickers","STK-RET-003","","Vinyl Sticker Paper"`;
+    
+    const blob = new Blob([template], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'product-template.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    
+    showToast('Template downloaded successfully', 'success');
+}
+
+// Event listeners for bulk creation
+document.addEventListener('DOMContentLoaded', () => {
+    // Open/close bulk creation
+    const openBtn = document.getElementById('openBulkCreationBtn');
+    const closeBtn = document.getElementById('closeBulkCreation');
+    const cancelBtn = document.getElementById('cancelBulkCreation');
+    
+    if (openBtn) openBtn.addEventListener('click', openBulkCreation);
+    if (closeBtn) closeBtn.addEventListener('click', closeBulkCreation);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeBulkCreation);
+    
+    // Tab switching
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('tab-header')) {
+            const tabName = e.target.getAttribute('data-tab');
+            switchBulkTab(tabName);
+        }
+    });
+    
+    // Template selection
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('template-btn')) {
+            const templateCard = e.target.closest('.template-card');
+            const templateType = templateCard?.getAttribute('data-template');
+            if (templateType) {
+                handleTemplateSelection(templateType);
+            }
+        }
+    });
+    
+    // CSV handling
+    const csvFileBtn = document.getElementById('csvFileBtn');
+    const csvFileInput = document.getElementById('csvFileInput');
+    const csvDropzone = document.getElementById('csvDropzone');
+    const downloadTemplateBtn = document.getElementById('downloadTemplate');
+    
+    if (csvFileBtn && csvFileInput) {
+        csvFileBtn.addEventListener('click', () => csvFileInput.click());
+        csvFileInput.addEventListener('change', (e) => {
+            if (e.target.files[0]) {
+                handleCSVUpload(e.target.files[0]);
+            }
+        });
+    }
+    
+    if (csvDropzone) {
+        csvDropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            csvDropzone.classList.add('dragover');
+        });
+        
+        csvDropzone.addEventListener('dragleave', () => {
+            csvDropzone.classList.remove('dragover');
+        });
+        
+        csvDropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            csvDropzone.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files[0] && files[0].type === 'text/csv') {
+                handleCSVUpload(files[0]);
+            } else {
+                showToast('Please drop a CSV file', 'error');
+            }
+        });
+        
+        csvDropzone.addEventListener('click', () => {
+            if (csvFileInput) csvFileInput.click();
+        });
+    }
+    
+    if (downloadTemplateBtn) {
+        downloadTemplateBtn.addEventListener('click', downloadCSVTemplate);
+    }
+});
+
+// Expose bulk creation function globally
+window.openBulkCreation = openBulkCreation;
+
 })();
 </script>
