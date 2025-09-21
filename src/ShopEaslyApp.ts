@@ -721,6 +721,8 @@ export class ShopEaslyApp {
 
     // --- GEMINI API FEATURES ---
 
+    // Stateful, conversational brainstorm flow
+    brainstormState: any = null;
     async generateBrainstormIdeas() {
         if (!ai) return this.showToast('AI is not configured.', 'error');
         if (!this.brainstormPrompt) return;
@@ -756,76 +758,103 @@ export class ShopEaslyApp {
             let productName = nameMatch ? nameMatch[1].trim() : 'New Product';
             let productDesc = descMatch ? descMatch[1].trim() : '';
 
-            // Step 2: Prompt for material, image, price, quantity
-            let formHtml = `<div style='margin-bottom:0.5rem;'><strong>Idea:</strong> ${productName}<br><span style='color:#666;'>${productDesc}</span></div>`;
-            formHtml += `<form id='brainstorm-product-form' style='display:flex;flex-direction:column;gap:0.5rem;'>`;
-            formHtml += `<input class='form-input' id='brainstorm-material' placeholder='Material (e.g. 100% Cotton)' maxlength='40' required>`;
-            formHtml += `<input class='form-input' id='brainstorm-image' placeholder='Image URL or description' maxlength='120' required>`;
-            formHtml += `<input class='form-input' id='brainstorm-price' type='number' min='0' step='0.01' placeholder='Price (USD)' required>`;
-            formHtml += `<input class='form-input' id='brainstorm-qty' type='number' min='1' step='1' placeholder='Quantity' required>`;
-            formHtml += `<button type='submit' class='btn btn-primary'>Save Product</button>`;
-            formHtml += `</form>`;
-            formHtml += `<div id='brainstorm-create-order' style='display:none;margin-top:0.5rem;'></div>`;
-
-            if (this.brainstormResults) {
-                this.brainstormResults.innerHTML = formHtml;
-                this.brainstormResults.style.display = 'block';
-            }
-
-            // Step 3: Handle product form submit
-            setTimeout(() => {
-                const form = document.getElementById('brainstorm-product-form') as HTMLFormElement;
-                if (form) {
-                    form.onsubmit = (ev) => {
-                        ev.preventDefault();
-                        const material = (document.getElementById('brainstorm-material') as HTMLInputElement).value.trim();
-                        const image = (document.getElementById('brainstorm-image') as HTMLInputElement).value.trim();
-                        const price = parseFloat((document.getElementById('brainstorm-price') as HTMLInputElement).value);
-                        const qty = parseInt((document.getElementById('brainstorm-qty') as HTMLInputElement).value);
-                        if (!material || !image || isNaN(price) || isNaN(qty)) return;
-                        // Save product to appState
-                        const newProduct = {
-                            id: `p${Date.now()}`,
-                            name: productName,
-                            description: productDesc,
-                            sku: '',
-                            price,
-                            stock: qty,
-                            threshold: 5,
-                            supplier: '',
-                            notes: material,
-                            imageUrl: image
-                        };
-                        appState.products.push(newProduct);
-                        this.renderAllTables();
-                        this.updateAllStats();
-                        // Show create order UI
-                        const orderDiv = document.getElementById('brainstorm-create-order');
-                        if (orderDiv) {
-                            orderDiv.innerHTML = `<button class='btn btn-secondary' id='brainstorm-create-order-btn'>Create Order for this Product</button>`;
-                            orderDiv.style.display = 'block';
-                            document.getElementById('brainstorm-product-form')!.setAttribute('disabled', 'true');
-                            // Wire up order button
-                            setTimeout(() => {
-                                const btn = document.getElementById('brainstorm-create-order-btn');
-                                if (btn) {
-                                    btn.onclick = () => {
-                                        this.openOrderModal(newProduct.id);
-                                    };
-                                }
-                            }, 50);
-                        }
-                        this.showToast('Product saved! You can now create an order.', 'success');
-                    };
-                }
-            }, 100);
-
+            // Initialize state for conversational flow
+            this.brainstormState = {
+                name: productName,
+                description: productDesc,
+                material: '',
+                image: '',
+                price: '',
+                qty: '',
+                step: 'material',
+                saved: false
+            };
+            this.renderBrainstormConversation();
         } catch (error) {
             console.error(error);
             this.showToast('Error generating ideas.', 'error');
         } finally {
             this.setLoadingState(this.brainstormGenerateBtn, false);
         }
+    }
+
+    renderBrainstormConversation() {
+        if (!this.brainstormResults || !this.brainstormState) return;
+        const s = this.brainstormState;
+        let html = `<div style='margin-bottom:0.5rem;'><strong>Idea:</strong> ${s.name}<br><span style='color:#666;'>${s.description}</span></div>`;
+        if (!s.saved) {
+            html += `<form id='brainstorm-product-form' style='display:flex;flex-direction:column;gap:0.5rem;'>`;
+            html += `<input class='form-input' id='brainstorm-material' placeholder='Material (e.g. 100% Cotton)' maxlength='40' value='${s.material || ''}' required>`;
+            html += `<input class='form-input' id='brainstorm-image' placeholder='Image URL or description' maxlength='120' value='${s.image || ''}' required>`;
+            html += `<input class='form-input' id='brainstorm-price' type='number' min='0' step='0.01' placeholder='Price (USD)' value='${s.price || ''}' required>`;
+            html += `<input class='form-input' id='brainstorm-qty' type='number' min='1' step='1' placeholder='Quantity' value='${s.qty || ''}' required>`;
+            html += `<div style='display:flex;gap:0.5rem;'>`;
+            html += `<button type='submit' class='btn btn-primary'>Save Product</button>`;
+            html += `<button type='button' class='btn btn-secondary' id='brainstorm-update-btn'>Update Fields</button>`;
+            html += `</div></form>`;
+        } else {
+            html += `<div class='success-text' style='margin-bottom:0.5rem;'>Product saved!</div>`;
+            html += `<button class='btn btn-secondary' id='brainstorm-create-order-btn'>Create Order for this Product</button>`;
+        }
+        this.brainstormResults.innerHTML = html;
+        this.brainstormResults.style.display = 'block';
+
+        // Form logic
+        setTimeout(() => {
+            if (!s.saved) {
+                const form = document.getElementById('brainstorm-product-form') as HTMLFormElement;
+                if (form) {
+                    form.onsubmit = (ev) => {
+                        ev.preventDefault();
+                        s.material = (document.getElementById('brainstorm-material') as HTMLInputElement).value.trim();
+                        s.image = (document.getElementById('brainstorm-image') as HTMLInputElement).value.trim();
+                        s.price = (document.getElementById('brainstorm-price') as HTMLInputElement).value.trim();
+                        s.qty = (document.getElementById('brainstorm-qty') as HTMLInputElement).value.trim();
+                        if (!s.material || !s.image || !s.price || !s.qty) return;
+                        // Save product
+                        const newProduct = {
+                            id: `p${Date.now()}`,
+                            name: s.name,
+                            description: s.description,
+                            sku: '',
+                            price: parseFloat(s.price),
+                            stock: parseInt(s.qty),
+                            threshold: 5,
+                            supplier: '',
+                            notes: s.material,
+                            imageUrl: s.image
+                        };
+                        appState.products.push(newProduct);
+                        this.renderAllTables();
+                        this.updateAllStats();
+                        s.saved = true;
+                        s.productId = newProduct.id;
+                        this.showToast('Product saved! You can now create an order.', 'success');
+                        this.renderBrainstormConversation();
+                    };
+                }
+                // Update fields button
+                const updateBtn = document.getElementById('brainstorm-update-btn');
+                if (updateBtn) {
+                    updateBtn.onclick = () => {
+                        s.material = (document.getElementById('brainstorm-material') as HTMLInputElement).value.trim();
+                        s.image = (document.getElementById('brainstorm-image') as HTMLInputElement).value.trim();
+                        s.price = (document.getElementById('brainstorm-price') as HTMLInputElement).value.trim();
+                        s.qty = (document.getElementById('brainstorm-qty') as HTMLInputElement).value.trim();
+                        this.showToast('Fields updated. You can now save or continue editing.', 'info');
+                        this.renderBrainstormConversation();
+                    };
+                }
+            } else {
+                // Create order button
+                const orderBtn = document.getElementById('brainstorm-create-order-btn');
+                if (orderBtn && s.productId) {
+                    orderBtn.onclick = () => {
+                        this.openOrderModal(s.productId);
+                    };
+                }
+            }
+        }, 100);
     }
     
     async refineImagePrompt() {
