@@ -28,6 +28,59 @@
     <% } %>
 </section>
 
+<!-- FEATURE TILES: Big buttons for Orders, Inventory, AI -->
+<section class="feature-tiles" style="margin-bottom: 1.5rem;">
+    <a href="/orders" class="feature-tile" aria-label="Go to Orders">
+        <div class="feature-head">
+            <div class="feature-icon">📦</div>
+            <h3>Orders</h3>
+        </div>
+        <div class="feature-meta">
+            <span>Total: <strong><%= stats?.totalOrders ?? 0 %></strong></span>
+            <span>Pending: <strong><%= stats?.pendingOrders ?? 0 %></strong></span>
+            <span>Processing: <strong><%= stats?.processingOrders ?? 0 %></strong></span>
+        </div>
+        <% if (orders && orders.length) { %>
+            <div class="feature-sub">
+                <small>Latest: <%= orders[0].customerName || 'Customer' %> • <%= orders[0].product || 'Product' %></small>
+            </div>
+        <% } %>
+    </a>
+
+    <a href="/inventory" class="feature-tile" aria-label="Go to Inventory">
+        <div class="feature-head">
+            <div class="feature-icon">📊</div>
+            <h3>Inventory</h3>
+        </div>
+        <div class="feature-meta">
+            <span>SKUs: <strong><%= stats?.inventory?.totalSkus ?? 0 %></strong></span>
+            <span>Low: <strong><%= stats?.inventory?.lowStockCount ?? 0 %></strong></span>
+            <span>Out: <strong><%= stats?.inventory?.outOfStockCount ?? 0 %></strong></span>
+        </div>
+        <ul class="feature-list">
+            <% 
+              const ls = (summary?.inventory?.lowStockItems || []).slice(0,3);
+              const os = (summary?.inventory?.outOfStockItems || []).slice(0,3);
+              const merged = [...ls, ...os].slice(0,3);
+              if (merged.length === 0) { 
+            %>
+                <li><small>No alerts. All good.</small></li>
+            <% } else { merged.forEach(item => { %>
+                <li><small><%= item.category || '—' %> — <strong><%= item.name %></strong> • Qty: <%= item.stock %></small></li>
+            <% }) } %>
+        </ul>
+    </a>
+
+    <a href="/easly" class="feature-tile" aria-label="Open Easly AI">
+        <div class="feature-head">
+            <div class="feature-icon">🤖</div>
+            <h3>Easly AI</h3>
+        </div>
+        <p class="feature-welcome">Hi, I’m Easly AI. Tap to get help with orders, inventory, and quick actions.</p>
+        <div class="feature-cta">Open Assistant →</div>
+    </a>
+</section>
+
 <!-- STATS GRID -->
 <section class="stats-grid">
     <div class="stat-card glass">
