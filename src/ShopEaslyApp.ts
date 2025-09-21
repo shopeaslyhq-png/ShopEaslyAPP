@@ -1,9 +1,9 @@
 
-import { GoogleGenAI, Type, Chat } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import * as XLSX from "xlsx";
 import DOMPurify from "dompurify";
 import { marked } from "marked";
-import { appState, Product, Material, Packaging, Order, Notification } from "./state/appState";
+import { appState } from "./state/appState";
 
 // --- GLOBAL CONSTANTS ---
 // Support both Vite and Node environments for API_KEY
@@ -67,7 +67,7 @@ export class ShopEaslyApp {
         this.loadTheme();
         this.loadMockData();
         this.bindEvents(); // New robust event binding
-        this.navigateTo(appState.currentView, true);
+    this.navigateTo(appState.currentView);
         this.updateAllStats();
         this.renderAllTables();
         this.updateDashboardGiantBtns();
@@ -441,7 +441,7 @@ export class ShopEaslyApp {
 
     // --- NAVIGATION & UI ---
 
-    navigateTo(viewId: string, isInitial = false) {
+    navigateTo(viewId: string) {
         if (!viewId) return;
         console.log(`Navigating to: ${viewId}`);
 
@@ -506,7 +506,7 @@ export class ShopEaslyApp {
             }
         }
         
-        this.updateSidebar(targetInnerViewId || targetContainerId);
+    this.updateSidebar();
         this.updateHeader(targetInnerViewId || targetContainerId);
 
         // Refresh data for specific views
@@ -515,7 +515,7 @@ export class ShopEaslyApp {
         }
     }
     
-    updateSidebar(activeViewId: string) {
+    updateSidebar() {
         // No sidebar: do nothing
     }
     
