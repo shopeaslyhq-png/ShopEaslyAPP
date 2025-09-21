@@ -992,19 +992,31 @@ module.exports = async function handleAICoPilot(req, res) {
   try {
     if (!allowRequest(ip)) return res.status(429).json({ error: 'Too many requests. Please slow down.' });
 
-  const { textPart, imagePart, responseMimeType, clientId } = req.body || {};
+    const { textPart, imagePart, responseMimeType, clientId } = req.body || {};
     const prompt = normalizeStr(textPart);
     if (!prompt) return res.status(400).json({ error: 'Missing textPart' });
 
-  // Record user message
-  appendChatHistory(clientId, [{ role: 'user', text: prompt }]);
+    // Record user message
+    appendChatHistory(clientId, [{ role: 'user', text: prompt }]);
 
-  // Provider keys
-  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY; // Google Gemini
-  const openaiKey = process.env.OPENAI_API_KEY || process.env.OPENAI_APIKEY || process.env.GEAPI_KEY; // OpenAI (includes GEAPI_KEY fallback)
-    
+    // ShopEasly domain enforcement: Only answer questions about ShopEasly inventory, orders, or business logic
+    const shopKeywords = [
+      'inventory', 'stock', 'order', 'orders', 'product', 'products', 'material', 'materials', 'packaging', 'fulfillment',
+      'add', 'delete', 'remove', 'update', 'create', 'set', 'mark', 'status', 'summary', 'report', 'sku', 'price', 'quantity', 'customer', 'analytics', 'business', 'shop', 'shopeasly', 'item', 'items', 'pending', 'processing', 'delivered', 'cancel', 'fulfill', 'supply', 'restock', 'low stock', 'out of stock', 'print', 'design', 'ninjatransfer', 'image', 'attach', 'link'
+    ];
+    const lowerPrompt = prompt.toLowerCase();
+    const isShopQuery = shopKeywords.some(k => lowerPrompt.includes(k));
+    if (!isShopQuery) {
+      appendChatHistory(clientId, [{ role: 'assistant', text: 'Please ask me something about ShopEasly. I can only help with inventory, orders, and business operations.' }]);
+      return res.json({ text: 'Please ask me something about ShopEasly. I can only help with inventory, orders, and business operations.', executed: false, source: 'domain-guard' });
+    }
+
+    // Provider keys
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY; // Google Gemini
+    const openaiKey = process.env.OPENAI_API_KEY || process.env.OPENAI_APIKEY || process.env.GEAPI_KEY; // OpenAI (includes GEAPI_KEY fallback)
+
     // Check for direct actions first
-  const directAction = await handleLocalIntents(prompt, true, clientId, { imagePart }); // Auto-execute enabled
+    const directAction = await handleLocalIntents(prompt, true, clientId, { imagePart }); // Auto-execute enabled
     if (directAction && directAction.executed) {
       appendAILog({ ip, type: 'direct_action', prompt, result: directAction });
       appendChatHistory(clientId, [{ role: 'assistant', text: directAction.text, action: directAction.action }]);

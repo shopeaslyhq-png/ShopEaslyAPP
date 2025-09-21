@@ -203,6 +203,17 @@ export class ShopEaslyApp {
         if (!isInitial) {
             this.app?.classList.remove('sidebar-open');
         }
+
+                    // Offline AI toggle button
+                    if (target.closest('#offline-ai-toggle-btn')) {
+                        this.showOfflineAIModal();
+                        return;
+                    }
+                    // Offline AI modal close button or overlay
+                    if (target.closest('#offline-ai-close-btn') || target.closest('#offline-ai-modal') && target.id === 'offline-ai-modal') {
+                        this.hideOfflineAIModal();
+                        return;
+                    }
         appState.currentView = viewId;
 
         // Define which views belong inside the main app panel
@@ -239,6 +250,34 @@ export class ShopEaslyApp {
             document.getElementById('sos-homepage')?.classList.remove('hidden');
             appState.currentView = 'sos-homepage';
             return;
+
+    // Show the offline AI modal and render the React component
+    showOfflineAIModal() {
+        const modal = document.getElementById('offline-ai-modal');
+        if (!modal) return;
+        modal.classList.remove('hidden');
+        // Dynamically import React and the component, then render
+        import('react').then(React => {
+            import('react-dom/client').then(ReactDOM => {
+                import('./EaslyOfflineAI').then(({ default: EaslyOfflineAI }) => {
+                    const rootDiv = document.getElementById('offline-ai-react-root');
+                    if (rootDiv) {
+                        if (!rootDiv._reactRootContainer) {
+                            const root = ReactDOM.createRoot(rootDiv);
+                            root.render(React.createElement(EaslyOfflineAI));
+                            rootDiv._reactRootContainer = root;
+                        }
+                    }
+                });
+            });
+        });
+    }
+
+    // Hide the offline AI modal
+    hideOfflineAIModal() {
+        const modal = document.getElementById('offline-ai-modal');
+        if (modal) modal.classList.add('hidden');
+    }
         }
 
         // Handle inner views for the app panel

@@ -276,3 +276,15 @@
 {"ts":"2025-09-18T03:26:41.901Z","ip":"::1","type":"gemini_enhanced","prompt":"ill let you generate a sku.","usage":{"model":"gemini-1.5-flash"}}
 {"ts":"2025-09-18T03:26:54.538Z","ip":"::1","type":"direct_prompt","prompt":"confirm","result":{"text":"✅ Ready to execute! Please provide the specific action you'd like me to perform."}}
 {"ts":"2025-09-18T03:27:12.545Z","ip":"::1","type":"gemini_enhanced_fallback","prompt":"add the batman shirt"}
+{"ts":"2025-09-21T00:09:03.863Z","ip":"::1","type":"gemini_enhanced","prompt":"hi","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-21T00:09:50.146Z","ip":"::1","type":"gemini_error","prompt":"lets go","error":"getaddrinfo ENOTFOUND generativelanguage.googleapis.com"}
+{"ts":"2025-09-21T00:09:50.158Z","ip":"::1","type":"fallback_llm_error","prompt":"lets go","error":"getaddrinfo ENOTFOUND generativelanguage.googleapis.com"}
+{"ts":"2025-09-21T00:09:50.165Z","ip":"::1","type":"offline","prompt":"lets go"}
+{"ts":"2025-09-21T00:10:11.582Z","ip":"::1","type":"direct_prompt","prompt":"Show me inventory summary","result":{"text":"📦 **Inventory Summary:**\n- **Total SKUs:** 7\n- **Units in stock:** 436\n- **Low stock items:** 1\n- **Out of stock:** 1\n- **Total inventory value:** $769.96\n\n⚠️ **Items at or below threshold:**\n• 6x9 poly mailer (PKG-6X9-POLY-MAILER) — 0 ≤ 5\n• Batman Shirt (BLK-BTM-001) — 2 ≤ 5","data":{"totalSkus":7,"totalUnits":436,"lowStock":1,"outOfStock":1,"inventoryValue":769.96,"topLow":[{"name":"6x9 poly mailer","sku":"PKG-6X9-POLY-MAILER","stock":0,"threshold":5},{"name":"Batman Shirt","sku":"BLK-BTM-001","stock":2,"threshold":5}]}}}
+{"ts":"2025-09-21T00:10:18.088Z","ip":"::1","type":"gemini_error","prompt":"Generate inventory usage report","error":"getaddrinfo ENOTFOUND generativelanguage.googleapis.com"}
+{"ts":"2025-09-21T00:10:18.097Z","ip":"::1","type":"fallback_llm_error","prompt":"Generate inventory usage report","error":"getaddrinfo ENOTFOUND generativelanguage.googleapis.com"}
+{"ts":"2025-09-21T00:10:18.106Z","ip":"::1","type":"offline","prompt":"Generate inventory usage report"}
+{"ts":"2025-09-21T00:11:49.844Z","ip":"::1","type":"direct_prompt","prompt":"generate design mockup for halloween scary mask t-shirt","result":{"text":"❌ Failed to generate image: OPENAI_API_KEY missing for image generation"}}
+{"ts":"2025-09-21T00:24:00.026Z","ip":"::1","type":"gemini_enhanced","prompt":"are you there","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-21T00:24:08.874Z","ip":"::1","type":"gemini_enhanced_fallback","prompt":"add product"}
+{"ts":"2025-09-21T00:24:20.631Z","ip":"::1","type":"gemini_enhanced_fallback","prompt":"add a ironman tshirt"}

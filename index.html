@@ -51,13 +51,21 @@
                 </div>
             </nav>
 
-            <!-- Main Content -->
-            <main id="main-content">
+                        <!-- Main Content -->
+                        <main id="main-content">
+                                <!-- Offline AI Modal (hidden by default) -->
+                                <div id="offline-ai-modal" class="modal-overlay hidden" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:1000;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;">
+                                    <div style="background:#222;padding:2em 2em 1em 2em;border-radius:12px;max-width:90vw;max-height:90vh;overflow:auto;position:relative;">
+                                        <button id="offline-ai-close-btn" class="modal-close-btn" style="position:absolute;top:1em;right:1em;font-size:2em;background:none;border:none;color:#fff;cursor:pointer;">&times;</button>
+                                        <div id="offline-ai-react-root"></div>
+                                    </div>
+                                </div>
                 <header class="main-header">
                     <button id="sidebar-toggle-btn" class="btn btn-icon" aria-label="Toggle sidebar" aria-expanded="false">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                     </button>
                     <div class="header-actions">
+                        <button id="offline-ai-toggle-btn" class="btn" style="margin-right:1em;">Offline AI</button>
                         <input type="search" id="main-search-input" class="form-input search-input" placeholder="Search items...">
                         <button id="add-new-btn-header" class="btn btn-primary" data-action="add-product">Add New</button>
                     </div>
