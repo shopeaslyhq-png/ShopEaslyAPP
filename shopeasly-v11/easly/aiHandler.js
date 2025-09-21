@@ -3,6 +3,11 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 const { getAllDocuments } = require('../config/firebase');
+// Tone system
+const ToneManager = require('../utils/ToneManager');
+const voiceConfig = require('../config/voice.json');
+const tone = new ToneManager(voiceConfig);
+const applyTone = (s) => { try { return tone.humanize(String(s||'')); } catch(_) { return s; } };
 
 // very simple in-memory rate limit per IP
 const RATE_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
@@ -154,7 +159,7 @@ module.exports = async function handleAICoPilot(req, res) {
         const geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey;
         const userParts = [];
         if (imagePart) userParts.push({ inline_data: { mime_type: 'image/png', data: imagePart } });
-        userParts.push({ text: `You are Easly AI for a small retail/merch shop. Be concise and helpful. If giving steps, keep it under 6 bullets.\n\nUser: ${prompt}` });
+  userParts.push({ text: `You are Easly AI — a core team member at ShopEasly (not just a bot). Use a friendly, confident, slightly quirky tone (safe and professional). Speak as a teammate using "we" for shop actions. Be concise; if listing steps, keep under 6 bullets.\n\nUser: ${prompt}` });
 
         const body = {
           contents: [ { role: 'user', parts: userParts } ],
@@ -162,7 +167,8 @@ module.exports = async function handleAICoPilot(req, res) {
         };
 
         const response = await axios.post(geminiUrl, body, { headers: { 'Content-Type': 'application/json' }, timeout: 15000 });
-        const aiText = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  let aiText = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  aiText = applyTone(aiText);
 
         const maybeJson = extractJsonCandidate(aiText);
         appendAILog({ ip, type: 'gemini', prompt, usage: { model: 'gemini-1.5-flash' } });
@@ -179,8 +185,8 @@ module.exports = async function handleAICoPilot(req, res) {
           appendChatHistory(clientId, [{ role: 'assistant', text: out.text, action: localAction || null }]);
           return res.json(out);
         }
-        appendChatHistory(clientId, [{ role: 'assistant', text: aiText, action: localAction || null }]);
-        return res.json({ text: aiText, source: 'gemini', action: localAction });
+  appendChatHistory(clientId, [{ role: 'assistant', text: aiText, action: localAction || null }]);
+  return res.json({ text: aiText, source: 'gemini', action: localAction });
       } catch (err) {
         // If Gemini fails, fall through to local intents
         appendAILog({ ip, type: 'gemini_error', prompt, error: err.message });
@@ -191,13 +197,13 @@ module.exports = async function handleAICoPilot(req, res) {
     const local = await handleLocalIntents(prompt);
     if (local) {
       appendAILog({ ip, type: 'local', prompt, result: local.data });
-      const payload = { text: local.text, data: local.data, action: local.action, source: apiKey ? 'local_fallback' : 'local' };
-      appendChatHistory(clientId, [{ role: 'assistant', text: local.text, action: local.action || null }]);
+      const payload = { text: applyTone(local.text), data: local.data, action: local.action, source: apiKey ? 'local_fallback' : 'local' };
+      appendChatHistory(clientId, [{ role: 'assistant', text: payload.text, action: local.action || null }]);
       return res.json(payload);
     }
 
     // Final fallback: offline notice
-    const offline = 'AI is offline. Configure GEMINI_API_KEY (or GOOGLE_API_KEY) in .env.local and restart the server.';
+  const offline = applyTone('AI is offline. Configure GEMINI_API_KEY (or GOOGLE_API_KEY) in .env.local and restart the server.');
     appendAILog({ ip, type: 'offline', prompt });
     return res.json({ text: offline, source: 'offline' });
   } catch (err) {

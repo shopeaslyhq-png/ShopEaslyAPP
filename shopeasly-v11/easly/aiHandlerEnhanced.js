@@ -9,6 +9,14 @@ const { initiateProductCreation, addPackingMaterial, addMaterial } = require('..
 const ConversationTrainer = require('../training/ConversationTrainer');
 const ProductKnowledgeBase = require('../training/ProductKnowledgeBase');
 
+// Tone system
+const ToneManager = require('../utils/ToneManager');
+const voiceConfig = require('../config/voice.json');
+const tone = new ToneManager(voiceConfig);
+function applyTone(s) {
+  try { return tone.humanize(String(s || '')); } catch (_) { return s; }
+}
+
 // Initialize training systems
 const conversationTrainer = new ConversationTrainer();
 const productKnowledge = new ProductKnowledgeBase();
@@ -419,7 +427,7 @@ async function handleLocalIntents(prompt, autoExecute = false, clientId = undefi
           return { text: '❌ Price is missing for product creation. Please specify like "price 25".', executed: false };
         }
 
-        const created = await initiateProductCreation({ name, price: Number(price), quantity: Number(quantity || 0), materialsIds: resolvedMats, packagingId, category: 'Products', imageUrl });
+  const created = await initiateProductCreation({ name, price: Number(price), quantity: Number(quantity || 0), materialsIds: resolvedMats, packagingId, category: 'Products', imageUrl });
         clearSession(clientId, ['pendingChoice', 'pendingCreateProduct']);
         if (clientId) setSession(clientId, { lastInventory: { id: created.id, name: created.name, sku: created.sku }, expiresAt: Date.now() + 10 * 60 * 1000 });
         const partsMsg = [];
@@ -1015,8 +1023,9 @@ module.exports = async function handleAICoPilot(req, res) {
     const lowerPrompt = prompt.toLowerCase();
     const isShopQuery = shopKeywords.some(k => lowerPrompt.includes(k));
     if (!isShopQuery) {
-      appendChatHistory(clientId, [{ role: 'assistant', text: 'Please ask me something about ShopEasly. I can only help with inventory, orders, and business operations.' }]);
-      return res.json({ text: 'Please ask me something about ShopEasly. I can only help with inventory, orders, and business operations.', executed: false, source: 'domain-guard' });
+      const guardMsg = applyTone('Please ask me something about ShopEasly. I can only help with inventory, orders, and business operations.');
+      appendChatHistory(clientId, [{ role: 'assistant', text: guardMsg }]);
+      return res.json({ text: guardMsg, executed: false, source: 'domain-guard' });
     }
 
     // Provider keys
@@ -1026,15 +1035,17 @@ module.exports = async function handleAICoPilot(req, res) {
     // Check for direct actions first
     const directAction = await handleLocalIntents(prompt, true, clientId, { imagePart }); // Auto-execute enabled
     if (directAction && directAction.executed) {
+      const toned = applyTone(directAction.text);
       appendAILog({ ip, type: 'direct_action', prompt, result: directAction });
-      appendChatHistory(clientId, [{ role: 'assistant', text: directAction.text, action: directAction.action }]);
-      return res.json({ text: directAction.text, executed: true, action: directAction.action, source: 'direct' });
+      appendChatHistory(clientId, [{ role: 'assistant', text: toned, action: directAction.action }]);
+      return res.json({ text: toned, executed: true, action: directAction.action, source: 'direct' });
     }
     if (directAction && !directAction.executed) {
       // Awaiting user choice/confirmation; don't call LLMs
+      const toned = applyTone(directAction.text);
       appendAILog({ ip, type: 'direct_prompt', prompt, result: directAction });
-      appendChatHistory(clientId, [{ role: 'assistant', text: directAction.text }]);
-      return res.json({ text: directAction.text, executed: false, awaiting: directAction.awaiting || 'input', options: directAction.options, uiCommand: directAction.uiCommand, source: 'direct' });
+      appendChatHistory(clientId, [{ role: 'assistant', text: toned }]);
+      return res.json({ text: toned, executed: false, awaiting: directAction.awaiting || 'input', options: directAction.options, uiCommand: directAction.uiCommand, source: 'direct' });
     }
 
     // 🧠 AI LEARNING SYSTEM - Check for learned responses first
@@ -1048,6 +1059,7 @@ module.exports = async function handleAICoPilot(req, res) {
       });
 
       if (learnedResponse) {
+        learnedResponse = applyTone(learnedResponse);
         console.log('🎯 Using learned response from conversation training');
         appendAILog({ ip, type: 'learned_response', prompt, result: 'conversation_trainer' });
         appendChatHistory(clientId, [{ role: 'assistant', text: learnedResponse, source: 'learned' }]);
@@ -1057,10 +1069,11 @@ module.exports = async function handleAICoPilot(req, res) {
       // Try to get response from product knowledge base
       const knowledgeResponse = productKnowledge.queryKnowledge(prompt);
       if (knowledgeResponse) {
+        const toned = applyTone(knowledgeResponse);
         console.log('📚 Using product knowledge base response');
         appendAILog({ ip, type: 'knowledge_response', prompt, result: 'product_knowledge' });
-        appendChatHistory(clientId, [{ role: 'assistant', text: knowledgeResponse, source: 'knowledge' }]);
-        return res.json({ text: knowledgeResponse, source: 'knowledge', executed: false });
+        appendChatHistory(clientId, [{ role: 'assistant', text: toned, source: 'knowledge' }]);
+        return res.json({ text: toned, source: 'knowledge', executed: false });
       }
 
     } catch (learningError) {
@@ -1080,7 +1093,7 @@ module.exports = async function handleAICoPilot(req, res) {
     } catch (_) {}
 
     // Shared system prompt for LLM providers
-    const systemPrompt = `You are Easly AI, an intelligent admin assistant for ShopEasly print-on-demand business. You have full administrative access and can:
+  const systemPrompt = `You are Easly AI — a core team member at ShopEasly (not just a bot). You speak like a friendly, confident colleague and collaborate using first-person plural ("we") when talking about shop operations. You have full administrative access and can:
 
 🏪 **Business Context:**
 - Manage inventory (add, update, delete items and stock levels)
@@ -1095,10 +1108,13 @@ module.exports = async function handleAICoPilot(req, res) {
 - Professional customer service responses
 
 💬 **Communication Style:**
-- Use emojis and markdown for clarity
+- Use contractions and a warm, confident, slightly quirky tone (a tiny bit unhinged is okay — keep it safe and professional)
+- Speak as a teammate: prefer "we" for shop actions; be proactive and collaborative
 - Be concise but thorough (max 6 bullet points for lists)
+- Sprinkle 0–2 tasteful emojis when it helps clarity (never spam)
 - Confirm actions before executing destructive operations
-- Provide helpful suggestions and insights
+- Offer a light follow-up question when helpful
+- Never use offensive, hateful, or inappropriate language; always be respectful
 
 📊 **Available Commands:**
 - "inventory summary" - Show current stock overview
@@ -1133,7 +1149,7 @@ ${recentHistory}\nUser: ${prompt}`;
           timeout: 15000 
         });
         
-        let aiText = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  let aiText = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
         // Prevent fabricated summary/report content from LLM
         const fabricatedReport = /(Inventory Summary|Orders Overview|Total SKUs|Units in stock|Low stock items|Out of stock|Top pending orders|Pending:|Processing:|Delivered:)/i;
         if (fabricatedReport.test(aiText)) {
@@ -1169,6 +1185,7 @@ ${recentHistory}\nUser: ${prompt}`;
           return res.json(out);
         }
         
+        aiText = applyTone(aiText);
         appendChatHistory(clientId, [{ role: 'assistant', text: aiText, action: localAction || null }]);
         
         // 🧠 LEARNING: Log successful interaction for training
@@ -1212,7 +1229,7 @@ ${recentHistory}\nUser: ${prompt}`;
           timeout: 15000
         });
 
-        let aiText = response.data?.choices?.[0]?.message?.content || '';
+  let aiText = response.data?.choices?.[0]?.message?.content || '';
         // Prevent fabricated summary/report content from LLM
         const fabricatedReport = /(Inventory Summary|Orders Overview|Total SKUs|Units in stock|Low stock items|Out of stock|Top pending orders|Pending:|Processing:|Delivered:)/i;
         if (fabricatedReport.test(aiText)) {
@@ -1247,7 +1264,8 @@ ${recentHistory}\nUser: ${prompt}`;
           
           return res.json(out);
         }
-
+        
+        aiText = applyTone(aiText);
         appendChatHistory(clientId, [{ role: 'assistant', text: aiText, action: localAction || null }]);
         
         // 🧠 LEARNING: Log successful interaction for training
@@ -1272,8 +1290,8 @@ ${recentHistory}\nUser: ${prompt}`;
   const local = await handleLocalIntents(prompt, false, clientId, { imagePart });
     if (local) {
       appendAILog({ ip, type: 'local_enhanced', prompt, result: local.data });
-      const payload = { text: local.text, data: local.data, action: local.action, options: local.options, uiCommand: local.uiCommand, source: apiKey ? 'local_fallback' : 'local_enhanced' };
-      appendChatHistory(clientId, [{ role: 'assistant', text: local.text, action: local.action || null }]);
+      const payload = { text: applyTone(local.text), data: local.data, action: local.action, options: local.options, uiCommand: local.uiCommand, source: apiKey ? 'local_fallback' : 'local_enhanced' };
+      appendChatHistory(clientId, [{ role: 'assistant', text: payload.text, action: local.action || null }]);
       return res.json(payload);
     }
 
@@ -1286,7 +1304,8 @@ ${recentHistory}\nUser: ${prompt}`;
           const geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey;
           const body = { contents: [{ role: 'user', parts: [{ text: `User: ${prompt}` }] }], generationConfig: { response_mime_type: 'text/plain', temperature: 0.2, max_output_tokens: 400 } };
           const response = await axios.post(geminiUrl, body, { headers: { 'Content-Type': 'application/json' }, timeout: 12000 });
-          const aiText = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || 'I can help with that.';
+          const aiTextRaw = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || 'I can help with that.';
+          const aiText = applyTone(aiTextRaw);
           appendAILog({ ip, type: 'gemini_enhanced_fallback', prompt });
           appendChatHistory(clientId, [{ role: 'assistant', text: aiText }]);
           return res.json({ text: aiText, source: 'gemini_enhanced_fallback' });
@@ -1295,7 +1314,8 @@ ${recentHistory}\nUser: ${prompt}`;
           const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
           const body = { model, messages: [{ role: 'system', content: 'Be concise and helpful.' }, { role: 'user', content: prompt }], temperature: 0.2, max_tokens: 400 };
           const response = await axios.post(openaiUrl, body, { headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${openaiKey}` }, timeout: 12000 });
-          const aiText = response.data?.choices?.[0]?.message?.content || 'I can help with that.';
+          const aiTextRaw = response.data?.choices?.[0]?.message?.content || 'I can help with that.';
+          const aiText = applyTone(aiTextRaw);
           appendAILog({ ip, type: 'openai_enhanced_fallback', prompt });
           appendChatHistory(clientId, [{ role: 'assistant', text: aiText }]);
           return res.json({ text: aiText, source: 'openai_enhanced_fallback' });
@@ -1320,7 +1340,7 @@ ${recentHistory}\nUser: ${prompt}`;
     }
 
     // Final fallback
-  const offline = '🤖 AI is offline. Configure GEMINI_API_KEY or OPENAI_API_KEY in .env (app folder) and restart the server for enhanced capabilities.';
+  const offline = applyTone('🤖 AI is offline. Configure GEMINI_API_KEY or OPENAI_API_KEY in .env (app folder) and restart the server for enhanced capabilities.');
     appendAILog({ ip, type: 'offline', prompt });
     return res.json({ text: offline, source: 'offline' });
   } catch (err) {

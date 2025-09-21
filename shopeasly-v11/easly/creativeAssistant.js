@@ -44,14 +44,14 @@ async function generateVisualMockup(clientId, prompt, imageGenerator) {
   return { message: 'Here is a mockup based on your inputs. Shall we create a product from it?', imageUrl: res.imageUrl, state: s };
 }
 
-async function recordDesignAndCreateProduct(clientId, { name, price, quantity, materialsIds = [], packagingId = '' }) {
+async function recordDesignAndCreateProduct(clientId, { name, price, quantity, materialsIds = [], materialsUsage = {}, packagingId = '' }) {
   const s = sessions.get(clientId) || {};
   const productType = s.productType || 'Product';
   const theme = s.theme || name || 'Untitled';
   // Save design entry
   const design = await addDesign({ theme, productType, style: s.style, prompt: '', imageUrl: s.imageUrl, metadata: s.imageMeta });
   // Create product in inventory, attaching design image if available
-  const created = await initiateProductCreation({ name: name || `${theme} ${productType}`.trim(), price, quantity, materialsIds, packagingId, imageUrl: s.imageUrl });
+  const created = await initiateProductCreation({ name: name || `${theme} ${productType}`.trim(), price, quantity, materialsIds, materialsUsage, packagingId, imageUrl: s.imageUrl });
   return { message: 'Product created from design.', design, product: created };
 }
 

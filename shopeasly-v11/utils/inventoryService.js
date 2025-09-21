@@ -32,7 +32,7 @@ async function uniqueSku(skuBase, existing) {
 }
 
 // Initiate product creation: validates relationships and assigns name, price, stock (quantity), and SKU
-async function initiateProductCreation({ name, price, quantity, materialsIds = [], packagingId = '', category = 'Products', sku, imageUrl }) {
+async function initiateProductCreation({ name, price, quantity, materialsIds = [], materialsUsage = {}, packagingId = '', category = 'Products', sku, imageUrl }) {
   // Basic validation
   if (!name || !String(name).trim()) throw new Error('name is required');
   const stock = Number.parseInt(quantity ?? 0, 10);
@@ -81,7 +81,28 @@ async function initiateProductCreation({ name, price, quantity, materialsIds = [
   };
 
   const docRef = await createDocument('inventory', item);
-  return { id: docRef.id, ...item };
+
+  // After creating the product, deduct material stock that was consumed to build the initial quantity.
+  // Assumption: each material defaults to 1 unit per product unless materialsUsage[materialId] specifies otherwise.
+  // Example: materialsUsage = { "mat123": 2 } => consume 2 units of material mat123 per product unit created.
+  const adjustments = [];
+  const qtyToBuild = Number.parseInt(stock || 0, 10) || 0;
+  if (qtyToBuild > 0 && validMaterialIds.length) {
+    for (const mid of validMaterialIds) {
+      try {
+        const perUnit = Number.isFinite(Number(materialsUsage[mid])) && Number(materialsUsage[mid]) > 0 ? Number(materialsUsage[mid]) : 1;
+        const consume = perUnit * qtyToBuild;
+        if (consume > 0) {
+          const adj = await adjustInventoryItemStock(mid, -consume);
+          adjustments.push({ materialId: mid, perUnit, consumed: consume, resultingStock: adj.to });
+        }
+      } catch (e) {
+        adjustments.push({ materialId: mid, error: e.message || String(e) });
+      }
+    }
+  }
+
+  return { id: docRef.id, ...item, materialAdjustments: adjustments };
 }
 
 // Create a new Packing Material item with name, dimensions, and stock level

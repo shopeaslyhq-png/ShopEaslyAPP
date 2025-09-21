@@ -56,8 +56,8 @@ router.post('/api', async (req, res) => {
 // Initiate product creation with validation of materials/packaging
 router.post('/api/initiate-product', async (req, res) => {
   try {
-    const { name, price, quantity, materialsIds, packagingId, category, sku } = req.body || {};
-    const created = await initiateProductCreation({ name, price, quantity, materialsIds, packagingId, category, sku });
+    const { name, price, quantity, materialsIds, materialsUsage, packagingId, category, sku } = req.body || {};
+    const created = await initiateProductCreation({ name, price, quantity, materialsIds, materialsUsage, packagingId, category, sku });
     res.json(created);
   } catch (err) {
     console.error('Error initiating product creation:', err);

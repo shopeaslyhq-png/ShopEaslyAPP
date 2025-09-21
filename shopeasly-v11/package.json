@@ -17,6 +17,7 @@
     "monitor:ai": "node scripts/monitor.js",
     "monitor:health": "node scripts/monitor.js health",
     "monitor:metrics": "node scripts/monitor.js metrics",
+    "test:tone": "node scripts/test-tone.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
