@@ -68,7 +68,39 @@
                     </button>
                     <div class="header-actions">
                         <button id="offline-ai-toggle-btn" class="btn" style="margin-right:1em;">Offline AI</button>
-                        <input type="search" id="main-search-input" class="form-input search-input" placeholder="Search items...">
+                        <div style="position:relative;display:inline-block;width:350px;max-width:100%;">
+                            <input type="search" id="main-search-input" class="form-input search-input" placeholder="Search items..." autocomplete="off">
+                            <div id="search-dropdown" class="dropdown hidden" style="position:absolute;top:110%;left:0;width:100%;background:var(--surface);box-shadow:0 4px 24px #0002;border-radius:1rem;padding:0.5rem 0;z-index:100;max-height:340px;overflow-y:auto;"></div>
+                        </div>
+                        <button id="notification-btn" class="btn btn-icon" aria-label="Notifications" title="Notifications">
+                            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                            <span id="notification-badge" style="position:absolute;top:0.2em;right:0.2em;min-width:1.2em;height:1.2em;background:var(--error);color:#fff;font-size:0.8em;border-radius:50%;display:none;align-items:center;justify-content:center;padding:0 0.4em;line-height:1.2em;z-index:2;"></span>
+                        </button>
+                        <div id="notification-dropdown" class="dropdown hidden" style="position:absolute;top:3.5rem;right:7rem;min-width:320px;background:var(--surface);box-shadow:0 4px 24px #0002;border-radius:1rem;padding:0.5rem 0;z-index:100;max-height:400px;overflow-y:auto;">
+                            <div style="display:flex;align-items:center;justify-content:space-between;padding:0.5em 1.2em 0.5em 1.2em;">
+                                <span style="font-weight:600;font-size:1.1em;">Notifications</span>
+                                <button id="clear-notifications-btn" class="btn btn-sm" style="font-size:0.9em;padding:0.2em 0.8em;">Clear All</button>
+                            </div>
+                            <div id="notification-list" style="margin-top:0.5em;"></div>
+                        </div>
+                        <button id="settings-btn" class="btn btn-icon" aria-label="Settings" title="Settings">
+                            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09A1.65 1.65 0 0 0 11 3.09V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.09a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                        </button>
+                        <div id="settings-modal" class="modal-overlay hidden" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:1000;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;">
+                            <div style="background:#222;padding:2em 2em 1em 2em;border-radius:12px;max-width:90vw;max-height:90vh;overflow:auto;position:relative;">
+                                <button id="settings-close-btn" class="modal-close-btn" style="position:absolute;top:1em;right:1em;font-size:2em;background:none;border:none;color:#fff;cursor:pointer;">&times;</button>
+                                <h2>Settings</h2>
+                                <div style="margin-top:1.5em;">
+                                    <label style="display:block;margin-bottom:1em;color:#ccc;">
+                                        <input type="checkbox" id="setting-dark-mode"> Dark Mode
+                                    </label>
+                                    <label style="display:block;margin-bottom:1em;color:#ccc;">
+                                        <input type="checkbox" id="setting-notifications"> Enable Notifications
+                                    </label>
+                                    <button class="btn btn-primary" id="settings-save-btn">Save Settings</button>
+                                </div>
+                            </div>
+                        </div>
                         <button id="add-new-btn-header" class="btn btn-primary" data-action="add-product">Add New</button>
                     </div>
                 </header>

@@ -22,6 +22,11 @@ const appState: any = {
     designs: [],
     aiChat: null as Chat | null,
     generatedImageData: null as any,
+    notifications: [
+        { id: 1, type: 'order', icon: '📝', text: 'New order #1234 received', time: Date.now() - 1000 * 60 * 5, read: false },
+        { id: 2, type: 'stock', icon: '⚠️', text: 'Low stock: Gemini Logo T-Shirt', time: Date.now() - 1000 * 60 * 30, read: false },
+        { id: 3, type: 'ai', icon: '🤖', text: 'AI brainstormed 3 new product ideas', time: Date.now() - 1000 * 60 * 60, read: true },
+    ],
 };
 
 // --- SPEECH RECOGNITION SETUP ---
@@ -85,7 +90,7 @@ export class ShopEaslyApp {
     }
 
     cacheDOMElements() {
-        const ids = [
+    const ids = [
             'app', 'main-content', 'app-views', 'sidebar-toggle-btn', 'add-new-btn-header',
             'stat-active-orders', 'stat-in-production', 'stat-completed-today', 'stat-low-stock',
             'mcc-stat-active-orders', 'mcc-stat-in-production', 'mcc-stat-low-stock',
@@ -99,7 +104,8 @@ export class ShopEaslyApp {
             'order-modal-overlay', 'close-order-modal-btn', 'order-modal-title', 'order-form', 'order-id', 'order-customer-name', 'order-status', 'order-items-container', 'add-order-item-btn', 'order-total-price', 'order-notes',
             'ai-fab-btn', 'ai-assistant-modal', 'ai-modal-close-btn', 'ai-chat-history', 'ai-text-input', 'ai-voice-btn', 'ai-send-btn', 'ai-status-text', 'ai-guide-btn', 'ai-guide-modal', 'ai-guide-close-btn',
             'toast-notification', 'file-input-excel',
-            'giant-products-count', 'giant-materials-count', 'giant-packaging-count', 'giant-orders-list'
+            'giant-products-count', 'giant-materials-count', 'giant-packaging-count', 'giant-orders-list',
+            'main-search-input', 'search-dropdown', 'notification-btn', 'notification-badge', 'notification-dropdown', 'notification-list', 'clear-notifications-btn', 'settings-btn', 'settings-modal', 'settings-close-btn', 'setting-dark-mode', 'setting-notifications', 'settings-save-btn'
         ];
         ids.forEach(id => {
             this[id.replace(/-./g, m => m[1].toUpperCase())] = document.getElementById(id);
@@ -116,6 +122,242 @@ export class ShopEaslyApp {
     }
     
     bindEvents() {
+        // --- NOTIFICATION SYSTEM ---
+        this.renderNotifications = () => {
+            if (!this.notificationList || !this.notificationBadge) return;
+            const notifs = appState.notifications || [];
+            const unread = notifs.filter((n: any) => !n.read);
+            if (unread.length) {
+                this.notificationBadge.textContent = unread.length > 9 ? '9+' : String(unread.length);
+                this.notificationBadge.style.display = 'flex';
+            } else {
+                this.notificationBadge.style.display = 'none';
+            }
+            if (!notifs.length) {
+                this.notificationList.innerHTML = '<div style="padding:1em;text-align:center;color:#888;">No notifications</div>';
+                return;
+            }
+            this.notificationList.innerHTML = notifs.map((n: any) =>
+                `<div class="notif-row${n.read ? '' : ' unread'}" style="display:flex;align-items:flex-start;gap:0.7em;padding:0.7em 1.2em;cursor:pointer;background:${n.read ? 'none' : 'var(--surface-alt)'};border-bottom:1px solid #0001;" data-id="${n.id}">
+                    <span style="font-size:1.3em;">${n.icon}</span>
+                    <span style="flex:1;">${n.text}<br><span style="color:#888;font-size:0.85em;">${this.timeAgo(n.time)}</span></span>
+                    ${!n.read ? '<span style="color:var(--primary);font-size:0.9em;">●</span>' : ''}
+                </div>`
+            ).join('');
+        };
+
+        this.timeAgo = (t: number) => {
+            const s = Math.floor((Date.now() - t) / 1000);
+            if (s < 60) return s + 's ago';
+            if (s < 3600) return Math.floor(s/60) + 'm ago';
+            if (s < 86400) return Math.floor(s/3600) + 'h ago';
+            return Math.floor(s/86400) + 'd ago';
+        };
+
+        // Render on open
+        if (this.notificationBtn) {
+            this.notificationBtn.addEventListener('click', () => {
+                this.renderNotifications();
+            });
+        }
+        // Mark as read on click
+        if (this.notificationList) {
+            this.notificationList.addEventListener('mousedown', (e: MouseEvent) => {
+                const row = (e.target as HTMLElement).closest('.notif-row');
+                if (row) {
+                    const id = Number(row.getAttribute('data-id'));
+                    const notif = (appState.notifications || []).find((n: any) => n.id === id);
+                    if (notif && !notif.read) {
+                        notif.read = true;
+                        this.renderNotifications();
+                    }
+                }
+            });
+        }
+        // Clear all
+        if (this.clearNotificationsBtn) {
+            this.clearNotificationsBtn.addEventListener('click', () => {
+                appState.notifications = [];
+                this.renderNotifications();
+            });
+        }
+        // Show toast for new notifications (mock)
+        setInterval(() => {
+            if (Math.random() < 0.08) { // ~8% chance every 5s
+                const id = Date.now();
+                const n = { id, type: 'ai', icon: '🤖', text: 'AI generated a new insight', time: Date.now(), read: false };
+                appState.notifications.unshift(n);
+                this.renderNotifications();
+                this.showToast(n.text, 'info');
+            }
+        }, 5000);
+        // Initial render
+        this.renderNotifications();
+        // --- SEARCH DROPDOWN INTERACTION ---
+        if (this.mainSearchInput && this.searchDropdown) {
+            // Keyboard navigation
+            this.mainSearchInput.addEventListener('keydown', (e: KeyboardEvent) => {
+                const results = Array.from(this.searchDropdown.querySelectorAll('.search-result')) as HTMLElement[];
+                if (!results.length) return;
+                let idx = results.findIndex(r => r.classList.contains('active'));
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (idx >= 0) results[idx].classList.remove('active');
+                    idx = (idx + 1) % results.length;
+                    results[idx].classList.add('active');
+                    results[idx].focus();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (idx >= 0) results[idx].classList.remove('active');
+                    idx = (idx - 1 + results.length) % results.length;
+                    results[idx].classList.add('active');
+                    results[idx].focus();
+                } else if (e.key === 'Enter') {
+                    if (idx >= 0) {
+                        results[idx].click();
+                        e.preventDefault();
+                    }
+                } else if (e.key === 'Escape') {
+                    this.searchDropdown.classList.add('hidden');
+                }
+            });
+            // Mouse click navigation
+            this.searchDropdown.addEventListener('mousedown', (e: MouseEvent) => {
+                const target = (e.target as HTMLElement).closest('.search-result');
+                if (target) {
+                    const type = target.getAttribute('data-type');
+                    const id = target.getAttribute('data-id');
+                    // Navigate to the relevant view and focus item
+                    if (type === 'product') {
+                        this.navigateTo('finished-goods-view');
+                        setTimeout(() => {
+                            const row = document.querySelector(`[data-id='${id}']`);
+                            if (row) row.classList.add('highlight');
+                        }, 200);
+                    } else if (type === 'material') {
+                        this.navigateTo('materials-view');
+                        setTimeout(() => {
+                            const row = document.querySelector(`[data-id='${id}']`);
+                            if (row) row.classList.add('highlight');
+                        }, 200);
+                    } else if (type === 'packaging') {
+                        this.navigateTo('packaging-view');
+                        setTimeout(() => {
+                            const row = document.querySelector(`[data-id='${id}']`);
+                            if (row) row.classList.add('highlight');
+                        }, 200);
+                    } else if (type === 'order') {
+                        this.navigateTo('orders-view');
+                        setTimeout(() => {
+                            const row = document.querySelector(`[data-id='${id}']`);
+                            if (row) row.classList.add('highlight');
+                        }, 200);
+                    }
+                    this.searchDropdown.classList.add('hidden');
+                }
+            });
+        }
+        // --- ENHANCED HEADER SEARCH BAR ---
+        if (this.mainSearchInput && this.searchDropdown) {
+            this.mainSearchInput.addEventListener('input', (e: Event) => {
+                const query = (e.target as HTMLInputElement).value.trim().toLowerCase();
+                if (!query) {
+                    this.searchDropdown.classList.add('hidden');
+                    this.searchDropdown.innerHTML = '';
+                    return;
+                }
+                // Fuzzy match helper
+                const fuzzy = (text: string, q: string) => {
+                    if (!text) return false;
+                    text = text.toLowerCase();
+                    let ti = 0, qi = 0;
+                    while (ti < text.length && qi < q.length) {
+                        if (text[ti] === q[qi]) qi++;
+                        ti++;
+                    }
+                    return qi === q.length;
+                };
+                // Highlight helper
+                const highlight = (text: string, q: string) => {
+                    if (!q) return text;
+                    const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+                    return text.replace(re, m => `<mark>${m}</mark>`);
+                };
+                // Search all entities
+                const searchEntities = [
+                    { label: 'Products', arr: appState.products, keys: ['name', 'sku', 'notes'], icon: '📦', type: 'product' },
+                    { label: 'Materials', arr: appState.materials, keys: ['name', 'sku', 'notes'], icon: '🧵', type: 'material' },
+                    { label: 'Packaging', arr: appState.packaging, keys: ['name', 'sku', 'notes'], icon: '📦', type: 'packaging' },
+                    { label: 'Orders', arr: appState.orders, keys: ['customer', 'status', 'id'], icon: '📝', type: 'order' },
+                ];
+                let anyResults = false;
+                let html = '';
+                for (const entity of searchEntities) {
+                    const matches = entity.arr.filter(item => entity.keys.some(k => fuzzy((item[k] || '').toString(), query)));
+                    if (matches.length) {
+                        anyResults = true;
+                        html += `<div class="search-category"><div class="search-category-label" style="font-weight:600;padding:0.25em 1em 0.25em 0.5em;color:var(--text-secondary);font-size:0.95em;">${entity.icon} ${entity.label}</div>`;
+                        for (const item of matches.slice(0, 5)) {
+                            let label = entity.keys.map(k => item[k]).filter(Boolean).join(' | ');
+                            label = highlight(label, query);
+                            html += `<div class="search-result" tabindex="0" data-type="${entity.type}" data-id="${item.id}" style="padding:0.5em 1em;cursor:pointer;display:flex;align-items:center;gap:0.5em;">${entity.icon} <span>${label}</span></div>`;
+                        }
+                        html += '</div>';
+                    }
+                }
+                if (!anyResults) {
+                    html = '<div class="search-no-results" style="padding:1em;text-align:center;color:#888;">No results found</div>';
+                }
+                this.searchDropdown.innerHTML = html;
+                this.searchDropdown.classList.remove('hidden');
+            });
+            // Hide dropdown on blur
+            this.mainSearchInput.addEventListener('blur', () => {
+                setTimeout(() => this.searchDropdown.classList.add('hidden'), 200);
+            });
+            this.mainSearchInput.addEventListener('focus', () => {
+                if (this.searchDropdown.innerHTML) this.searchDropdown.classList.remove('hidden');
+            });
+        }
+
+        // --- NOTIFICATION BUTTON ---
+        if (this.notificationBtn && this.notificationDropdown) {
+            this.notificationBtn.addEventListener('click', () => {
+                this.notificationDropdown.classList.toggle('hidden');
+            });
+            document.addEventListener('click', (e) => {
+                if (!this.notificationBtn.contains(e.target as Node) && !this.notificationDropdown.contains(e.target as Node)) {
+                    this.notificationDropdown.classList.add('hidden');
+                }
+            });
+        }
+
+        // --- SETTINGS BUTTON ---
+        if (this.settingsBtn && this.settingsModal && this.settingsCloseBtn) {
+            this.settingsBtn.addEventListener('click', () => {
+                this.settingsModal.classList.remove('hidden');
+            });
+            this.settingsCloseBtn.addEventListener('click', () => {
+                this.settingsModal.classList.add('hidden');
+            });
+        }
+
+        // --- SETTINGS SAVE ---
+        if (this.settingsSaveBtn) {
+            this.settingsSaveBtn.addEventListener('click', () => {
+                const darkMode = this.settingDarkMode?.checked;
+                const notifications = this.settingNotifications?.checked;
+                if (darkMode) {
+                    document.body.setAttribute('data-theme', 'dark');
+                } else {
+                    document.body.setAttribute('data-theme', 'light');
+                }
+                localStorage.setItem('shopeasly-dark-mode', darkMode ? '1' : '0');
+                localStorage.setItem('shopeasly-notifications', notifications ? '1' : '0');
+                this.showToast('Settings saved!', 'success');
+                this.settingsModal.classList.add('hidden');
+            });
+        }
         const body = document.body;
 
         // Use event delegation for dynamically added content and robustness
@@ -385,8 +627,10 @@ export class ShopEaslyApp {
     }
 
     loadTheme() {
-        const savedTheme = localStorage.getItem('shopeasly-theme') || 'dark';
-        this.setTheme(savedTheme);
+    const savedTheme = localStorage.getItem('shopeasly-theme') || (localStorage.getItem('shopeasly-dark-mode') === '1' ? 'dark' : 'light') || 'dark';
+    this.setTheme(savedTheme);
+    if (this.settingDarkMode) this.settingDarkMode.checked = savedTheme === 'dark';
+    if (this.settingNotifications) this.settingNotifications.checked = localStorage.getItem('shopeasly-notifications') === '1';
     }
     
     // --- DATA MANAGEMENT ---
