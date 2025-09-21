@@ -3,8 +3,9 @@ import { GoogleGenAI, Type, Chat } from "@google/genai";
 import * as XLSX from "xlsx";
 import DOMPurify from "dompurify";
 import { marked } from "marked";
+import { appState, Product, Material, Packaging, Order, Notification } from "./state/appState";
 
-// --- GLOBAL STATE & CONSTANTS ---
+// --- GLOBAL CONSTANTS ---
 // Support both Vite and Node environments for API_KEY
 const API_KEY = (typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.VITE_API_KEY) 
     ? (import.meta as any).env.VITE_API_KEY 
@@ -12,22 +13,6 @@ const API_KEY = (typeof import.meta !== 'undefined' && (import.meta as any).env 
         ? process.env.API_KEY 
         : undefined;
 let ai: GoogleGenAI | null = null;
-
-const appState: any = {
-    currentView: 'sos-homepage', // This can be a hub ID or an inner view ID
-    products: [],
-    materials: [],
-    packaging: [],
-    orders: [],
-    designs: [],
-    aiChat: null as Chat | null,
-    generatedImageData: null as any,
-    notifications: [
-        { id: 1, type: 'order', icon: '📝', text: 'New order #1234 received', time: Date.now() - 1000 * 60 * 5, read: false },
-        { id: 2, type: 'stock', icon: '⚠️', text: 'Low stock: Gemini Logo T-Shirt', time: Date.now() - 1000 * 60 * 30, read: false },
-        { id: 3, type: 'ai', icon: '🤖', text: 'AI brainstormed 3 new product ideas', time: Date.now() - 1000 * 60 * 60, read: true },
-    ],
-};
 
 // --- SPEECH RECOGNITION SETUP ---
 const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -90,8 +75,8 @@ export class ShopEaslyApp {
     }
 
     cacheDOMElements() {
-    const ids = [
-            'app', 'main-content', 'app-views', 'sidebar-toggle-btn', 'add-new-btn-header',
+        const ids = [
+            'app', 'main-content', 'app-views', 'add-new-btn-header',
             'stat-active-orders', 'stat-in-production', 'stat-completed-today', 'stat-low-stock',
             'mcc-stat-active-orders', 'mcc-stat-in-production', 'mcc-stat-low-stock',
             'hp-stat-active-orders', 'hp-stat-in-production', 'hp-stat-completed-today', 'hp-stat-low-stock',
@@ -293,12 +278,12 @@ export class ShopEaslyApp {
                 let anyResults = false;
                 let html = '';
                 for (const entity of searchEntities) {
-                    const matches = entity.arr.filter(item => entity.keys.some(k => fuzzy((item[k] || '').toString(), query)));
+                    const matches = entity.arr.filter((item: any) => entity.keys.some((k: string) => fuzzy((item[k] || '').toString(), query)));
                     if (matches.length) {
                         anyResults = true;
                         html += `<div class="search-category"><div class="search-category-label" style="font-weight:600;padding:0.25em 1em 0.25em 0.5em;color:var(--text-secondary);font-size:0.95em;">${entity.icon} ${entity.label}</div>`;
                         for (const item of matches.slice(0, 5)) {
-                            let label = entity.keys.map(k => item[k]).filter(Boolean).join(' | ');
+                            let label = entity.keys.map((k: string) => (item as any)[k]).filter(Boolean).join(' | ');
                             label = highlight(label, query);
                             html += `<div class="search-result" tabindex="0" data-type="${entity.type}" data-id="${item.id}" style="padding:0.5em 1em;cursor:pointer;display:flex;align-items:center;gap:0.5em;">${entity.icon} <span>${label}</span></div>`;
                         }
@@ -363,16 +348,6 @@ export class ShopEaslyApp {
         // Use event delegation for dynamically added content and robustness
         body.addEventListener('click', (e: MouseEvent) => {
             const target = e.target as HTMLElement;
-            // Sidebar toggle
-            if (target.closest('#sidebar-toggle-btn')) {
-                this.app?.classList.toggle('sidebar-open');
-                return;
-            }
-
-            // Close sidebar on content click (mobile)
-            if (this.app?.classList.contains('sidebar-open') && target.closest('#main-content')) {
-                this.app?.classList.remove('sidebar-open');
-            }
 
             // Theme buttons
             const themeBtn = target.closest('.theme-btn');
@@ -401,11 +376,11 @@ export class ShopEaslyApp {
                 return;
             }
             
-            // AI Assistant
-            if (target.closest('#ai-fab-btn')) this.toggleAIModal(true);
-            if (target.closest('#ai-voice-btn')) this.toggleMicListener();
-            if (target.closest('#ai-send-btn')) this.sendTextMessage();
-            if (target.closest('#ai-guide-btn')) this.aiGuideModal?.classList.remove('hidden');
+        // Centralized AI Assistant trigger (dashboard giant button only)
+        if (target.closest('#ai-fab-btn')) this.toggleAIModal(true);
+        if (target.closest('#ai-voice-btn')) this.toggleMicListener();
+        if (target.closest('#ai-send-btn')) this.sendTextMessage();
+        if (target.closest('#ai-guide-btn')) this.aiGuideModal?.classList.remove('hidden');
 
             // Order form item management
             if (target.closest('#add-order-item-btn')) this.addOrderItemRow();
@@ -470,10 +445,6 @@ export class ShopEaslyApp {
         if (!viewId) return;
         console.log(`Navigating to: ${viewId}`);
 
-        // Close sidebar on navigation for mobile
-        if (!isInitial) {
-            this.app?.classList.remove('sidebar-open');
-        }
 
         // Offline AI modal toggles (move to a click event handler)
         document.body.addEventListener('click', (e: MouseEvent) => {
@@ -545,17 +516,7 @@ export class ShopEaslyApp {
     }
     
     updateSidebar(activeViewId: string) {
-        const navButtons = document.querySelectorAll('.sidebar-nav .nav-btn');
-        navButtons.forEach(btn => {
-            if (!btn) return;
-            const btnView = btn.getAttribute('data-view');
-            const isProductNav = activeViewId === 'finished-goods-view' && btn.id === 'nav-products';
-            if (btnView === activeViewId || isProductNav) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
-        });
+        // No sidebar: do nothing
     }
     
     updateHeader(viewId: string) {
@@ -682,7 +643,7 @@ export class ShopEaslyApp {
 
     renderTable(type: string, tableElement: HTMLElement, headers: string[], rowRenderer: (item: any) => string[]) {
         if (!tableElement) return;
-        const data = appState[type];
+    const data = appState[type];
         const singularType = type.slice(0, -1);
         let html = `<thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}<th>Actions</th></tr></thead><tbody>`;
         if (data.length === 0) {
@@ -725,7 +686,7 @@ export class ShopEaslyApp {
     }
     
     findItemById(type: string, id: string | number) {
-        return appState[type].find((item: any) => item.id == id);
+    return (appState[type] as any[]).find((item: any) => item.id == id);
     }
     
     // --- MODAL & FORM LOGIC ---
@@ -792,7 +753,7 @@ export class ShopEaslyApp {
             notes: this.itemNotes.value
         };
         
-        const dataArray = appState[`${type}s`];
+        const dataArray = appState[`${type}s`] as any[];
         const existingIndex = dataArray.findIndex((i: any) => i.id === id);
 
         if (existingIndex > -1) {
@@ -914,7 +875,7 @@ export class ShopEaslyApp {
         
         if (confirm(`Are you sure you want to delete this ${type}?`)) {
             const dataArrayName = `${type}s`;
-            const dataArray = appState[dataArrayName];
+            const dataArray = appState[dataArrayName] as any[];
             appState[dataArrayName] = dataArray.filter((i: any) => i.id != id);
             this.showToast(`${type} deleted.`, 'success');
             this.renderAllTables();
@@ -1425,7 +1386,7 @@ export class ShopEaslyApp {
                         stock: parameters.stock || 0,
                         sku: '', price: 0, threshold: 0, supplier: '', notes: '',
                     };
-                    appState[typePlural].push(newItem);
+                    (appState[typePlural] as any[]).push(newItem);
                     this.renderAllTables();
                     this.updateAllStats();
                     responseMessage = `The new ${entity} “${newItem.name}” has been added. Would you like to review or update its details?`;
