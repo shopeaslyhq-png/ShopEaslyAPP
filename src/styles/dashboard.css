@@ -1,0 +1,91 @@
+/* Modern dashboard styles for shell, buttons, notifications */
+.dashboard-shell {
+  min-height: 100vh;
+  background: #f8fafc;
+  color: #222;
+  font-family: 'Inter', Arial, sans-serif;
+}
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem 2rem 1rem 2rem;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+}
+.dashboard-main {
+  padding: 2rem;
+}
+.dashboard-btns-row {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  justify-content: center;
+}
+.giant-btn {
+  background: #fff;
+  border: 2px solid #e0e7ef;
+  border-radius: 1.5rem;
+  padding: 2.5rem 2rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px #0001;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 160px;
+  cursor: pointer;
+  transition: box-shadow 0.2s, border 0.2s;
+}
+.giant-btn:hover {
+  border-color: #a5b4fc;
+  box-shadow: 0 4px 16px #6366f11a;
+}
+.giant-btn-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+.giant-btn-label {
+  margin-bottom: 0.25rem;
+}
+.giant-btn-count {
+  font-size: 2rem;
+  color: #6366f1;
+  font-weight: bold;
+}
+.notification-list {
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 1px 4px #0001;
+  padding: 1rem 2rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.notification-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+.notification-item:last-child {
+  border-bottom: none;
+}
+.notification-icon {
+  font-size: 1.5rem;
+}
+.notification-text {
+  flex: 1;
+}
+.notification-time {
+  color: #888;
+  font-size: 0.9rem;
+}
+.notification-item.read {
+  opacity: 0.5;
+}
+.notification-empty {
+  color: #aaa;
+  text-align: center;
+  padding: 1.5rem 0;
+}
