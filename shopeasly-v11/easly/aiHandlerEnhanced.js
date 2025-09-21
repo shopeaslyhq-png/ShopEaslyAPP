@@ -5,6 +5,14 @@ const path = require('path');
 const { getAllDocuments, createDocument, updateDocument, deleteDocument } = require('../config/firebase');
 const { initiateProductCreation, addPackingMaterial, addMaterial } = require('../utils/inventoryService');
 
+// AI Training Systems
+const ConversationTrainer = require('../training/ConversationTrainer');
+const ProductKnowledgeBase = require('../training/ProductKnowledgeBase');
+
+// Initialize training systems
+const conversationTrainer = new ConversationTrainer();
+const productKnowledge = new ProductKnowledgeBase();
+
 // Rate limiting
 const RATE_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
 const RATE_MAX = 60; // max requests per window per IP
@@ -1029,6 +1037,37 @@ module.exports = async function handleAICoPilot(req, res) {
       return res.json({ text: directAction.text, executed: false, awaiting: directAction.awaiting || 'input', options: directAction.options, uiCommand: directAction.uiCommand, source: 'direct' });
     }
 
+    // 🧠 AI LEARNING SYSTEM - Check for learned responses first
+    let learnedResponse = null;
+    try {
+      // Try to get response from conversation trainer
+      learnedResponse = conversationTrainer.generateImprovedResponse(prompt, {
+        clientId,
+        hasImage: !!imagePart,
+        timestamp: new Date().toISOString()
+      });
+
+      if (learnedResponse) {
+        console.log('🎯 Using learned response from conversation training');
+        appendAILog({ ip, type: 'learned_response', prompt, result: 'conversation_trainer' });
+        appendChatHistory(clientId, [{ role: 'assistant', text: learnedResponse, source: 'learned' }]);
+        return res.json({ text: learnedResponse, source: 'learned', executed: false });
+      }
+
+      // Try to get response from product knowledge base
+      const knowledgeResponse = productKnowledge.queryKnowledge(prompt);
+      if (knowledgeResponse) {
+        console.log('📚 Using product knowledge base response');
+        appendAILog({ ip, type: 'knowledge_response', prompt, result: 'product_knowledge' });
+        appendChatHistory(clientId, [{ role: 'assistant', text: knowledgeResponse, source: 'knowledge' }]);
+        return res.json({ text: knowledgeResponse, source: 'knowledge', executed: false });
+      }
+
+    } catch (learningError) {
+      console.log('⚠️ Learning system error:', learningError.message);
+      // Continue to LLM fallback
+    }
+
     // Include brief chat memory to aid conversational flow
     let recentHistory = '';
     try {
@@ -1114,10 +1153,36 @@ ${recentHistory}\nUser: ${prompt}`;
         if (maybeJson) {
           const out = { text: JSON.stringify(maybeJson, null, 2), data: maybeJson, source: 'gemini_enhanced', action: localAction };
           appendChatHistory(clientId, [{ role: 'assistant', text: out.text, action: localAction || null }]);
+          
+          // 🧠 LEARNING: Log successful interaction for training
+          try {
+            conversationTrainer.logSuccessfulInteraction(prompt, out.text, {
+              clientId,
+              hasImage: !!imagePart,
+              source: 'gemini_enhanced',
+              hasAction: !!localAction
+            });
+          } catch (learningError) {
+            console.log('⚠️ Learning capture error:', learningError.message);
+          }
+          
           return res.json(out);
         }
         
         appendChatHistory(clientId, [{ role: 'assistant', text: aiText, action: localAction || null }]);
+        
+        // 🧠 LEARNING: Log successful interaction for training
+        try {
+          conversationTrainer.logSuccessfulInteraction(prompt, aiText, {
+            clientId,
+            hasImage: !!imagePart,
+            source: 'gemini_enhanced',
+            hasAction: !!localAction
+          });
+        } catch (learningError) {
+          console.log('⚠️ Learning capture error:', learningError.message);
+        }
+        
         return res.json({ text: aiText, source: 'gemini_enhanced', action: localAction });
       } catch (err) {
         appendAILog({ ip, type: 'gemini_error', prompt, error: err.message });
@@ -1167,10 +1232,36 @@ ${recentHistory}\nUser: ${prompt}`;
         if (maybeJson) {
           const out = { text: JSON.stringify(maybeJson, null, 2), data: maybeJson, source: 'openai_enhanced', action: localAction };
           appendChatHistory(clientId, [{ role: 'assistant', text: out.text, action: localAction || null }]);
+          
+          // 🧠 LEARNING: Log successful interaction for training
+          try {
+            conversationTrainer.logSuccessfulInteraction(prompt, out.text, {
+              clientId,
+              hasImage: !!imagePart,
+              source: 'openai_enhanced',
+              hasAction: !!localAction
+            });
+          } catch (learningError) {
+            console.log('⚠️ Learning capture error:', learningError.message);
+          }
+          
           return res.json(out);
         }
 
         appendChatHistory(clientId, [{ role: 'assistant', text: aiText, action: localAction || null }]);
+        
+        // 🧠 LEARNING: Log successful interaction for training
+        try {
+          conversationTrainer.logSuccessfulInteraction(prompt, aiText, {
+            clientId,
+            hasImage: !!imagePart,
+            source: 'openai_enhanced',
+            hasAction: !!localAction
+          });
+        } catch (learningError) {
+          console.log('⚠️ Learning capture error:', learningError.message);
+        }
+        
         return res.json({ text: aiText, source: 'openai_enhanced', action: localAction });
       } catch (err) {
         appendAILog({ ip, type: 'openai_error', prompt, error: err.message });
@@ -1212,6 +1303,20 @@ ${recentHistory}\nUser: ${prompt}`;
       } catch (err) {
         appendAILog({ ip, type: 'fallback_llm_error', prompt, error: err.message });
       }
+    }
+
+    // 🧠 PERIODIC LEARNING - Trigger background learning (10% chance)
+    if (Math.random() < 0.1) {
+      setTimeout(async () => {
+        try {
+          console.log('🔄 Triggering background AI learning...');
+          await conversationTrainer.learnFromHistory();
+          await productKnowledge.buildKnowledgeBase();
+          console.log('✅ Background learning completed');
+        } catch (learningError) {
+          console.log('⚠️ Background learning error:', learningError.message);
+        }
+      }, 2000); // Run after 2 seconds to not delay response
     }
 
     // Final fallback

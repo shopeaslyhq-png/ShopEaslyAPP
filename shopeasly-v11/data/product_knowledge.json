@@ -1,0 +1,259 @@
+{
+  "products": {
+    "6x9 poly mailer": {
+      "original_name": "6x9 poly mailer",
+      "category": "Packing Materials",
+      "price": 0,
+      "description": "",
+      "materials": [],
+      "tags": [],
+      "colors": [],
+      "sizes": [],
+      "keywords": [
+        "poly",
+        "mailer"
+      ],
+      "difficulty_level": "medium",
+      "profit_margin": 0.3,
+      "seasonal_relevance": "year-round"
+    },
+    "space t-shirt": {
+      "original_name": "space t-shirt",
+      "category": "Products",
+      "price": 25,
+      "description": "",
+      "materials": [],
+      "tags": [
+        "theme:space"
+      ],
+      "colors": [],
+      "sizes": [],
+      "keywords": [
+        "space",
+        "t-shirt"
+      ],
+      "difficulty_level": "medium",
+      "profit_margin": 0.6,
+      "seasonal_relevance": "year-round"
+    },
+    "dtf film": {
+      "original_name": "dtf film",
+      "category": "Materials",
+      "price": 0.45,
+      "description": "",
+      "materials": [],
+      "tags": [],
+      "colors": [],
+      "sizes": [],
+      "keywords": [
+        "film"
+      ],
+      "difficulty_level": "medium",
+      "profit_margin": 0.3,
+      "seasonal_relevance": "year-round"
+    },
+    "batman shirt": {
+      "original_name": "Batman Shirt",
+      "category": "SHIRTS",
+      "price": 20,
+      "description": "Batman fighting Ironman",
+      "materials": [],
+      "tags": [],
+      "colors": [],
+      "sizes": [],
+      "keywords": [
+        "batman",
+        "shirt",
+        "fighting",
+        "ironman"
+      ],
+      "difficulty_level": "medium",
+      "profit_margin": 0.5,
+      "seasonal_relevance": "year-round"
+    },
+    "black t-shirt": {
+      "original_name": "Black T-Shirt",
+      "category": "Materials",
+      "price": 7,
+      "description": "Black shirt for printing",
+      "materials": [],
+      "tags": [],
+      "colors": [
+        "black"
+      ],
+      "sizes": [],
+      "keywords": [
+        "black",
+        "t-shirt",
+        "shirt",
+        "printing"
+      ],
+      "difficulty_level": "medium",
+      "profit_margin": 0.3,
+      "seasonal_relevance": "year-round"
+    },
+    "dtf transfer film (a3)": {
+      "original_name": "DTF Transfer Film (A3)",
+      "category": "Materials",
+      "price": 0.65,
+      "description": "A3 size DTF transfer film sheets",
+      "materials": [],
+      "tags": [],
+      "colors": [],
+      "sizes": [],
+      "keywords": [
+        "transfer",
+        "film",
+        "(a3)",
+        "size",
+        "sheets"
+      ],
+      "difficulty_level": "medium",
+      "profit_margin": 0.3,
+      "seasonal_relevance": "year-round"
+    },
+    "dtf ink - black (1l)": {
+      "original_name": "DTF Ink - Black (1L)",
+      "category": "Materials",
+      "price": 29.99,
+      "description": "Black DTF ink 1 liter bottle",
+      "materials": [],
+      "tags": [],
+      "colors": [
+        "black"
+      ],
+      "sizes": [],
+      "keywords": [
+        "black",
+        "(1l)",
+        "liter",
+        "bottle"
+      ],
+      "difficulty_level": "medium",
+      "profit_margin": 0.6,
+      "seasonal_relevance": "year-round"
+    }
+  },
+  "categories": {
+    "Packing Materials": {
+      "product_count": 1,
+      "avg_price": 0,
+      "price_range": {
+        "min": 0,
+        "max": 0
+      },
+      "top_materials": [],
+      "top_colors": [],
+      "market_share": 14.285714285714285,
+      "profitability": 0.3
+    },
+    "Products": {
+      "product_count": 1,
+      "avg_price": 25,
+      "price_range": {
+        "min": 25,
+        "max": 25
+      },
+      "top_materials": [],
+      "top_colors": [],
+      "market_share": 14.285714285714285,
+      "profitability": 0.5
+    },
+    "Materials": {
+      "product_count": 4,
+      "avg_price": 9.522499999999999,
+      "price_range": {
+        "min": 0.45,
+        "max": 29.99
+      },
+      "top_materials": [],
+      "top_colors": [
+        {
+          "item": "black",
+          "count": 2
+        }
+      ],
+      "market_share": 57.14285714285714,
+      "profitability": 0.3
+    },
+    "SHIRTS": {
+      "product_count": 1,
+      "avg_price": 20,
+      "price_range": {
+        "min": 20,
+        "max": 20
+      },
+      "top_materials": [],
+      "top_colors": [],
+      "market_share": 14.285714285714285,
+      "profitability": 0.5
+    }
+  },
+  "materials": {},
+  "pricing_patterns": {
+    "price_tiers": {
+      "budget": 4,
+      "mid": 3,
+      "premium": 0
+    },
+    "material_pricing": {},
+    "category_pricing": {
+      "Packing Materials": {
+        "prices": [
+          0
+        ],
+        "avg": 0
+      },
+      "Products": {
+        "prices": [
+          25
+        ],
+        "avg": 25
+      },
+      "Materials": {
+        "prices": [
+          0.45,
+          7,
+          0.65,
+          29.99
+        ],
+        "avg": 9.522499999999999
+      },
+      "SHIRTS": {
+        "prices": [
+          20
+        ],
+        "avg": 20
+      }
+    },
+    "size_impact": {},
+    "complexity_pricing": {}
+  },
+  "sales_insights": {
+    "top_sellers": {},
+    "revenue_by_category": {},
+    "seasonal_trends": {},
+    "customer_preferences": {},
+    "reorder_patterns": {}
+  },
+  "design_trends": {
+    "popular_themes": {},
+    "color_trends": {},
+    "style_preferences": {},
+    "seasonal_designs": {},
+    "trending_keywords": {}
+  },
+  "business_metrics": {
+    "total_products": 7,
+    "total_categories": 4,
+    "avg_product_price": 13.848333333333334,
+    "total_inventory_value": 83.09,
+    "most_profitable_category": "Products",
+    "growth_opportunities": [],
+    "optimization_suggestions": [
+      "Expand into new product categories to diversify offerings"
+    ]
+  },
+  "last_updated": "2025-09-21T21:22:34.485Z",
+  "version": "1.0"
+}

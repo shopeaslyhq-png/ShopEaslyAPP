@@ -1,0 +1,59 @@
+{
+  "lastTraining": "2025-09-21T21:22:34.481Z",
+  "totalPatterns": 13,
+  "totalQuestions": 135,
+  "categoryBreakdown": {
+    "general": 68,
+    "help": 11,
+    "inventory": 87,
+    "design": 34,
+    "orders": 13,
+    "pricing": 2,
+    "materials": 2,
+    "business": 3
+  },
+  "topQuestions": [
+    {
+      "question": "hi",
+      "count": 23
+    },
+    {
+      "question": "generate sales report",
+      "count": 9
+    },
+    {
+      "question": "show me inventory summary",
+      "count": 9
+    },
+    {
+      "question": "what are my pending orders",
+      "count": 8
+    },
+    {
+      "question": "help me optimize inventory",
+      "count": 6
+    },
+    {
+      "question": "add inventory",
+      "count": 6
+    },
+    {
+      "question": "show inventory status",
+      "count": 3
+    },
+    {
+      "question": "hello",
+      "count": 3
+    },
+    {
+      "question": "confirm",
+      "count": 3
+    },
+    {
+      "question": "add 50 large black t shirts as raw material for product creation generate a sku for me and the price is 20 a shirt it was bought from ninjatransfer com",
+      "count": 3
+    }
+  ],
+  "improvementAreas": [],
+  "averageConfidence": 100
+}

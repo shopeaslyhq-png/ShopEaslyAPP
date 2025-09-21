@@ -1,0 +1,143 @@
+{
+  "training_started": "2025-09-21T21:22:34.466Z",
+  "phases": {
+    "conversation_learning": {
+      "phase": "conversation_learning",
+      "started": "2025-09-21T21:22:34.468Z",
+      "status": "completed",
+      "patterns_learned": 13,
+      "common_questions": 135,
+      "category_coverage": 8,
+      "top_questions": [
+        {
+          "question": "hi",
+          "count": 23
+        },
+        {
+          "question": "generate sales report",
+          "count": 9
+        },
+        {
+          "question": "show me inventory summary",
+          "count": 9
+        },
+        {
+          "question": "what are my pending orders",
+          "count": 8
+        },
+        {
+          "question": "help me optimize inventory",
+          "count": 6
+        }
+      ],
+      "improvement_areas": [],
+      "learning_metrics": {
+        "totalConversations": 151,
+        "learnedPatterns": 13,
+        "coverageByCategory": 8,
+        "lastUpdated": "2025-09-21T21:22:34.474Z"
+      },
+      "completed": "2025-09-21T21:22:34.484Z"
+    },
+    "knowledge_building": {
+      "phase": "knowledge_building",
+      "started": "2025-09-21T21:22:34.484Z",
+      "status": "completed",
+      "total_products": 7,
+      "total_categories": 4,
+      "business_metrics": {
+        "total_products": 7,
+        "total_categories": 4,
+        "avg_product_price": 13.848333333333334,
+        "total_inventory_value": 83.09,
+        "most_profitable_category": "Products",
+        "growth_opportunities": [],
+        "optimization_suggestions": [
+          "Expand into new product categories to diversify offerings"
+        ]
+      },
+      "pricing_insights": {
+        "avg_price": 13.848333333333334,
+        "total_value": 83.09,
+        "price_tiers": {
+          "budget": 4,
+          "mid": 3,
+          "premium": 0
+        }
+      },
+      "completed": "2025-09-21T21:22:34.491Z"
+    },
+    "performance_analysis": {
+      "phase": "performance_analysis",
+      "started": "2025-09-21T21:22:34.491Z",
+      "status": "completed",
+      "conversation_trainer": {
+        "isReady": true,
+        "lastTraining": "2025-09-21T21:22:34.481Z",
+        "totalPatterns": 13,
+        "averageConfidence": 100,
+        "topCategories": {
+          "general": 68,
+          "help": 11,
+          "inventory": 87,
+          "design": 34,
+          "orders": 13,
+          "pricing": 2,
+          "materials": 2,
+          "business": 3
+        },
+        "hasHistoryData": true
+      },
+      "knowledge_base": {
+        "isReady": true,
+        "lastUpdated": "2025-09-21T21:22:34.485Z",
+        "totalProducts": 7,
+        "totalCategories": 4,
+        "version": "1.0"
+      },
+      "overall_readiness": 100,
+      "readiness_status": "excellent",
+      "data_quality": {
+        "conversation_history": 100,
+        "inventory_data": 50,
+        "order_data": 25,
+        "overall_score": 58
+      },
+      "completed": "2025-09-21T21:22:34.497Z"
+    }
+  },
+  "summary": {
+    "phases_completed": 3,
+    "phases_failed": 0,
+    "total_patterns": 13,
+    "total_products": 7,
+    "readiness_level": "good"
+  },
+  "recommendations": [
+    {
+      "type": "inventory",
+      "priority": "high",
+      "title": "Expand product catalog",
+      "description": "Your inventory is small. Add more products for better AI recommendations.",
+      "action": "Add more products to your inventory"
+    },
+    {
+      "type": "inventory",
+      "priority": "medium",
+      "title": "Diversify product categories",
+      "description": "Add products in different categories for broader AI knowledge.",
+      "action": "Expand into new product categories"
+    },
+    {
+      "type": "data",
+      "priority": "high",
+      "title": "Improve data quality",
+      "description": "Add more conversation history, inventory items, and order data.",
+      "action": "Use the system more and add comprehensive business data"
+    }
+  ],
+  "next_training": "2025-09-24T21:22:34.467Z",
+  "training_completed": "2025-09-21T21:22:34.497Z",
+  "duration_ms": 31,
+  "duration_human": "0s"
+}
