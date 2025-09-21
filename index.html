@@ -367,29 +367,32 @@
         </button>
 
         <div id="ai-assistant-modal" class="modal-overlay hidden">
-            <div class="modal-content ai-modal">
-                <div class="ai-modal-header">
-                     <h2>Easly AI Assistant</h2>
-                     <div class="ai-header-actions">
+            <div class="modal-content ai-modal" style="max-width:500px;min-height:unset;max-height:90vh;padding:1rem 0.5rem;">
+                <div class="ai-modal-header" style="padding:0.75rem 1rem 0.5rem 1rem;">
+                    <h2 style="font-size:1.1rem;margin:0;">Easly AI Assistant</h2>
+                    <div class="ai-header-actions">
                         <button id="ai-guide-btn" class="btn btn-icon" aria-label="Show command guide"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></button>
                         <button id="ai-modal-close-btn" class="modal-close-btn" aria-label="Close modal">&times;</button>
-                     </div>
-                </div>
-                <div id="ai-chat-history" class="ai-chat-container"></div>
-                <div class="ai-input-area">
-                    <div class="ai-input-wrapper">
-                        <textarea id="ai-text-input" class="ai-text-input" placeholder="Type your message or use voice..." rows="1" maxlength="1000"></textarea>
-                        <div class="ai-input-actions">
-                            <button id="ai-voice-btn" class="ai-voice-btn" aria-label="Voice input" title="Voice input">
-                                <svg class="mic-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg>
-                                <div class="thinking-spinner"></div>
-                            </button>
-                            <button id="ai-send-btn" class="ai-send-btn" aria-label="Send message" title="Send message" disabled>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4z"></path><path d="M22 2 11 13"></path></svg>
-                            </button>
-                        </div>
                     </div>
-                    <p id="ai-status-text" class="ai-status-text">Type a message or tap the mic for voice input</p>
+                </div>
+                <div class="ai-brainstorm-bar" style="display:flex;gap:0.5rem;align-items:center;padding:0.5rem 1rem 0.5rem 1rem;">
+                    <input id="brainstorm-prompt" class="form-input" type="text" placeholder="Brainstorm: e.g. new product ideas, shop improvements..." style="flex:1;min-width:0;" maxlength="120">
+                    <button id="brainstorm-generate-btn" class="btn btn-primary" style="white-space:nowrap;">Brainstorm</button>
+                </div>
+                <div id="brainstorm-results" class="ai-brainstorm-results" style="padding:0.5rem 1rem 0.5rem 1rem;display:none;"></div>
+                <div id="ai-chat-history" class="ai-chat-container" style="padding:0.5rem 1rem;min-height:180px;"></div>
+                <div class="ai-input-area" style="padding:0.5rem 1rem 0.5rem 1rem;">
+                    <div class="ai-input-wrapper" style="gap:0.5rem;align-items:center;">
+                        <textarea id="ai-text-input" class="ai-text-input" placeholder="Type a message or use voice..." rows="1" maxlength="1000" style="resize:none;"></textarea>
+                        <button id="ai-voice-btn" class="ai-voice-btn" aria-label="Voice input" title="Voice input">
+                            <svg class="mic-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg>
+                            <div class="thinking-spinner"></div>
+                        </button>
+                        <button id="ai-send-btn" class="ai-send-btn" aria-label="Send message" title="Send message" disabled>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4z"></path><path d="M22 2 11 13"></path></svg>
+                        </button>
+                    </div>
+                    <p id="ai-status-text" class="ai-status-text" style="margin:0.25rem 0 0 0;">Type a message or tap the mic for voice input</p>
                 </div>
             </div>
         </div>

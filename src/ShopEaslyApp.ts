@@ -5,7 +5,12 @@ import DOMPurify from "dompurify";
 import { marked } from "marked";
 
 // --- GLOBAL STATE & CONSTANTS ---
-const API_KEY = import.meta.env.VITE_API_KEY || process.env.API_KEY;
+// Support both Vite and Node environments for API_KEY
+const API_KEY = (typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.VITE_API_KEY) 
+    ? (import.meta as any).env.VITE_API_KEY 
+    : (typeof process !== 'undefined' && process.env && process.env.API_KEY) 
+        ? process.env.API_KEY 
+        : undefined;
 let ai: GoogleGenAI | null = null;
 
 const appState: any = {
@@ -68,7 +73,7 @@ export class ShopEaslyApp {
             'stat-active-orders', 'stat-in-production', 'stat-completed-today', 'stat-low-stock',
             'mcc-stat-active-orders', 'mcc-stat-in-production', 'mcc-stat-low-stock',
             'hp-stat-active-orders', 'hp-stat-in-production', 'hp-stat-completed-today', 'hp-stat-low-stock',
-            'brainstorm-form', 'brainstorm-prompt', 'brainstorm-generate-btn', 'brainstorm-results',
+            'brainstorm-prompt', 'brainstorm-generate-btn', 'brainstorm-results',
             'orders-table', 'finished-goods-table', 'materials-table', 'packaging-table',
             'idea-form', 'prompt-input', 'refine-prompt-btn', 'generate-btn', 'image-output-container', 'loading-indicator', 'error-message', 'save-design-section', 'save-design-form', 'design-name', 'create-product-btn', 'save-design-btn',
             'creator-form', 'creator-prompt-input', 'creator-generate-btn', 'creator-output',
@@ -153,7 +158,14 @@ export class ShopEaslyApp {
         // Form submissions
         this.itemForm?.addEventListener('submit', (e: Event) => this.handleItemFormSubmit(e));
         this.orderForm?.addEventListener('submit', (e: Event) => this.handleOrderFormSubmit(e));
-        this.brainstormForm?.addEventListener('submit', (e: Event) => { e.preventDefault(); this.generateBrainstormIdeas(); });
+        // Brainstorm bar (new compact UI)
+        this.brainstormGenerateBtn?.addEventListener('click', () => this.generateBrainstormIdeas());
+        this.brainstormPrompt?.addEventListener('keydown', (e: KeyboardEvent) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.generateBrainstormIdeas();
+            }
+        });
         this.ideaForm?.addEventListener('submit', (e: Event) => { e.preventDefault(); this.generateIdeaImage(); });
         this.creatorForm?.addEventListener('submit', (e: Event) => { e.preventDefault(); this.generateCreatorDoc(); });
         this.saveDesignForm?.addEventListener('submit', (e: Event) => { e.preventDefault(); this.saveDesign(); });
@@ -164,7 +176,7 @@ export class ShopEaslyApp {
         // AI text input handlers
         if (this.aiTextInput) {
             this.aiTextInput.addEventListener('input', () => this.handleTextInputChange());
-            this.aiTextInput.addEventListener('keydown', (e) => {
+            this.aiTextInput?.addEventListener('keydown', (e: KeyboardEvent) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     this.sendTextMessage();
@@ -251,42 +263,12 @@ export class ShopEaslyApp {
             document.getElementById('sos-homepage')?.classList.remove('hidden');
             appState.currentView = 'sos-homepage';
             return;
-
-    // Show the offline AI modal and render the React component
-    showOfflineAIModal() {
-        const modal = document.getElementById('offline-ai-modal');
-        if (!modal) return;
-        modal.classList.remove('hidden');
-        // Dynamically import React and the component, then render
-        import('react').then(React => {
-            import('react-dom/client').then(ReactDOM => {
-                import('./EaslyOfflineAI').then(({ default: EaslyOfflineAI }) => {
-                    const rootDiv = document.getElementById('offline-ai-react-root');
-                    if (rootDiv) {
-                        if (!rootDiv._reactRootContainer) {
-                            const root = ReactDOM.createRoot(rootDiv);
-                            root.render(React.createElement(EaslyOfflineAI));
-                            rootDiv._reactRootContainer = root;
-                        }
-                    }
-                });
-            });
-        });
-    }
-
-    // Hide the offline AI modal
-    hideOfflineAIModal() {
-        const modal = document.getElementById('offline-ai-modal');
-        if (modal && modal.classList) {
-            modal.classList.add('hidden');
-        }
-    }
         }
 
         // Handle inner views for the app panel
         if (targetContainerId === 'shopeasly-app-panel') {
-            targetContainer.querySelectorAll('.view-container').forEach((view: HTMLElement) => {
-                view.classList.add('hidden');
+            targetContainer.querySelectorAll('.view-container').forEach((view) => {
+                (view as HTMLElement).classList.add('hidden');
             });
             if (targetInnerViewId) {
                 document.getElementById(targetInnerViewId)?.classList.remove('hidden');
@@ -742,22 +724,102 @@ export class ShopEaslyApp {
     async generateBrainstormIdeas() {
         if (!ai) return this.showToast('AI is not configured.', 'error');
         if (!this.brainstormPrompt) return;
-        const prompt = this.brainstormPrompt.value;
+        const prompt = this.brainstormPrompt.value.trim();
         if (!prompt) return;
 
         this.setLoadingState(this.brainstormGenerateBtn, true);
-        this.brainstormResults?.classList.add('hidden');
+        if (this.brainstormResults) {
+            this.brainstormResults.style.display = 'none';
+            this.brainstormResults.innerHTML = '';
+        }
 
         try {
+            // Strictly allow only shop/dashboard/product brainstorms
+            const allowed = /product|shop|inventory|order|material|marketing|improvement/i;
+            if (!allowed.test(prompt)) {
+                if (this.brainstormResults) {
+                    this.brainstormResults.innerHTML = 'I’m only able to assist with shop and dashboard operations.';
+                    this.brainstormResults.style.display = 'block';
+                }
+                this.setLoadingState(this.brainstormGenerateBtn, false);
+                return;
+            }
+
+            // Step 1: Brainstorm product idea
             const response = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
-                contents: `As an e-commerce expert, generate some ideas based on this prompt: "${prompt}". Please format the response as markdown.`
+                contents: `Brainstorm a new product idea for an e-commerce shop. Give a short name and a one-sentence description. Format as: Name: ...\nDescription: ...` 
             });
-            const markdown = await this.safeMarkdown(response.text ?? '');
+            let idea = response.text || '';
+            let nameMatch = idea.match(/Name:\s*(.+)/i);
+            let descMatch = idea.match(/Description:\s*(.+)/i);
+            let productName = nameMatch ? nameMatch[1].trim() : 'New Product';
+            let productDesc = descMatch ? descMatch[1].trim() : '';
+
+            // Step 2: Prompt for material, image, price, quantity
+            let formHtml = `<div style='margin-bottom:0.5rem;'><strong>Idea:</strong> ${productName}<br><span style='color:#666;'>${productDesc}</span></div>`;
+            formHtml += `<form id='brainstorm-product-form' style='display:flex;flex-direction:column;gap:0.5rem;'>`;
+            formHtml += `<input class='form-input' id='brainstorm-material' placeholder='Material (e.g. 100% Cotton)' maxlength='40' required>`;
+            formHtml += `<input class='form-input' id='brainstorm-image' placeholder='Image URL or description' maxlength='120' required>`;
+            formHtml += `<input class='form-input' id='brainstorm-price' type='number' min='0' step='0.01' placeholder='Price (USD)' required>`;
+            formHtml += `<input class='form-input' id='brainstorm-qty' type='number' min='1' step='1' placeholder='Quantity' required>`;
+            formHtml += `<button type='submit' class='btn btn-primary'>Save Product</button>`;
+            formHtml += `</form>`;
+            formHtml += `<div id='brainstorm-create-order' style='display:none;margin-top:0.5rem;'></div>`;
+
             if (this.brainstormResults) {
-                this.brainstormResults.innerHTML = markdown;
-                this.brainstormResults.classList.remove('hidden');
+                this.brainstormResults.innerHTML = formHtml;
+                this.brainstormResults.style.display = 'block';
             }
+
+            // Step 3: Handle product form submit
+            setTimeout(() => {
+                const form = document.getElementById('brainstorm-product-form') as HTMLFormElement;
+                if (form) {
+                    form.onsubmit = (ev) => {
+                        ev.preventDefault();
+                        const material = (document.getElementById('brainstorm-material') as HTMLInputElement).value.trim();
+                        const image = (document.getElementById('brainstorm-image') as HTMLInputElement).value.trim();
+                        const price = parseFloat((document.getElementById('brainstorm-price') as HTMLInputElement).value);
+                        const qty = parseInt((document.getElementById('brainstorm-qty') as HTMLInputElement).value);
+                        if (!material || !image || isNaN(price) || isNaN(qty)) return;
+                        // Save product to appState
+                        const newProduct = {
+                            id: `p${Date.now()}`,
+                            name: productName,
+                            description: productDesc,
+                            sku: '',
+                            price,
+                            stock: qty,
+                            threshold: 5,
+                            supplier: '',
+                            notes: material,
+                            imageUrl: image
+                        };
+                        appState.products.push(newProduct);
+                        this.renderAllTables();
+                        this.updateAllStats();
+                        // Show create order UI
+                        const orderDiv = document.getElementById('brainstorm-create-order');
+                        if (orderDiv) {
+                            orderDiv.innerHTML = `<button class='btn btn-secondary' id='brainstorm-create-order-btn'>Create Order for this Product</button>`;
+                            orderDiv.style.display = 'block';
+                            document.getElementById('brainstorm-product-form')!.setAttribute('disabled', 'true');
+                            // Wire up order button
+                            setTimeout(() => {
+                                const btn = document.getElementById('brainstorm-create-order-btn');
+                                if (btn) {
+                                    btn.onclick = () => {
+                                        this.openOrderModal(newProduct.id);
+                                    };
+                                }
+                            }, 50);
+                        }
+                        this.showToast('Product saved! You can now create an order.', 'success');
+                    };
+                }
+            }, 100);
+
         } catch (error) {
             console.error(error);
             this.showToast('Error generating ideas.', 'error');
