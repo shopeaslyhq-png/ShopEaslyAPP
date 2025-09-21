@@ -9,6 +9,7 @@
   </div>
   <div class="header-actions">
     <button class="btn btn-secondary" onclick="location.reload()">↻ Refresh</button>
+    <button class="btn btn-secondary" onclick="openBulkProductModal()">📊 Bulk Create</button>
     <button class="btn btn-primary" onclick="openProductModal('add')">＋ New Product</button>
   </div>
 </section>
@@ -144,6 +145,233 @@
   </div>
 </div>
 
+</div>
+
+<!-- Bulk Product Creation Modal -->
+<div id="bulk-product-modal" class="modal-overlay hidden" aria-hidden="true">
+  <div class="modal-content" role="dialog" aria-labelledby="bulk-product-modal-title" style="max-width: 800px; width: 95%;">
+    <button class="modal-close-btn" onclick="closeBulkProductModal()" aria-label="Close">✕</button>
+    <h2 id="bulk-product-modal-title">Bulk Product Creation</h2>
+    
+    <div class="bulk-creation-tabs">
+      <div class="tab-headers">
+        <button class="tab-header active" data-tab="csv">📄 CSV Import</button>
+        <button class="tab-header" data-tab="template">🏷️ Template-Based</button>
+        <button class="tab-header" data-tab="ai-generate">🤖 AI Generate</button>
+      </div>
+      
+      <!-- CSV Import Tab -->
+      <div class="tab-content active" data-tab="csv">
+        <div class="tab-section">
+          <h3>Import from CSV</h3>
+          <p class="text-muted">Upload a CSV file with product information to create multiple products at once.</p>
+          
+          <div class="form-group">
+            <label for="bulk-csv-file">Select CSV File</label>
+            <input type="file" id="bulk-csv-file" accept=".csv" class="form-input" />
+          </div>
+          
+          <div class="csv-template-section">
+            <h4>Expected CSV Format</h4>
+            <div class="csv-preview">
+              <table class="csv-example">
+                <thead>
+                  <tr>
+                    <th>name</th>
+                    <th>price</th>
+                    <th>stock</th>
+                    <th>category</th>
+                    <th>description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Cool Space T-Shirt</td>
+                    <td>25.99</td>
+                    <td>50</td>
+                    <td>Apparel</td>
+                    <td>Retro space design</td>
+                  </tr>
+                  <tr>
+                    <td>Galaxy Mug</td>
+                    <td>12.99</td>
+                    <td>25</td>
+                    <td>Drinkware</td>
+                    <td>11oz ceramic mug</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="downloadCsvTemplate()">📥 Download Template</button>
+          </div>
+          
+          <div id="csv-preview-section" style="display: none;">
+            <h4>Preview</h4>
+            <div id="csv-preview-content"></div>
+          </div>
+          
+          <div class="form-actions">
+            <button class="btn btn-secondary" onclick="closeBulkProductModal()">Cancel</button>
+            <button class="btn btn-primary" id="import-csv-btn" onclick="importFromCsv()" disabled>Import Products</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Template-Based Tab -->
+      <div class="tab-content" data-tab="template">
+        <div class="tab-section">
+          <h3>Template-Based Creation</h3>
+          <p class="text-muted">Use predefined templates to quickly create similar products with variations.</p>
+          
+          <div class="template-selection">
+            <h4>Choose Template</h4>
+            <div class="template-grid">
+              <div class="template-card" data-template="apparel">
+                <div class="template-icon">👕</div>
+                <h5>Apparel</h5>
+                <p>T-shirts, hoodies, etc.</p>
+              </div>
+              <div class="template-card" data-template="drinkware">
+                <div class="template-icon">☕</div>
+                <h5>Drinkware</h5>
+                <p>Mugs, tumblers, bottles</p>
+              </div>
+              <div class="template-card" data-template="prints">
+                <div class="template-icon">🖼️</div>
+                <h5>Prints</h5>
+                <p>Posters, canvases, stickers</p>
+              </div>
+              <div class="template-card" data-template="accessories">
+                <div class="template-icon">👜</div>
+                <h5>Accessories</h5>
+                <p>Bags, phone cases, etc.</p>
+              </div>
+            </div>
+          </div>
+          
+          <div id="template-form" style="display: none;">
+            <h4>Template Configuration</h4>
+            <form id="bulk-template-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="template-base-name">Base Product Name</label>
+                  <input id="template-base-name" class="form-input" type="text" placeholder="e.g., Cool Space Design" required>
+                </div>
+                <div class="form-group">
+                  <label for="template-base-price">Base Price</label>
+                  <input id="template-base-price" class="form-input" type="number" step="0.01" placeholder="0.00" required>
+                </div>
+              </div>
+              
+              <div class="variation-section">
+                <h5>Create Variations</h5>
+                <div class="checkbox-group">
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="create-sizes"> Create size variations (S, M, L, XL)
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="create-colors"> Create color variations
+                  </label>
+                </div>
+                
+                <div id="color-options" style="display: none;">
+                  <label>Colors (comma-separated):</label>
+                  <input type="text" id="template-colors" class="form-input" placeholder="Black, White, Navy, Red" />
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="template-stock">Stock per variation</label>
+                <input id="template-stock" class="form-input" type="number" value="10" min="0">
+              </div>
+            </form>
+            
+            <div class="preview-section">
+              <h5>Preview Products to Create</h5>
+              <div id="template-preview"></div>
+            </div>
+            
+            <div class="form-actions">
+              <button class="btn btn-secondary" onclick="resetTemplateForm()">Reset</button>
+              <button class="btn btn-primary" onclick="createFromTemplate()">Create Products</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- AI Generate Tab -->
+      <div class="tab-content" data-tab="ai-generate">
+        <div class="tab-section">
+          <h3>AI Product Generation</h3>
+          <p class="text-muted">Let AI generate product ideas and variations based on your criteria.</p>
+          
+          <form id="ai-generation-form">
+            <div class="form-group">
+              <label for="ai-theme">Theme/Style</label>
+              <input id="ai-theme" class="form-input" type="text" placeholder="e.g., vintage space, minimalist nature, retro gaming" required>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="ai-product-types">Product Types</label>
+                <select id="ai-product-types" class="form-input" multiple>
+                  <option value="t-shirt">T-Shirts</option>
+                  <option value="hoodie">Hoodies</option>
+                  <option value="mug">Mugs</option>
+                  <option value="sticker">Stickers</option>
+                  <option value="poster">Posters</option>
+                  <option value="phone-case">Phone Cases</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="ai-quantity">How many products?</label>
+                <input id="ai-quantity" class="form-input" type="number" value="5" min="1" max="20">
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="ai-price-range">Price Range</label>
+                <select id="ai-price-range" class="form-input">
+                  <option value="budget">Budget ($5-15)</option>
+                  <option value="mid">Mid-range ($15-35)</option>
+                  <option value="premium">Premium ($35-75)</option>
+                  <option value="luxury">Luxury ($75+)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="ai-target-audience">Target Audience</label>
+                <input id="ai-target-audience" class="form-input" type="text" placeholder="e.g., young adults, gamers, coffee lovers">
+              </div>
+            </div>
+            
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="ai-generate-images"> Generate product images with AI
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="ai-create-variations"> Create size/color variations
+              </label>
+            </div>
+          </form>
+          
+          <div class="form-actions">
+            <button class="btn btn-secondary" onclick="closeBulkProductModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="generateWithAI()">🤖 Generate Products</button>
+          </div>
+          
+          <div id="ai-generation-results" style="display: none;">
+            <h4>Generated Products</h4>
+            <div id="ai-generated-list"></div>
+            <div class="form-actions">
+              <button class="btn btn-secondary" onclick="regenerateAI()">🔄 Regenerate</button>
+              <button class="btn btn-primary" onclick="createAIProducts()">✅ Create All Products</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 
