@@ -42,9 +42,8 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT) {
     : process.env.GOOGLE_APPLICATION_CREDENTIALS;
   firebaseCred = JSON.parse(fs.readFileSync(p, 'utf8'));
 } else {
-  // default to local file
-  const localPath = path.join(__dirname, 'serviceAccountKey.json');
-  firebaseCred = JSON.parse(fs.readFileSync(localPath, 'utf8'));
+  console.error('[OAuth] Firebase service account not configured. Set FIREBASE_SERVICE_ACCOUNT (JSON string) or GOOGLE_APPLICATION_CREDENTIALS (path).');
+  process.exit(1);
 }
 admin.initializeApp({
   credential: admin.credential.cert(firebaseCred),
@@ -190,6 +189,19 @@ app.post('/token', async (req, res) => {
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/health', (req, res) => res.json({ ok: true }));
+
+// Admin health: verifies Firestore connectivity
+app.get('/health/admin', async (req, res) => {
+  const start = Date.now();
+  try {
+    // Minimal Firestore read to validate credentials
+    await db.listCollections();
+    const ms = Date.now() - start;
+    res.json({ ok: true, firestore: 'ok', latencyMs: ms, projectId: firebaseCred.project_id || null });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

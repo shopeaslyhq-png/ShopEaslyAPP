@@ -5,8 +5,9 @@ const layouts = require('express-ejs-layouts');
 const app = express();
 
 // Middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+// Capture raw body using body-parser verify to enable HMAC verification without consuming the stream
+app.use(express.json({ limit: '10mb', verify: (req, res, buf) => { req.rawBody = buf.toString('utf8'); } }));
+app.use(express.urlencoded({ extended: true, verify: (req, res, buf) => { req.rawBody = buf.toString('utf8'); } }));
 // TODO: Add authentication middleware if needed
 
 // Routes

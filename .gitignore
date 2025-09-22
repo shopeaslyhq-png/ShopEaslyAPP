@@ -28,3 +28,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Service account keys and sensitive JSON
+**/serviceAccountKey.json
+**/*serviceAccount*.json
+**/firebase-admin-*.json
+
+# Local data JSON (opt-out by removing these lines)
+shopeasly-v11/data/*.json
+!shopeasly-v11/data/.gitkeep

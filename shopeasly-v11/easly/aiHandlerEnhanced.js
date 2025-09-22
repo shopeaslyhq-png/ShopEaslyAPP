@@ -359,6 +359,9 @@ async function saveImagePartToUploads(imagePart) {
   }
 }
 
+// Legacy intents-based block removed (used a missing './services' module and an unused handler).
+
+
 async function handleLocalIntents(prompt, autoExecute = false, clientId = undefined, ctx = {}) {
   const q = prompt.toLowerCase();
   const { imagePart } = ctx || {};
@@ -553,7 +556,11 @@ async function handleLocalIntents(prompt, autoExecute = false, clientId = undefi
     const delivered = orders.filter(o => /delivered/i.test(o.status || ''));
     const head = (arr, n=5) => arr.slice(0,n);
     const top = head(pending).map(o => ({ orderNumber: o.orderNumber || o.id, id: o.id, customer: o.customerName || o.customer || 'N/A', total: o.total || o.price || 0 }));
-  const text = `Orders overview:\n- Pending: ${pending.length}\n- Processing: ${processing.length}\n- Delivered: ${delivered.length}` + (top.length ? `\n\nTop pending:\n` + top.map(o=>`- ${o.orderNumber} — ${o.customer} — $${Number(o.total||0).toFixed(2)}`).join('\n') : '') + `\n\n(source: ${orders.length} orders scanned just now)`;
+    const text = `Orders overview:\n- Pending: ${pending.length}\n- Processing: ${processing.length}\n- Delivered: ${delivered.length}` + (top.length ? `\n\nTop pending:\n` + top.map(o=>`- ${o.orderNumber} — ${o.customer} — $${Number(o.total||0).toFixed(2)}`).join('\n') : '') + `\n\n(source: ${orders.length} orders scanned just now)`;
+    if (clientId) {
+      const recentOrders = orders.slice().sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0)).slice(0, 20).map(o => ({ id: o.id, orderNumber: o.orderNumber || o.id, status: o.status || 'Pending' }));
+      setSession(clientId, { recentOrders, expiresAt: Date.now() + 10*60*1000 });
+    }
     return { text, data: { counts: { pending: pending.length, processing: processing.length, delivered: delivered.length }, topPending: top } };
   }
 
@@ -889,7 +896,48 @@ async function handleLocalIntents(prompt, autoExecute = false, clientId = undefi
 • Product: ${productName} (${productSku})
 • Qty: ${qty} × $${unit.toFixed(2)} = $${total.toFixed(2)}
 • Created: ${createdAt}`;
+    if (clientId) {
+      const prev = getSession(clientId) || {};
+      const recent = Array.isArray(prev.recentOrders) ? prev.recentOrders.slice(0) : [];
+      const entry = { id: found.id, orderNumber, status };
+      const exists = recent.find(r => r.id === found.id);
+      const nextRecent = [entry].concat(exists ? recent.filter(r => r.id !== found.id) : recent).slice(0, 20);
+      setSession(clientId, { recentOrders: nextRecent, expiresAt: Date.now() + 10*60*1000 });
+    }
     return { text, data: { id: found.id, orderNumber, status, customer, productName, productSku, quantity: qty, price: unit, total, createdAt: found.createdAt || null } };
+  }
+
+  // Batch mark last N orders as shipped using session memory (e.g., "mark the last 2 orders as shipped")
+  let lastN = q.match(/mark\s+the\s+last\s+(\d+)\s+orders?\s+as\s+(shipped|delivered|processing|pending)/i);
+  if (lastN) {
+    const n = Math.max(1, Math.min(50, Number(lastN[1])));
+    const statusRaw = lastN[2].toLowerCase();
+    const newStatus = statusRaw.charAt(0).toUpperCase() + statusRaw.slice(1);
+    let targets = [];
+    const allOrders = await getAllDocuments('orders', 1000);
+    if (clientId) {
+      const s = getSession(clientId) || {};
+      if (Array.isArray(s.recentOrders) && s.recentOrders.length) {
+        targets = s.recentOrders.slice(0, n);
+      }
+    }
+    if (!targets.length) {
+      targets = allOrders.slice().sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0)).slice(0, n).map(o => ({ id: o.id, orderNumber: o.orderNumber || o.id }));
+    }
+    if (!targets.length) return { text: '❌ No orders found to update.' };
+    let ok = 0; const ids = [];
+    for (const t of targets) {
+      try {
+        await updateDocument('orders', t.id, { status: newStatus });
+        ok += 1; ids.push(t.orderNumber || t.id);
+      } catch (_) {}
+    }
+    // Refresh session recentOrders with updated statuses
+    if (clientId) {
+      const updated = (getSession(clientId)?.recentOrders || []).map(r => ({ ...r, status: ids.includes(r.orderNumber) ? newStatus : r.status }));
+      setSession(clientId, { recentOrders: updated, expiresAt: Date.now() + 10*60*1000 });
+    }
+    return { text: `✅ Marked ${ok} order(s) as ${newStatus}: ${ids.join(', ')}`, executed: true };
   }
 
   // Mark/Update order status
@@ -1413,3 +1461,49 @@ ${recentHistory}\nUser: ${prompt}`;
     return res.status(500).json({ error: 'AI request failed', details: err.message });
   }
 };
+
+// Architect-provided Gemini function-calling loop (optional named export)
+try {
+  const { GoogleGenerativeAI } = require('@google/generative-ai');
+  const localPath = path.join(__dirname, '..', 'utils', 'localDataService.js');
+  const sysMod = path.join(__dirname, '..', 'config', 'system-instructions.js');
+  let coPilotSystemInstruction = { systemInstruction: { role: 'system', content: [{ text: 'You are Easly AI.' }] } };
+  try {
+    coPilotSystemInstruction = require('../config/system-instructions.js').coPilotSystemInstruction || coPilotSystemInstruction;
+  } catch (_) { /* optional */ }
+
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', ...coPilotSystemInstruction });
+
+  async function handleCoPilotMessage(message) {
+    const chat = model.startChat();
+    let response = await chat.sendMessage(message);
+    while (typeof response?.response?.functionCalls === 'function' && (response.response.functionCalls() || []).length > 0) {
+      const functionCalls = response.response.functionCalls();
+      const results = await Promise.all(functionCalls.map(async (fc) => {
+        const { name, args } = fc || {};
+        try {
+          if (name === 'findInventoryItems') {
+            const svc = require(localPath);
+            const items = await (svc.findInventoryItems ? svc.findInventoryItems(args || {}) : []);
+            return { name, response: { content: JSON.stringify(items) } };
+          }
+          if (name === 'findOrders') {
+            const svc = require(localPath);
+            const orders = await (svc.findOrders ? svc.findOrders(args || {}) : []);
+            return { name, response: { content: JSON.stringify(orders) } };
+          }
+          return { name: name || 'unknown', response: { content: JSON.stringify({ error: 'Function not implemented' }) } };
+        } catch (e) {
+          return { name: name || 'unknown', response: { content: JSON.stringify({ error: e.message }) } };
+        }
+      }));
+      response = await chat.sendMessage([{ functionResponse: { name: 'tool_code', response: results } }]);
+    }
+    return String(response?.response?.text?.() || '').trim();
+  }
+
+  module.exports.handleCoPilotMessage = handleCoPilotMessage;
+} catch (_) {
+  // Gemini package not installed or not configured; skip named export
+}

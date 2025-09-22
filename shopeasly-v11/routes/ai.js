@@ -3,11 +3,12 @@ const fs = require('fs');
 const path = require('path');
 const router = express.Router();
 const handleAICoPilot = require('../easly/aiHandlerEnhanced'); // Use enhanced handler
+const { hmacVerify, firebaseAuthVerify } = require('../utils/securityMiddleware');
 const axios = require('axios');
 const { getAllDocuments } = require('../config/firebase');
 
-// AI chat endpoint
-router.post('/co-pilot', handleAICoPilot);
+// AI chat endpoint (secured by optional HMAC + Firebase Auth)
+router.post('/co-pilot', hmacVerify, firebaseAuthVerify, handleAICoPilot);
 
 // Lightweight health/info endpoint (no secrets)
 router.get('/health', (req, res) => {

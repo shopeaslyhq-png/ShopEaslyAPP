@@ -1,0 +1,9 @@
+{
+  "get_inventory": "inventoryService.listStock",
+  "needs_reorder": "inventoryService.checkThresholds",
+  "create_purchase_order": "ordersService.createPO",
+  "get_orders_status": "ordersService.listOrders",
+  "mark_order_shipped": "ordersService.markShipped",
+  "business_summary": "reportsService.summary",
+  "low_stock_alerts": "alertsService.lowStock"
+}
