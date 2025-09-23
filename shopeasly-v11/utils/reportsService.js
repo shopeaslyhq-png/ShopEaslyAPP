@@ -3,6 +3,7 @@
 // Calculates daily sales totals, low stock counts, and pending orders using the JSON-backed data layer
 
 const { getAllDocuments } = require('../config/firebase');
+const { forecastNextDay } = require('./forecastService');
 
 function toDateOnly(d) {
   if (!d) return '';
@@ -36,11 +37,14 @@ async function summary({ date } = {}) {
     return thr > 0 && stock > 0 && stock <= thr;
   }).length;
 
+  const fc = await forecastNextDay({ window: 7 }).catch(() => ({ forecast: 0, window: 7 }));
+
   return {
     date: day,
     dailySales: Number(dailySales.toFixed(2)),
     lowStock,
-    pendingOrders
+    pendingOrders,
+    forecast: fc
   };
 }
 

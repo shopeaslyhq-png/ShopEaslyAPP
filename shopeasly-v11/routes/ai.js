@@ -3,12 +3,28 @@ const fs = require('fs');
 const path = require('path');
 const router = express.Router();
 const handleAICoPilot = require('../easly/aiHandlerEnhanced'); // Use enhanced handler
+const { handleCoPilotMessage } = require('../easly/aiHandlerEnhanced');
 const { hmacVerify, firebaseAuthVerify } = require('../utils/securityMiddleware');
 const axios = require('axios');
 const { getAllDocuments } = require('../config/firebase');
 
 // AI chat endpoint (secured by optional HMAC + Firebase Auth)
 router.post('/co-pilot', hmacVerify, firebaseAuthVerify, handleAICoPilot);
+
+// Architect loop endpoint (side-by-side for testing). Accepts { message } and returns { ok, text }
+router.post('/co-pilot-arch', hmacVerify, firebaseAuthVerify, async (req, res) => {
+  try {
+    if (typeof handleCoPilotMessage !== 'function') {
+      return res.status(503).json({ ok: false, error: 'Architect handler unavailable (Gemini not configured)' });
+    }
+    const message = String(req.body?.message || req.body?.prompt || '').trim();
+    if (!message) return res.status(400).json({ ok: false, error: 'message is required' });
+    const text = await handleCoPilotMessage(message);
+    return res.json({ ok: true, text });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
+  }
+});
 
 // Lightweight health/info endpoint (no secrets)
 router.get('/health', (req, res) => {

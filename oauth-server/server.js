@@ -199,7 +199,12 @@ app.get('/health/admin', async (req, res) => {
     const ms = Date.now() - start;
     res.json({ ok: true, firestore: 'ok', latencyMs: ms, projectId: firebaseCred.project_id || null });
   } catch (err) {
-    res.status(500).json({ ok: false, error: err.message });
+    const dev = (process.env.NODE_ENV || 'development') === 'development';
+    const payload = { ok: false, firestore: 'unavailable', error: err.message, hint: 'Ensure Firestore API enabled and service account has permissions.' };
+    if (dev) {
+      return res.json(payload);
+    }
+    return res.status(500).json(payload);
   }
 });
 
