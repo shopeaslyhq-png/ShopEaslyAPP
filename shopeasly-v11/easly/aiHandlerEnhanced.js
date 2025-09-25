@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { getAllDocuments, createDocument, updateDocument, deleteDocument } = require('../config/firebase');
 const { initiateProductCreation, addPackingMaterial, addMaterial } = require('../utils/inventoryService');
+const { emitEvent } = require('../utils/securityMiddleware');
 
 // AI Training Systems
 const ConversationTrainer = require('../training/ConversationTrainer');
@@ -1138,6 +1139,7 @@ module.exports = async function handleAICoPilot(req, res) {
     if (!isShopQuery) {
       const guardMsg = applyTone('Please ask me something about ShopEasly. I can only help with inventory, orders, and business operations.');
       appendChatHistory(clientId, [{ role: 'assistant', text: guardMsg }]);
+      try { emitEvent('ai.reply', { clientId, text: guardMsg, source: 'domain-guard' }); } catch(_) {}
       return res.json({ text: guardMsg, executed: false, source: 'domain-guard' });
     }
 
@@ -1151,6 +1153,7 @@ module.exports = async function handleAICoPilot(req, res) {
       const toned = applyTone(directAction.text);
       appendAILog({ ip, type: 'direct_action', prompt, result: directAction });
       appendChatHistory(clientId, [{ role: 'assistant', text: toned, action: directAction.action }]);
+      try { emitEvent('ai.reply', { clientId, text: toned, source: 'direct', action: directAction.action }); } catch(_) {}
       return res.json({ text: toned, executed: true, action: directAction.action, source: 'direct' });
     }
     if (directAction && !directAction.executed) {
@@ -1158,6 +1161,7 @@ module.exports = async function handleAICoPilot(req, res) {
       const toned = applyTone(directAction.text);
       appendAILog({ ip, type: 'direct_prompt', prompt, result: directAction });
       appendChatHistory(clientId, [{ role: 'assistant', text: toned }]);
+      try { emitEvent('ai.reply', { clientId, text: toned, source: 'direct', awaiting: directAction.awaiting || 'input' }); } catch(_) {}
       return res.json({ text: toned, executed: false, awaiting: directAction.awaiting || 'input', options: directAction.options, uiCommand: directAction.uiCommand, source: 'direct' });
     }
 
@@ -1176,6 +1180,7 @@ module.exports = async function handleAICoPilot(req, res) {
         console.log('🎯 Using learned response from conversation training');
         appendAILog({ ip, type: 'learned_response', prompt, result: 'conversation_trainer' });
         appendChatHistory(clientId, [{ role: 'assistant', text: learnedResponse, source: 'learned' }]);
+        try { emitEvent('ai.reply', { clientId, text: learnedResponse, source: 'learned' }); } catch(_) {}
         return res.json({ text: learnedResponse, source: 'learned', executed: false });
       }
 
@@ -1186,6 +1191,7 @@ module.exports = async function handleAICoPilot(req, res) {
         console.log('📚 Using product knowledge base response');
         appendAILog({ ip, type: 'knowledge_response', prompt, result: 'product_knowledge' });
         appendChatHistory(clientId, [{ role: 'assistant', text: toned, source: 'knowledge' }]);
+        try { emitEvent('ai.reply', { clientId, text: toned, source: 'knowledge' }); } catch(_) {}
         return res.json({ text: toned, source: 'knowledge', executed: false });
       }
 
@@ -1282,6 +1288,7 @@ ${recentHistory}\nUser: ${prompt}`;
         if (maybeJson) {
           const out = { text: JSON.stringify(maybeJson, null, 2), data: maybeJson, source: 'gemini_enhanced', action: localAction };
           appendChatHistory(clientId, [{ role: 'assistant', text: out.text, action: localAction || null }]);
+          try { emitEvent('ai.reply', { clientId, text: out.text, source: out.source, action: localAction }); } catch(_) {}
           
           // 🧠 LEARNING: Log successful interaction for training
           try {
@@ -1299,7 +1306,8 @@ ${recentHistory}\nUser: ${prompt}`;
         }
         
         aiText = applyTone(aiText);
-        appendChatHistory(clientId, [{ role: 'assistant', text: aiText, action: localAction || null }]);
+  appendChatHistory(clientId, [{ role: 'assistant', text: aiText, action: localAction || null }]);
+  try { emitEvent('ai.reply', { clientId, text: aiText, source: 'gemini_enhanced', action: localAction }); } catch(_) {}
         
         // 🧠 LEARNING: Log successful interaction for training
         try {
@@ -1362,6 +1370,7 @@ ${recentHistory}\nUser: ${prompt}`;
         if (maybeJson) {
           const out = { text: JSON.stringify(maybeJson, null, 2), data: maybeJson, source: 'openai_enhanced', action: localAction };
           appendChatHistory(clientId, [{ role: 'assistant', text: out.text, action: localAction || null }]);
+          try { emitEvent('ai.reply', { clientId, text: out.text, source: out.source, action: localAction }); } catch(_) {}
           
           // 🧠 LEARNING: Log successful interaction for training
           try {
@@ -1379,7 +1388,8 @@ ${recentHistory}\nUser: ${prompt}`;
         }
         
         aiText = applyTone(aiText);
-        appendChatHistory(clientId, [{ role: 'assistant', text: aiText, action: localAction || null }]);
+  appendChatHistory(clientId, [{ role: 'assistant', text: aiText, action: localAction || null }]);
+  try { emitEvent('ai.reply', { clientId, text: aiText, source: 'openai_enhanced', action: localAction }); } catch(_) {}
         
         // 🧠 LEARNING: Log successful interaction for training
         try {
@@ -1405,6 +1415,7 @@ ${recentHistory}\nUser: ${prompt}`;
       appendAILog({ ip, type: 'local_enhanced', prompt, result: local.data });
       const payload = { text: applyTone(local.text), data: local.data, action: local.action, options: local.options, uiCommand: local.uiCommand, source: apiKey ? 'local_fallback' : 'local_enhanced' };
       appendChatHistory(clientId, [{ role: 'assistant', text: payload.text, action: local.action || null }]);
+      try { emitEvent('ai.reply', { clientId, text: payload.text, source: payload.source, action: payload.action }); } catch(_) {}
       return res.json(payload);
     }
 
@@ -1421,6 +1432,7 @@ ${recentHistory}\nUser: ${prompt}`;
           const aiText = applyTone(aiTextRaw);
           appendAILog({ ip, type: 'gemini_enhanced_fallback', prompt });
           appendChatHistory(clientId, [{ role: 'assistant', text: aiText }]);
+          try { emitEvent('ai.reply', { clientId, text: aiText, source: 'gemini_enhanced_fallback' }); } catch(_) {}
           return res.json({ text: aiText, source: 'gemini_enhanced_fallback' });
         } else {
           const openaiUrl = 'https://api.openai.com/v1/chat/completions';
@@ -1431,6 +1443,7 @@ ${recentHistory}\nUser: ${prompt}`;
           const aiText = applyTone(aiTextRaw);
           appendAILog({ ip, type: 'openai_enhanced_fallback', prompt });
           appendChatHistory(clientId, [{ role: 'assistant', text: aiText }]);
+          try { emitEvent('ai.reply', { clientId, text: aiText, source: 'openai_enhanced_fallback' }); } catch(_) {}
           return res.json({ text: aiText, source: 'openai_enhanced_fallback' });
         }
       } catch (err) {
@@ -1455,9 +1468,11 @@ ${recentHistory}\nUser: ${prompt}`;
     // Final fallback
   const offline = applyTone('🤖 AI is offline. Configure GEMINI_API_KEY or OPENAI_API_KEY in .env (app folder) and restart the server for enhanced capabilities.');
     appendAILog({ ip, type: 'offline', prompt });
+    try { emitEvent('ai.reply', { clientId, text: offline, source: 'offline' }); } catch(_) {}
     return res.json({ text: offline, source: 'offline' });
   } catch (err) {
     appendAILog({ ip, type: 'error', error: err.message });
+    try { emitEvent('ai.error', { clientId: req?.body?.clientId, error: err.message }); } catch(_) {}
     return res.status(500).json({ error: 'AI request failed', details: err.message });
   }
 };

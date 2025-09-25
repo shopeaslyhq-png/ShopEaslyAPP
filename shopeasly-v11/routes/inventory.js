@@ -197,3 +197,57 @@ router.get('/api/usage', async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 });
+
+// Bulk import inventory items (Products, Materials, or Packing Materials)
+router.post('/api/bulk', async (req, res) => {
+  try {
+    const { items, defaultCategory } = req.body || {};
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: 'items array is required' });
+    }
+    const created = [];
+    const errors = [];
+    for (let idx = 0; idx < items.length; idx++) {
+      const r = items[idx] || {};
+      try {
+        const name = String(r.name || '').trim();
+        if (!name) throw new Error('name is required');
+        const category = String(r.category || defaultCategory || 'Products').trim();
+        const sku = (r.sku ? String(r.sku).trim() : '').toUpperCase() || generateSkuFrom(name, category);
+        const stock = Number.isFinite(Number(r.stock)) ? Number(r.stock) : 0;
+        const price = Number.isFinite(Number(r.price)) ? Number(r.price) : 0;
+        const description = r.description ? String(r.description).trim() : '';
+        const doc = {
+          name,
+          sku,
+          stock,
+          price,
+          status: 'active',
+          threshold: Number.isFinite(Number(r.threshold)) ? Number(r.threshold) : 0,
+          category,
+          description,
+          materials: Array.isArray(r.materials) ? r.materials.map(String) : [],
+          packagingId: r.packagingId ? String(r.packagingId) : '',
+          dateAdded: new Date().toISOString().split('T')[0]
+        };
+        const ref = await createDocument('inventory', doc);
+        try { emitEvent('inventory.create', { id: ref.id, sku: doc.sku, name: doc.name, category: doc.category }); } catch(_) {}
+        created.push({ id: ref.id, ...doc });
+      } catch (e) {
+        errors.push({ index: idx, error: e.message });
+      }
+    }
+    res.json({ ok: true, createdCount: created.length, errors, created });
+  } catch (err) {
+    console.error('Error during bulk import:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+function generateSkuFrom(name, category) {
+  const n = String(name || '').replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toUpperCase();
+  const c = String(category || '').replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toUpperCase();
+  const base = (c.slice(0,3) + '-' + n.slice(0,8)).replace(/--+/g,'-').replace(/^-+|-+$/g,'');
+  const rand = Math.random().toString(36).slice(2,5).toUpperCase();
+  return `${base}-${rand}`;
+}

@@ -3,10 +3,12 @@ const fs = require('fs');
 const path = require('path');
 const router = express.Router();
 const handleAICoPilot = require('../easly/aiHandlerEnhanced'); // Use enhanced handler
-const { handleCoPilotMessage } = require('../easly/aiHandlerEnhanced');
+// Replace architect endpoint with Planner-Executor+RAG orchestrator
+const { runEaslyAgent } = require('../easly/agentOrchestrator');
 const { hmacVerify, firebaseAuthVerify } = require('../utils/securityMiddleware');
 const axios = require('axios');
 const { getAllDocuments } = require('../config/firebase');
+const { emitEvent } = require('../utils/securityMiddleware');
 
 // AI chat endpoint (secured by optional HMAC + Firebase Auth)
 router.post('/co-pilot', hmacVerify, firebaseAuthVerify, handleAICoPilot);
@@ -14,14 +16,12 @@ router.post('/co-pilot', hmacVerify, firebaseAuthVerify, handleAICoPilot);
 // Architect loop endpoint (side-by-side for testing). Accepts { message } and returns { ok, text }
 router.post('/co-pilot-arch', hmacVerify, firebaseAuthVerify, async (req, res) => {
   try {
-    if (typeof handleCoPilotMessage !== 'function') {
-      return res.status(503).json({ ok: false, error: 'Architect handler unavailable (Gemini not configured)' });
-    }
     const message = String(req.body?.message || req.body?.prompt || req.body?.textPart || '').trim();
     if (!message) return res.status(400).json({ ok: false, error: 'message is required' });
     const role = String(req.headers['x-user-role'] || req.body?.role || '').toLowerCase();
-    const text = await handleCoPilotMessage(message);
+    const text = await runEaslyAgent(message);
     const decorated = role ? `[${role}] ${text}` : text;
+    try { emitEvent('ai.reply', { text: decorated, source: 'architect', role: role || undefined, clientId: req.body?.clientId }); } catch(_) {}
     return res.json({ ok: true, text: decorated, role: role || undefined });
   } catch (err) {
     return res.status(500).json({ ok: false, error: err.message });

@@ -19,6 +19,7 @@
     "monitor:health": "node scripts/monitor.js health",
     "monitor:metrics": "node scripts/monitor.js metrics",
     "test:tone": "node scripts/test-tone.js",
+    "rag:ingest": "node scripts/ingest.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -26,6 +27,10 @@
   "license": "ISC",
   "description": "ShopEasly V11 - AI-powered inventory management system",
   "dependencies": {
+    "@langchain/core": "^0.2.34",
+    "@langchain/openai": "^0.3.6",
+    "chromadb": "^1.8.1",
+    "openai": "^4.58.1",
     "googleapis": "^137.0.0",
     "@google/generative-ai": "^0.24.1",
     "axios": "^1.6.0",

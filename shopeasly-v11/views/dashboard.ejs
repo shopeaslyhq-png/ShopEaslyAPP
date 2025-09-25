@@ -174,6 +174,15 @@
         <div class="quick-actions">
             <a href="/easly" class="btn btn-primary">Open AI Assistant</a>
         </div>
+        <div id="aiUpdates" class="ai-updates" style="margin-top:1rem;">
+            <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.25rem;">
+                <span style="font-weight:600;">Live AI Updates</span>
+                <span id="aiUpdatesStatus" title="Events" style="width:8px;height:8px;border-radius:50%;display:inline-block;background:#bbb;"></span>
+            </div>
+            <ul id="aiUpdatesList" class="list-unstyled" style="max-height:140px;overflow:auto;margin:0;padding:0;">
+                <li><small>No updates yet.</small></li>
+            </ul>
+        </div>
     </section>
 
     <!-- QUICK ACTIONS -->
@@ -424,6 +433,34 @@ document.addEventListener('DOMContentLoaded', function() {
     if (analyticsSection && window.location.hash === '#analytics') {
         analyticsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+
+    // Live AI updates via SSE (optional)
+    try {
+        if (typeof EventSource !== 'undefined') {
+            const statusDot = document.getElementById('aiUpdatesStatus');
+            const list = document.getElementById('aiUpdatesList');
+            let connected = false;
+            const src = new EventSource('/events');
+            src.onopen = () => { connected = true; if (statusDot) statusDot.style.background = '#10b981'; };
+            src.onerror = () => { if (statusDot) statusDot.style.background = '#f59e0b'; };
+            src.addEventListener('ai.reply', (evt) => {
+                try {
+                    const data = JSON.parse(evt.data || '{}');
+                    const text = (data.payload && data.payload.text) || (data.text) || '';
+                    if (!text) return;
+                    if (list) {
+                        if (list.firstElementChild && list.firstElementChild.tagName === 'LI' && list.firstElementChild.textContent.includes('No updates')) {
+                            list.innerHTML = '';
+                        }
+                        const li = document.createElement('li');
+                        li.innerHTML = `<small>${new Date().toLocaleTimeString()} — ${escapeHtml(text).slice(0,240)}</small>`;
+                        list.prepend(li);
+                        while (list.children.length > 8) list.removeChild(list.lastChild);
+                    }
+                } catch (_) {}
+            });
+        }
+    } catch (_) { /* ignore */ }
 });
 
 // Add CSS animation for refresh icon
@@ -435,6 +472,14 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+</script>
+
+<script>
+// Tiny HTML escaper to avoid injection in AI updates list
+function escapeHtml(s){
+    return String(s||'').replace(/[&<>"']/g, (ch)=>({"&":"&amp;","<":"&lt;",
+    ">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]));
+}
 </script>
 
 

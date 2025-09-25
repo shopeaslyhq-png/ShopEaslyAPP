@@ -607,7 +607,15 @@
                                 </div>
                             </div>
                             
-                            <div class="csv-actions" style="margin-top: 20px;">
+                            <div class="csv-actions" style="margin-top: 20px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                                <label style="display:flex; gap:6px; align-items:center; font-weight:600;">
+                                    Import as
+                                    <select id="importCategory" class="form-input" style="height:34px; padding:2px 8px;">
+                                        <option value="Products">Products</option>
+                                        <option value="Materials" selected>Materials</option>
+                                        <option value="Packing Materials">Packing Materials</option>
+                                    </select>
+                                </label>
                                 <button class="btn btn-outline" id="downloadTemplate" style="margin-right: 10px;">
                                     📥 Download CSV Template
                                 </button>
@@ -616,6 +624,9 @@
                                 </button>
                                 <button class="btn btn-outline" id="csvPreview" disabled>
                                     👀 Preview Data
+                                </button>
+                                <button class="btn btn-primary" id="importCsvBtn" disabled>
+                                    ✅ Import to Inventory
                                 </button>
                             </div>
                         </div>
@@ -638,6 +649,7 @@
                             <div class="csv-stats">
                                 <span id="csvRowCount">0 products</span>
                                 <span id="csvValidation">Validation pending...</span>
+                                <span id="csvImportHint" class="text-muted" style="margin-left:auto;">Tip: Set "Import as" to Materials for your file.</span>
                             </div>
                         </div>
                     </div>
@@ -3133,6 +3145,10 @@ function displayCSVPreview(parsedData) {
         previewBtn.disabled = false;
         previewBtn.textContent = '👀 View Full Preview';
     }
+
+    // Enable import button
+    const importBtn = document.getElementById('importCsvBtn');
+    if (importBtn) importBtn.disabled = data.length === 0;
 }
 
 // Show detailed preview in a modal or expanded view
@@ -3257,6 +3273,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const csvDropzone = document.getElementById('csvDropzone');
     const downloadTemplateBtn = document.getElementById('downloadTemplate');
     const downloadExcelTemplateBtn = document.getElementById('downloadExcelTemplate');
+    const importBtn = document.getElementById('importCsvBtn');
     
     if (csvFileBtn && csvFileInput) {
         csvFileBtn.addEventListener('click', () => csvFileInput.click());
@@ -3315,6 +3332,54 @@ document.addEventListener('DOMContentLoaded', () => {
                 showDetailedPreview(bulkCreationState.csvData);
             } else {
                 showToast('No data to preview. Please upload a file first.', 'warning');
+            }
+        });
+    }
+
+    if (importBtn) {
+        importBtn.addEventListener('click', async () => {
+            if (!bulkCreationState.csvData) {
+                showToast('No data to import. Please upload a file first.', 'warning');
+                return;
+            }
+            const { headers, data } = bulkCreationState.csvData;
+            // Normalize into API shape
+            const items = data.map(row => ({
+                name: row.name || row.Name || row.product || '',
+                category: row.category || row.Category || '',
+                price: row.price || row.Price || '',
+                stock: row.stock || row.Stock || '',
+                description: row.description || row.Description || '',
+                sku: row.sku || row.SKU || row.Sku || ''
+            }));
+            const categorySelect = document.getElementById('importCategory');
+            const defaultCategory = categorySelect ? categorySelect.value : 'Products';
+
+            // Basic confirmation
+            const toCreate = items.filter(i => (i.name||'').trim());
+            if (toCreate.length === 0) {
+                showToast('No valid rows found (missing name).', 'error');
+                return;
+            }
+
+            importBtn.disabled = true;
+            importBtn.textContent = 'Importing...';
+            try {
+                const res = await fetch('/inventory/api/bulk', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ items: toCreate, defaultCategory })
+                });
+                const j = await res.json();
+                if (!res.ok) throw new Error(j.error || ('HTTP ' + res.status));
+                const msg = `Imported ${j.createdCount} item${j.createdCount===1?'':'s'}${j.errors?.length?`, ${j.errors.length} errors`:''}`;
+                showToast(msg, j.errors?.length ? 'warning' : 'success');
+                addMessageToChat('ai', `✅ Bulk import complete. ${msg}.`);
+            } catch (e) {
+                showToast('Import failed: ' + (e.message||e), 'error');
+            } finally {
+                importBtn.disabled = false;
+                importBtn.textContent = '✅ Import to Inventory';
             }
         });
     }
