@@ -1,7 +1,7 @@
 # ShopEasly APP — Comprehensive Design Document
 
-Version: 2.0
-Date: 2025-09-21
+Version: 2.0.1
+Date: 2025-09-24
 Owner: shopeaslyhq-png
 
 ## 1. Purpose and Scope
@@ -46,7 +46,7 @@ Runtime topology:
 - Client-side enhancements for modals, tabs, upload, and AI overlay
 - Storage: local JSON files in `shopeasly-v11/data/*.json` via a Firestore-like shim
 - Optional: Vite/React source `src/` for future UI; currently EJS pages are primary
-- Real-time: optional WebSockets channel for live updates; centralized event bus emitting domain events for dashboards and AI digests
+- Real-time: optional SSE channel for live updates (`GET /events`, gated by USE_EVENTS); centralized event bus emitting domain events for dashboards and AI digests
 - Data backends: dual storage strategy (local JSON now; Firestore/Postgres target with migration path)
 
 Key packages and layers:
@@ -57,7 +57,7 @@ Key packages and layers:
 - Business logic: `utils/*` (orders, inventory, dashboard summary, sheets)
 - AI: `easly/aiHandlerEnhanced.js` (local intents + LLM fallback), voice/tone via `utils/ToneManager.js` + `config/voice.json`
 - AI (architect blueprint): Gemini function-calling loop with tools; system instructions at `config/system-instructions.js`; local tools at `utils/localDataService.js`
- - Real-time: server WebSocket hub (planned), event bus (`utils/securityMiddleware.emitEvent` today; promote to dedicated module)
+- Real-time: Server-Sent Events stream `/events` (enabled when `USE_EVENTS` is set) backed by a lightweight EventEmitter bus in `utils/eventBus.js`; `utils/securityMiddleware.emitEvent` writes to file and emits to the bus
 
 Deployment:
 - Local: Node process; data persisted under `data/*.json`
@@ -192,8 +192,9 @@ AI
 - DELETE /ai/history?clientId= → { ok }
 
 Optional (architect route):
-- POST /ai/co-pilot-arch { message } → { response }
+- POST /ai/co-pilot-arch { message | textPart, role? } → { ok, text, role? }
   - Calls `handleCoPilotMessage` (Gemini tool loop). Safe to run alongside the default /co-pilot.
+  - UI toggle “Architect mode” in Easly AI header routes chat to this endpoint and passes optional role via header `x-user-role` or body `role`.
 
 OAuth
 - GET /oauth/health → { ok }
@@ -240,7 +241,7 @@ AI Co-Pilot
 - Security: CSP `upgrade-insecure-requests`; secrets in env; no API keys exposed client-side; optional HMAC verification + Firebase Auth on AI webhook; idempotency support
 - Privacy: no third-party trackers; data stays local unless configured
 - Extensibility: replace local JSON with Firestore/Postgres by swapping `config/firebase.js`
- - Real-time: WebSockets for inventory/orders updates; event bus emits domain events consumed by UI and AI digest jobs
+- Real-time: SSE for inventory/orders updates; event bus emits domain events consumed by UI and AI digest jobs. Client shows a small status dot in Easly AI header (grey=unknown, green=connected, red=disabled/error).
 
 ## 10. Error Handling & Edge Cases
 - Inventory import: skip rows missing `name` or `sku`; basic CSV parsing; SheetJS for XLSX
@@ -282,6 +283,7 @@ Environment setup
   - `GEMINI_API_KEY=...`
   - `OPENAI_API_KEY=...` (optional for images)
   - `DATA_DIR=./data`
+  - `USE_EVENTS=1` (to enable SSE and event bus)
   - (optional) `USE_HMAC=1`, `WEBHOOK_SHARED_SECRET=...`
 
 OAuth server
@@ -314,6 +316,14 @@ Long-term (6+ months)
 - `shopeasly-v11/views/*`: EJS templates (Dashboard, Inventory, Orders, AI)
 - `shopeasly-v11/public/css/style.css`: design system
 - `shopeasly-v11/easly/aiHandlerEnhanced.js`: AI co-pilot logic
+- `shopeasly-v11/utils/eventBus.js`: in-process event emitter powering `/events`
+
+## 16. Changelog
+- 2.0.1 (2025-09-24)
+  - Added in-process event bus (`utils/eventBus.js`) and SSE endpoint `/events` with CSP allowances.
+  - Wired client-side SSE in `views/easly.ejs` with a status indicator dot and toast notifications for key events.
+  - Added “Architect mode” toggle and optional Role selector in Easly AI header; client routes to `/ai/co-pilot-arch` when enabled and passes role.
+  - `/ai/co-pilot-arch` now accepts `{ textPart }` in addition to `{ message|prompt }` for consistency with the main co-pilot payload.
 - `src/EaslyOfflineAI.*`: offline/image training UI (extendable)
 
 ---

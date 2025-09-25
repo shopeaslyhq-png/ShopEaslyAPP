@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { collections, createDocument, getAllDocuments, updateDocument, deleteDocument } = require('../config/firebase');
+const { emitEvent } = require('../utils/securityMiddleware');
 const { generateOrderNumber } = require('../utils/orderNumber');
 
 // Helpers to classify inventory categories
@@ -263,8 +264,9 @@ router.post('/', async (req, res) => {
       orderNumber,
     };
 
-    const docRef = await createDocument('orders', orderData);
-    res.json({ id: docRef.id, ...orderData });
+  const docRef = await createDocument('orders', orderData);
+  try { emitEvent('order.created', { id: docRef.id, orderNumber, customerName: orderData.customerName, total: orderData.total, status: orderData.status }); } catch(_) {}
+  res.json({ id: docRef.id, ...orderData });
   } catch (error) {
     console.error('Error creating order:', error);
     res.status(500).json({ error: error.message });
@@ -276,7 +278,8 @@ router.patch('/:id/status', async (req, res) => {
   try {
     const { status } = req.body;
     if (!status) return res.status(400).json({ error: 'Missing status' });
-    await updateDocument('orders', req.params.id, { status });
+  await updateDocument('orders', req.params.id, { status });
+  try { emitEvent('order.updated', { id: req.params.id, status }); } catch(_) {}
     res.json({ ok: true });
   } catch (error) {
     console.error('Error updating order status:', error);
@@ -324,12 +327,16 @@ router.post('/bulk', async (req, res) => {
       try {
         if (action === 'delete') {
           await deleteDocument('orders', id);
+          try { emitEvent('order.deleted', { id }); } catch(_) {}
         } else if (action === 'mark-processing') {
           await updateDocument('orders', id, { status: 'Processing' });
+          try { emitEvent('order.updated', { id, status: 'Processing' }); } catch(_) {}
         } else if (action === 'mark-shipped') {
           await updateDocument('orders', id, { status: 'Shipped' });
+          try { emitEvent('order.updated', { id, status: 'Shipped' }); } catch(_) {}
         } else if (action === 'mark-delivered') {
           await updateDocument('orders', id, { status: 'Delivered' });
+          try { emitEvent('order.updated', { id, status: 'Delivered' }); } catch(_) {}
         }
         updated++;
       } catch (inner) {

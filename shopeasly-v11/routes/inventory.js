@@ -5,6 +5,7 @@ const { initiateProductCreation, addPackingMaterial, generatePackingLowStockAler
 const { getInventoryUsageReport } = require('../utils/usageReport');
 const fs = require('fs');
 const path = require('path');
+const { emitEvent } = require('../utils/securityMiddleware');
 
 // Inventory page
 router.get('/', async (req, res) => {
@@ -46,6 +47,7 @@ router.post('/api', async (req, res) => {
       dateAdded: new Date().toISOString().split('T')[0]
     };
     const docRef = await createDocument('inventory', item);
+    try { emitEvent('inventory.create', { id: docRef.id, sku: item.sku, name: item.name, category: item.category }); } catch(_) {}
     res.json({ id: docRef.id, ...item });
   } catch (err) {
     console.error('Error creating inventory item:', err);
@@ -58,6 +60,7 @@ router.post('/api/initiate-product', async (req, res) => {
   try {
     const { name, price, quantity, materialsIds, materialsUsage, packagingId, category, sku } = req.body || {};
     const created = await initiateProductCreation({ name, price, quantity, materialsIds, materialsUsage, packagingId, category, sku });
+    try { emitEvent('inventory.productCreated', { id: created.id, name: created.name, sku: created.sku, quantity: created.quantity }); } catch(_) {}
     res.json(created);
   } catch (err) {
     console.error('Error initiating product creation:', err);
@@ -91,6 +94,7 @@ router.put('/api/:id', async (req, res) => {
     if (b.materials !== undefined) patch.materials = Array.isArray(b.materials) ? b.materials.map(String) : [];
     if (b.packagingId !== undefined) patch.packagingId = b.packagingId ? String(b.packagingId) : '';
     await updateDocument('inventory', id, patch);
+    try { emitEvent('inventory.update', { id, ...patch }); } catch(_) {}
     res.json({ ok: true });
   } catch (err) {
     console.error('Error updating inventory item:', err);
@@ -102,6 +106,7 @@ router.delete('/api/:id', async (req, res) => {
   try {
     const id = req.params.id;
     await deleteDocument('inventory', id);
+    try { emitEvent('inventory.delete', { id }); } catch(_) {}
     res.json({ ok: true });
   } catch (err) {
     console.error('Error deleting inventory item:', err);

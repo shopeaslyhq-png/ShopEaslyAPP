@@ -15,6 +15,19 @@
                 <div class="ai-header-actions">
                     <button id="openProductWizardBtn" class="btn btn-primary">+ Product</button>
                     <button id="openBulkCreationBtn" class="btn btn-secondary" title="Create multiple products">📦 Bulk</button>
+                    <div class="ai-mode-controls" style="display:flex;align-items:center;gap:.5rem;margin-left:.75rem;">
+                        <label title="Send messages to the architect tool-loop endpoint" style="display:flex;align-items:center;gap:.35rem;cursor:pointer;user-select:none;font-size:.9rem;color:var(--text-secondary);">
+                            <input type="checkbox" id="archModeToggle" style="margin:0;">
+                            <span>Architect mode</span>
+                        </label>
+                        <select id="userRoleSelect" title="User role (optional)" class="form-input" style="height:32px;padding:2px 8px;font-size:.85rem;width:auto;">
+                            <option value="">Role: auto</option>
+                            <option value="owner">Owner</option>
+                            <option value="manager">Manager</option>
+                            <option value="staff">Staff</option>
+                        </select>
+                        <span id="eventsStatusDot" class="status-dot" title="Real-time: unknown" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#bbb;box-shadow:0 0 0 2px rgba(0,0,0,.05);"></span>
+                    </div>
                 </div>
             </div>
         </header>
@@ -743,6 +756,8 @@
 // Enhanced AI Assistant JavaScript
 let isRecording = false;
 let recognition = null;
+let ARCH_MODE = false;
+let USER_ROLE = '';
 
 // Initialize speech recognition if available
 if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -781,6 +796,9 @@ const form = document.getElementById('ai-form');
 const input = document.getElementById('ai-input');
 const chatHistory = document.getElementById('ai-chat-history');
 const sendBtn = document.getElementById('sendBtn');
+const archModeToggle = document.getElementById('archModeToggle');
+const userRoleSelect = document.getElementById('userRoleSelect');
+const eventsStatusDot = document.getElementById('eventsStatusDot');
 // Settings modal elements
 const settingsModal = document.getElementById('settingsModal');
 const openSettingsBtn = document.getElementById('openSettingsBtn');
@@ -920,10 +938,15 @@ async function submitMessage(prompt) {
 
     try {
         const payload = { textPart: prompt, clientId };
+        // Attach role hint if Architect mode is enabled
+        if (ARCH_MODE && USER_ROLE) payload.role = USER_ROLE;
         if (window.__attachedImageB64) payload.imagePart = window.__attachedImageB64;
-        const res = await fetch('/ai/co-pilot', {
+        const endpoint = ARCH_MODE ? '/ai/co-pilot-arch' : '/ai/co-pilot';
+        const headers = { 'Content-Type': 'application/json' };
+        if (ARCH_MODE && USER_ROLE) headers['x-user-role'] = USER_ROLE;
+        const res = await fetch(endpoint, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify(payload)
         });
         if (!res.ok) { throw new Error(`HTTP ${res.status}`); }
@@ -1502,6 +1525,27 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (vb) vb.style.display = 'none';
     }
 
+    // Load Architect mode + role from localStorage
+    try {
+        ARCH_MODE = localStorage.getItem('easly.archMode') === '1';
+        USER_ROLE = localStorage.getItem('easly.userRole') || '';
+        if (archModeToggle) archModeToggle.checked = ARCH_MODE;
+        if (userRoleSelect) userRoleSelect.value = USER_ROLE;
+    } catch {}
+
+    // Wire up mode controls
+    if (archModeToggle) archModeToggle.addEventListener('change', (e) => {
+        ARCH_MODE = !!e.target.checked;
+        try { localStorage.setItem('easly.archMode', ARCH_MODE ? '1' : '0'); } catch {}
+        showToast(`Architect mode ${ARCH_MODE ? 'enabled' : 'disabled'}`, 'info');
+    });
+    if (userRoleSelect) userRoleSelect.addEventListener('change', (e) => {
+        USER_ROLE = e.target.value || '';
+        try { localStorage.setItem('easly.userRole', USER_ROLE); } catch {}
+        if (ARCH_MODE)
+            showToast(`Role set to ${USER_ROLE || 'auto'}`, 'info');
+    });
+
     // Load chat history
     try {
         const r = await fetch(`/ai/history?clientId=${encodeURIComponent(clientId)}&limit=50`);
@@ -1530,9 +1574,74 @@ document.addEventListener('DOMContentLoaded', async function() {
     }, 500);
 
     console.log('Enhanced AI Assistant page loaded successfully');
+
+    // Initialize real-time events (SSE); gracefully degrade if disabled
+    initEventsStream();
 });
 
 // Enhanced AI Assistant initialization complete
+
+// Real-time events via Server-Sent Events (SSE)
+function initEventsStream() {
+    if (!window.EventSource) {
+        if (eventsStatusDot) { eventsStatusDot.style.background = '#bbb'; eventsStatusDot.title = 'Real-time: unsupported'; }
+        return;
+    }
+    let opened = false;
+    let closed = false;
+    try {
+        const es = new EventSource('/events');
+        const setOnline = () => { if (eventsStatusDot) { eventsStatusDot.style.background = '#28a745'; eventsStatusDot.title = 'Real-time: connected'; } };
+        const setOffline = (reason) => { if (eventsStatusDot) { eventsStatusDot.style.background = '#dc3545'; eventsStatusDot.title = 'Real-time: ' + (reason || 'disconnected'); } };
+        es.onopen = () => { opened = true; setOnline(); };
+        es.onerror = () => {
+            if (!opened) {
+                // Likely disabled on server (404) — stop trying
+                setOffline('disabled');
+                try { es.close(); closed = true; } catch {}
+            } else {
+                setOffline('error');
+            }
+        };
+        // Known event types from server emissions (subscribe selectively)
+        const onEvt = (e) => {
+            try {
+                const evt = JSON.parse(e.data || '{}');
+                if (evt && evt.type) {
+                    handleIncomingEvent(evt);
+                }
+            } catch {}
+        };
+        es.addEventListener('inventory.update', onEvt);
+        es.addEventListener('inventory.lowStock', onEvt);
+        es.addEventListener('order.created', onEvt);
+        es.addEventListener('order.updated', onEvt);
+        es.addEventListener('ai.action', onEvt);
+        // Fallback generic handler
+        es.onmessage = onEvt;
+        // Safety timeout: if not opened in 3s, assume disabled
+        setTimeout(() => { if (!opened && !closed) { setOffline('disabled'); try { es.close(); } catch {} } }, 3000);
+    } catch (_) {
+        if (eventsStatusDot) { eventsStatusDot.style.background = '#bbb'; eventsStatusDot.title = 'Real-time: unavailable'; }
+    }
+}
+
+function handleIncomingEvent(evt) {
+    // Show compact toast; add richer cards later if desired
+    const { type, payload } = evt;
+    if (type === 'order.created') {
+        showToast(`New order ${payload?.id || ''} created`, 'success');
+    } else if (type === 'order.updated') {
+        showToast(`Order ${payload?.id || ''} updated to ${payload?.status || ''}`, 'info');
+    } else if (type === 'inventory.lowStock') {
+        showToast(`Low stock: ${payload?.name || payload?.sku || ''}`, 'warning');
+    } else if (type === 'inventory.update') {
+        showToast(`Inventory updated: ${payload?.name || payload?.sku || ''}`, 'info');
+    } else {
+        // Generic informational toast
+        showToast(`Event: ${type}`, 'info');
+    }
+}
 
 // --- Product Wizard Logic ---
 (function(){

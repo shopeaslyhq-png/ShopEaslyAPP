@@ -17,7 +17,7 @@ router.post('/co-pilot-arch', hmacVerify, firebaseAuthVerify, async (req, res) =
     if (typeof handleCoPilotMessage !== 'function') {
       return res.status(503).json({ ok: false, error: 'Architect handler unavailable (Gemini not configured)' });
     }
-    const message = String(req.body?.message || req.body?.prompt || '').trim();
+    const message = String(req.body?.message || req.body?.prompt || req.body?.textPart || '').trim();
     if (!message) return res.status(400).json({ ok: false, error: 'message is required' });
     const role = String(req.headers['x-user-role'] || req.body?.role || '').toLowerCase();
     const text = await handleCoPilotMessage(message);

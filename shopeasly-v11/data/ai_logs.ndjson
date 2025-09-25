@@ -288,3 +288,8 @@
 {"ts":"2025-09-21T00:24:00.026Z","ip":"::1","type":"gemini_enhanced","prompt":"are you there","usage":{"model":"gemini-1.5-flash"}}
 {"ts":"2025-09-21T00:24:08.874Z","ip":"::1","type":"gemini_enhanced_fallback","prompt":"add product"}
 {"ts":"2025-09-21T00:24:20.631Z","ip":"::1","type":"gemini_enhanced_fallback","prompt":"add a ironman tshirt"}
+{"ts":"2025-09-25T01:32:44.978Z","ip":"::1","type":"direct_prompt","prompt":"List pending orders","result":{"text":"Orders overview:\n- Pending: 0\n- Processing: 0\n- Delivered: 0\n\n(source: 0 orders scanned just now)","data":{"counts":{"pending":0,"processing":0,"delivered":0},"topPending":[]}}}
+{"ts":"2025-09-25T01:32:48.704Z","ip":"::1","type":"knowledge_response","prompt":"Show packing materials low stock","result":"product_knowledge"}
+{"ts":"2025-09-25T05:10:29.885Z","ip":"::1","type":"gemini_enhanced","prompt":"Generate inventory usage report","usage":{"model":"gemini-1.5-flash"}}
+{"ts":"2025-09-25T05:11:15.093Z","ip":"::1","type":"gemini_enhanced_fallback","prompt":"add product"}
+{"ts":"2025-09-25T05:25:11.254Z","ip":"::1","type":"gemini_enhanced","prompt":"show prending orders","usage":{"model":"gemini-1.5-flash"}}
