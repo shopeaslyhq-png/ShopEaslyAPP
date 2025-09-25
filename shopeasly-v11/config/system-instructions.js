@@ -1,5 +1,6 @@
 // System instructions for Co-Pilot behavior with Gemini
-export const coPilotSystemInstruction = {
+// System instructions for Co-Pilot behavior with Gemini (CommonJS)
+const coPilotSystemInstruction = {
   systemInstruction: {
     role: 'system',
     content: [
@@ -10,3 +11,5 @@ export const coPilotSystemInstruction = {
     ]
   }
 };
+
+module.exports = { coPilotSystemInstruction };

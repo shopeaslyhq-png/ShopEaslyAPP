@@ -12,6 +12,7 @@ dotenv.config();
 const app = express();
 const { getAllDocuments } = require('./config/firebase');
 const { hmacVerify, firebaseAuthVerify, idempotencyCheck, emitEvent } = require('./utils/securityMiddleware');
+const { subscribe, emit: busEmit } = require('./utils/eventBus');
 
 // View engine and middleware
 const ejsMate = require('ejs-mate');
@@ -165,6 +166,21 @@ app.get('/health', async (req, res) => {
     } catch (err) {
         res.status(500).json({ ok: false, error: err.message });
     }
+});
+
+// Server-Sent Events stream for real-time UI updates (opt-in via USE_EVENTS)
+app.get('/events', (req, res) => {
+    if (!process.env.USE_EVENTS) return res.status(404).end();
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders?.();
+    const send = (evt) => {
+        res.write(`event: ${evt.type}\n`);
+        res.write(`data: ${JSON.stringify(evt)}\n\n`);
+    };
+    const unsubscribe = subscribe(send);
+    req.on('close', () => unsubscribe());
 });
 
 // Error handling middleware

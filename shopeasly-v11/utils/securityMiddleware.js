@@ -41,14 +41,17 @@ function idempotencyCheck(req, res, next) {
 // Event emission (writes to events.json for now)
 const fs = require('fs');
 const path = require('path');
+const { emit: busEmit } = require('./eventBus');
 function emitEvent(type, payload, userId) {
   if (!process.env.USE_EVENTS) return;
   const dir = path.join(__dirname, '..', 'data');
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   const file = path.join(dir, 'events.json');
   const events = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')||'[]') : [];
-  events.push({ ts: new Date().toISOString(), type, userId, payload });
+  const evt = { ts: new Date().toISOString(), type, userId, payload };
+  events.push(evt);
   fs.writeFileSync(file, JSON.stringify(events, null, 2));
+  try { busEmit(type, payload, userId); } catch (_) {}
 }
 
 module.exports = {

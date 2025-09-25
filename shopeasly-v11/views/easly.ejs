@@ -1,139 +1,112 @@
 <% layout('layout') %>
 
-                <button class="panel-tab active" data-tab="quick">Quick</button>
+<div class="page-container ai-theme">
     <div class="ai-assistant-container">
-    <!-- Header Section -->
-    <div class="ai-header">
-                <div data-panel="quick">
-    <div class="ai-chat-history" id="ai-chat-history" role="log" aria-live="polite" aria-relevant="additions">
-            <!-- Welcome Message (concise) -->
-            <div class="chat-message ai-message">
-                <div class="message-avatar">
-                    <div class="avatar-ai">🤖</div>
+        <!-- Header -->
+        <header class="ai-header">
+            <div class="ai-header-content">
+                <div class="ai-title-section">
+                    <img class="ai-logo" src="/images/shopeasly-logo.png" alt="Easly AI" />
+                    <div class="ai-title-text">
+                        <h1>Easly AI</h1>
+                        <p>Creative + Operations Copilot</p>
+                    </div>
                 </div>
-                <div class="message-content">
-                    <div class="message-header">
-                        <span class="sender-name">Easly AI</span>
-                        <span class="message-time">Just now</span>
-                    </div>
-                    <div class="message-text">
-                        <p>Welcome! How can I help you today?</p>
-                    </div>
+                <div class="ai-header-actions">
+                    <button id="openProductWizardBtn" class="btn btn-primary">+ Product</button>
+                    <button id="openBulkCreationBtn" class="btn btn-secondary" title="Create multiple products">📦 Bulk</button>
                 </div>
             </div>
-        </div>
+        </header>
 
-        <!-- Input Section -->
-        <div class="ai-input-section">
-            <!-- Quick Actions -->
-            <div class="quick-actions">
-                <button class="quick-action-btn" onclick="sendQuickMessage('Show me inventory summary')">
-                    📊 Inventory Summary
-                </button>
-                <button class="quick-action-btn" onclick="sendQuickMessage('What are my pending orders?')">
-                    📦 Pending Orders
-                </button>
-                <button class="quick-action-btn" onclick="sendQuickMessage('Generate inventory usage report')">
-                    📈 Usage Report
-                </button>
-                <button class="quick-action-btn" onclick="sendQuickMessage('Start a design brainstorming session')">
-                    🎨 Brainstorm Design
-                </button>
-            </div>
-
-            <!-- Enhanced Input Form -->
-            <form id="ai-form" class="ai-form">
-                <div class="input-wrapper">
-                    <textarea
-                        id="ai-input"
-                        class="form-input ai-input"
-                        rows="1"
-                        placeholder="Message Easly…"
-                        aria-label="Type a message"
-                        autocomplete="off"
-                        autocapitalize="sentences"
-                        spellcheck="true"
-                        maxlength="4000"
-                        onkeydown="handleKeyDown(event)"
-                    ></textarea>
-                    <div class="input-actions">
-                        <button type="button" class="attach-btn" id="attachBtn" title="Attach image" aria-label="Attach image">📎</button>
-                        <button type="button" class="attach-btn" id="openGenBtn" title="Generate design image" aria-label="Generate design image">🖼️</button>
-                        <button type="button" class="voice-btn" id="voiceBtn" onclick="toggleVoiceRecording()" title="Voice Input" aria-label="Start voice input">
-                            <span class="voice-icon">🎤</span>
-                        </button>
-                        <button type="submit" class="send-btn" id="sendBtn" title="Send Message" aria-label="Send message" disabled>
-                            <span class="send-icon">➤</span>
-                        </button>
+        <!-- Main layout: chat left, panel right -->
+        <div class="ai-layout">
+            <!-- Chat column -->
+            <section class="ai-chat-container" aria-label="Chat">
+                <div class="ai-chat-history" id="ai-chat-history" role="log" aria-live="polite" aria-relevant="additions">
+                    <!-- Welcome message -->
+                    <div class="chat-message ai-message">
+                        <div class="message-avatar"><div class="avatar-ai">🤖</div></div>
+                        <div class="message-content">
+                            <div class="message-header">
+                                <span class="sender-name">Easly AI</span>
+                                <span class="message-time">Just now</span>
+                            </div>
+                            <div class="message-text"><p>Welcome! How can I help you today?</p></div>
+                        </div>
                     </div>
                 </div>
-            </form>
-            <input type="file" id="imageInput" accept="image/*" style="display:none" />
-            <div id="attachmentPreview" class="attachment-preview" style="display:none"></div>
 
-            <!-- Voice Status -->
-            <div class="voice-status" id="voiceStatus" style="display: none;">
-                <div class="voice-animation">
-                    <div class="voice-wave"></div>
-                    <div class="voice-wave"></div>
-                    <div class="voice-wave"></div>
-                </div>
-                <span class="voice-text">Listening...</span>
-            </div>
-        </div>
-    </div>
+                <!-- Composer -->
+                <div class="ai-input-section">
+                    <form id="ai-form" class="ai-form">
+                        <div class="input-wrapper">
+                            <textarea id="ai-input" class="form-input ai-input" rows="1" placeholder="Message Easly…" aria-label="Type a message" autocomplete="off" autocapitalize="sentences" spellcheck="true" maxlength="4000" onkeydown="handleKeyDown(event)"></textarea>
+                            <div class="input-actions">
+                                <button type="button" class="attach-btn" id="attachBtn" title="Attach image" aria-label="Attach image">📎</button>
+                                <button type="button" class="attach-btn" id="openGenBtn" title="Generate design image" aria-label="Generate design image">🖼️</button>
+                                <button type="button" class="voice-btn" id="voiceBtn" onclick="toggleVoiceRecording()" title="Voice Input" aria-label="Start voice input"><span class="voice-icon">🎤</span></button>
+                                <button type="submit" class="send-btn" id="sendBtn" title="Send Message" aria-label="Send message" disabled><span class="send-icon">➤</span></button>
+                            </div>
+                        </div>
+                    </form>
+                    <input type="file" id="imageInput" accept="image/*" style="display:none" />
+                    <div id="attachmentPreview" class="attachment-preview" style="display:none"></div>
 
-    <!-- Side Panel (tabbed) -->
-    <div class="ai-side-panel">
-        <div class="panel-section" id="brand-card-section">
-            <div class="brand-card" id="brand-card">
-                <img src="/images/shopeasly-logo.png" alt="Easly AI" class="brand-logo" />
-                <div>
-                    <div class="brand-title">Easly AI</div>
-                    <small class="text-muted">Creative + Operations Copilot</small>
-                </div>
-                <button class="brand-dismiss" id="brand-dismiss" title="Hide">✕</button>
-            </div>
-            <div style="margin-top:0.5rem; display:flex; gap:0.5rem;">
-                <button id="openProductWizardBtn" class="btn btn-primary" style="flex:1;">+ Product</button>
-                <button id="openBulkCreationBtn" class="btn btn-secondary" style="flex:1; font-weight: bold; border: 2px solid #007bff;" title="Create multiple products">📦 Bulk</button>
-            </div>
-        </div>
-        <div class="panel-section">
-            <div class="panel-tabs">
-                </div>
-                <div data-panel="reference" class="hidden">
-                <button class="panel-tab" data-tab="reference">Reference</button>
-            </div>
-            <div class="panel-content" id="panel-content">
-                <div data-panel="quick">
-                    <div class="quick-actions" style="margin-bottom:0.5rem;">
-                        <button class="quick-action-btn" onclick="sendQuickMessage('Show me inventory summary')">📊 Inventory Summary</button>
-                        <button class="quick-action-btn" onclick="sendQuickMessage('What are my pending orders?')">📦 Pending Orders</button>
-                        <button class="quick-action-btn" onclick="sendQuickMessage('Generate inventory usage report')">📈 Usage Report</button>
-                        <button class="quick-action-btn" onclick="sendQuickMessage('Start a design brainstorming session')">🎨 Brainstorm Design</button>
-                    </div>
-                    <div class="quick-commands-grid">
-                <button class="quick-cmd-btn" onclick="sendQuickMessage('Show inventory status')">
-                    📦 Inventory Status
-                </button>
-                <button class="quick-cmd-btn" onclick="sendQuickMessage('List pending orders')">
-                    📋 Pending Orders
-                </button>
-                        <button class="quick-cmd-btn" onclick="sendQuickMessage('Generate inventory usage report')">📊 Inventory Usage</button>
-                        <button class="quick-cmd-btn" onclick="openBulkCreation()" style="background: linear-gradient(135deg, #007bff, #0056b3); color: white; font-weight: bold; border: 2px solid #007bff;">
-                            📊📂 Bulk Upload
-                        </button>
-                        <button class="quick-cmd-btn" onclick="sendQuickMessage('Show low stock items')">⚠️ Low Stock Alert</button>
-                        <button class="quick-cmd-btn" onclick="sendQuickMessage('Show packing materials low stock')">📦⚠️ Packing Low Stock</button>
-                        <button class="quick-cmd-btn" onclick="sendQuickMessage('Start design brainstorm')">🎨 Start Brainstorm</button>
-                        <button class="quick-cmd-btn" onclick="sendQuickMessage('Generate design mockup for Space T-Shirt')">🖼️ Generate Mockup</button>
-                        <button class="quick-cmd-btn" onclick="sendQuickMessage('Create product from last design at $25 qty 10')">🛠️ Create Product</button>
-                        <button class="quick-cmd-btn" onclick="sendQuickMessage('Add packing material 6x9 Poly Mailer dimensions 6x9 in stock 250')">📦➕ Add Packing Material</button>
+                    <!-- Voice Status -->
+                    <div class="voice-status" id="voiceStatus" style="display: none;">
+                        <div class="voice-animation"><div class="voice-wave"></div><div class="voice-wave"></div><div class="voice-wave"></div></div>
+                        <span class="voice-text">Listening...</span>
                     </div>
                 </div>
-                <div data-panel="commands" class="hidden">
-                    <div class="key-terms-container">
+            </section>
+
+            <!-- Right panel -->
+            <aside class="ai-side-panel">
+                <div class="panel-section" id="brand-card-section">
+                    <div class="brand-card" id="brand-card">
+                        <img src="/images/shopeasly-logo.png" alt="Easly AI" class="brand-logo" />
+                        <div>
+                            <div class="brand-title">Easly AI</div>
+                            <small class="text-muted">Creative + Operations Copilot</small>
+                        </div>
+                        <button class="brand-dismiss" id="brand-dismiss" title="Hide">✕</button>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <div class="panel-tabs">
+                        <button class="panel-tab active" data-tab="quick">Quick</button>
+                        <button class="panel-tab" data-tab="commands">Commands</button>
+                        <button class="panel-tab" data-tab="reference">Reference</button>
+                    </div>
+
+                    <div class="panel-content" id="panel-content">
+                        <!-- Quick -->
+                        <div data-panel="quick">
+                            <div class="quick-actions" style="margin-bottom:0.5rem;">
+                                <button class="quick-action-btn" onclick="sendQuickMessage('Show me inventory summary')">📊 Inventory Summary</button>
+                                <button class="quick-action-btn" onclick="sendQuickMessage('What are my pending orders?')">📦 Pending Orders</button>
+                                <button class="quick-action-btn" onclick="sendQuickMessage('Generate inventory usage report')">📈 Usage Report</button>
+                                <button class="quick-action-btn" onclick="sendQuickMessage('Start a design brainstorming session')">🎨 Brainstorm Design</button>
+                            </div>
+                            <div class="quick-commands-grid">
+                                <button class="quick-cmd-btn" onclick="sendQuickMessage('Show inventory status')">📦 Inventory Status</button>
+                                <button class="quick-cmd-btn" onclick="sendQuickMessage('List pending orders')">📋 Pending Orders</button>
+                                <button class="quick-cmd-btn" onclick="sendQuickMessage('Generate inventory usage report')">📊 Inventory Usage</button>
+                                <button class="quick-cmd-btn" onclick="openBulkCreation()" style="background: linear-gradient(135deg, #007bff, #0056b3); color: white; font-weight: bold; border: 2px solid #007bff;">📊📂 Bulk Upload</button>
+                                <button class="quick-cmd-btn" onclick="sendQuickMessage('Show low stock items')">⚠️ Low Stock Alert</button>
+                                <button class="quick-cmd-btn" onclick="sendQuickMessage('Show packing materials low stock')">📦⚠️ Packing Low Stock</button>
+                                <button class="quick-cmd-btn" onclick="sendQuickMessage('Start design brainstorm')">🎨 Start Brainstorm</button>
+                                <button class="quick-cmd-btn" onclick="sendQuickMessage('Generate design mockup for Space T-Shirt')">🖼️ Generate Mockup</button>
+                                <button class="quick-cmd-btn" onclick="sendQuickMessage('Create product from last design at $25 qty 10')">🛠️ Create Product</button>
+                                <button class="quick-cmd-btn" onclick="sendQuickMessage('Add packing material 6x9 Poly Mailer dimensions 6x9 in stock 250')">📦➕ Add Packing Material</button>
+                            </div>
+                        </div>
+
+                        <!-- Commands -->
+                        <div data-panel="commands" class="hidden">
+                            <div class="key-terms-container">
                 <div class="terms-category">
                     <h4>📦 Inventory</h4>
                     <div class="terms-list">
@@ -220,19 +193,21 @@
                         </div>
                     </div>
                 </div>
-                <div data-panel="reference" class="hidden">
-                    <div class="capabilities-grid">
-                        <div class="capability-card" onclick="triggerCapability('analytics')" title="Analytics & reports"><div class="capability-icon">📊</div><span>Analytics</span></div>
-                        <div class="capability-card" onclick="triggerCapability('voice')" title="Voice controls"><div class="capability-icon">🎤</div><span>Voice</span></div>
-                        <div class="capability-card" onclick="triggerCapability('forecasting')" title="Forecasting"><div class="capability-icon">📈</div><span>Forecasting</span></div>
-                        <div class="capability-card" onclick="triggerCapability('insights')" title="Insights"><div class="capability-icon">💡</div><span>Insights</span></div>
+                        </div>
+
+                        <!-- Reference -->
+                        <div data-panel="reference" class="hidden">
+                            <div class="capabilities-grid">
+                                <div class="capability-card" onclick="triggerCapability('analytics')" title="Analytics & reports"><div class="capability-icon">📊</div><span>Analytics</span></div>
+                                <div class="capability-card" onclick="triggerCapability('voice')" title="Voice controls"><div class="capability-icon">🎤</div><span>Voice</span></div>
+                                <div class="capability-card" onclick="triggerCapability('forecasting')" title="Forecasting"><div class="capability-icon">📈</div><span>Forecasting</span></div>
+                                <div class="capability-card" onclick="triggerCapability('insights')" title="Insights"><div class="capability-icon">💡</div><span>Insights</span></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </aside>
         </div>
-        </div>
-    </div>
-
     </div>
 </div>
 

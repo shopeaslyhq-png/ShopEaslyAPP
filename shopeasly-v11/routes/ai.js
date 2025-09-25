@@ -19,8 +19,10 @@ router.post('/co-pilot-arch', hmacVerify, firebaseAuthVerify, async (req, res) =
     }
     const message = String(req.body?.message || req.body?.prompt || '').trim();
     if (!message) return res.status(400).json({ ok: false, error: 'message is required' });
+    const role = String(req.headers['x-user-role'] || req.body?.role || '').toLowerCase();
     const text = await handleCoPilotMessage(message);
-    return res.json({ ok: true, text });
+    const decorated = role ? `[${role}] ${text}` : text;
+    return res.json({ ok: true, text: decorated, role: role || undefined });
   } catch (err) {
     return res.status(500).json({ ok: false, error: err.message });
   }
