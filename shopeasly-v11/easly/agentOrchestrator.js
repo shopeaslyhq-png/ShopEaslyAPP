@@ -7,7 +7,10 @@
  */
 
 // Note: This module uses ESM-like imports available via require() shims where needed.
-const { ChromaClient } = require('chromadb');
+let ChromaClient = null;
+try { ({ ChromaClient } = require('chromadb')); } catch (e) {
+  console.warn('[agentOrchestrator] chromadb not installed; RAG context retrieval will return empty context. Install chromadb or set CHROMA_URL.');
+}
 const OpenAI = require('openai');
 const { RunnableSequence, RunnablePassthrough } = require('@langchain/core/runnables');
 const { ChatOpenAI } = require('@langchain/openai');
@@ -70,6 +73,7 @@ function generateSkuFrom(name, category) {
  */
 async function getRelevantContext(query, opts = {}) {
   const k = Number.isFinite(opts.k) ? opts.k : 5;
+  if (!ChromaClient) return '';
   const client = new ChromaClient({ path: CHROMA_URL });
   const collection = await client.getOrCreateCollection({ name: COLLECTION_NAME });
 
