@@ -12,6 +12,10 @@ const OpenAI = require('openai');
 const { RunnableSequence, RunnablePassthrough } = require('@langchain/core/runnables');
 const { ChatOpenAI } = require('@langchain/openai');
 const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+const { emitEvent } = require('../utils/securityMiddleware');
 
 const CHROMA_URL = process.env.CHROMA_URL || 'http://localhost:8000';
 const COLLECTION_NAME = process.env.CHROMA_COLLECTION || 'shopeasly_data';
@@ -69,12 +73,22 @@ async function getRelevantContext(query, opts = {}) {
   const client = new ChromaClient({ path: CHROMA_URL });
   const collection = await client.getOrCreateCollection({ name: COLLECTION_NAME });
 
-  // Use OpenAI embeddings for the query
   if (!process.env.OPENAI_API_KEY) throw new Error('OPENAI_API_KEY is missing for embeddings.');
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   const embedModel = process.env.OPENAI_EMBED_MODEL || 'text-embedding-3-small';
-  const embResp = await openai.embeddings.create({ model: embedModel, input: [query] });
-  const queryVec = embResp.data[0].embedding;
+
+  // Simple on-disk embedding cache for queries
+  const cacheFile = path.join(__dirname, '..', 'data', 'embeddings_cache.json');
+  let cache = {};
+  try { if (fs.existsSync(cacheFile)) cache = JSON.parse(fs.readFileSync(cacheFile, 'utf8')||'{}'); } catch(_) {}
+  const hash = crypto.createHash('sha1').update(embedModel + '|' + query).digest('hex');
+  let queryVec = cache[hash];
+  if (!queryVec) {
+    const embResp = await openai.embeddings.create({ model: embedModel, input: [query] });
+    queryVec = embResp.data[0].embedding;
+    cache[hash] = queryVec;
+    try { fs.writeFileSync(cacheFile, JSON.stringify(cache, null, 2)); } catch(_) {}
+  }
 
   const res = await collection.query({ queryEmbeddings: [queryVec], nResults: k });
   const docs = (res.documents && res.documents[0]) || [];
@@ -92,8 +106,10 @@ async function getRelevantContext(query, opts = {}) {
  * @param {string} prompt User prompt.
  * @returns {Promise<string>} Final LLM response.
  */
-async function runEaslyAgent(prompt) {
+async function runEaslyAgent(prompt, options = {}) {
   if (!process.env.OPENAI_API_KEY) throw new Error('OPENAI_API_KEY is required (for LLM).');
+  const role = (options.role || '').toLowerCase();
+  const startedOverall = Date.now();
 
   // LLM wrapper (OpenAI Chat)
   const llm = new ChatOpenAI({
@@ -214,39 +230,81 @@ async function runEaslyAgent(prompt) {
       if (items.length === 0) throw new Error('items array is required');
       const resp = await axios.post(`${url}/inventory/api/bulk`, { items, defaultCategory }, { headers: { 'Content-Type': 'application/json' } });
       return resp.data;
+    },
+    async deleteInventoryItem(args) {
+      const url = process.env.AGENT_API_BASE || 'http://localhost:10000';
+      const id = String(args?.id || '').trim();
+      const confirmToken = String(args?.confirmToken || '');
+      if (!id) throw new Error('id is required');
+      if (confirmToken !== `CONFIRM DELETE ${id}`) {
+        return { pendingConfirmation: true, message: `Type: CONFIRM DELETE ${id} to proceed.` };
+      }
+      const resp = await axios.delete(`${url}/inventory/api/${id}`);
+      return { deleted: true, id, resp: resp.data };
+    },
+    async deleteOrder(args) {
+      const url = process.env.AGENT_API_BASE || 'http://localhost:10000';
+      const id = String(args?.id || '').trim();
+      const confirmToken = String(args?.confirmToken || '');
+      if (!id) throw new Error('id is required');
+      if (confirmToken !== `CONFIRM DELETE ${id}`) {
+        return { pendingConfirmation: true, message: `Type: CONFIRM DELETE ${id} to proceed.` };
+      }
+      const resp = await axios.delete(`${url}/orders/${id}`);
+      return { deleted: true, id, resp: resp.data };
     }
   };
 
+  // Role-based permissions
+  const ROLE_TOOL_ALLOW = {
+    viewer: ['getInventorySummary','listOrders','getPackingAlerts','inventoryUsageReport'],
+    operator: ['getInventorySummary','listOrders','getPackingAlerts','inventoryUsageReport','updateInventoryStock','updateOrderStatus','createOrder','initiateProductCreation','createInventoryItem','bulkImportInventory'],
+    admin: Object.keys(TOOLS)
+  };
+  const allowedTools = ROLE_TOOL_ALLOW[role] || Object.keys(TOOLS);
+
   // Ask the model if a tool is needed before final answer
   const decisionPrompt = (vars) => [
-    { role: 'system', content: 'Decide if calling a tool will help. Output strict JSON: {"useTool":boolean, "toolName":"getInventorySummary|createInventoryItem|updateInventoryStock|updateOrderStatus|createOrder|listOrders|initiateProductCreation|getPackingAlerts|inventoryUsageReport|bulkImportInventory|none", "args":object, "reason":string}. If not needed, set useTool=false and toolName="none".' },
-    { role: 'user', content: `QUESTION: ${vars.query}\nCONTEXT:\n${vars.context || '(none)'}` }
+    { role: 'system', content: 'Decide next action. Output strict JSON: {"useTool":boolean,"toolName":"getInventorySummary|createInventoryItem|updateInventoryStock|updateOrderStatus|createOrder|listOrders|initiateProductCreation|getPackingAlerts|inventoryUsageReport|bulkImportInventory|deleteInventoryItem|deleteOrder|none","args":object,"reason":string,"needsAnotherTool":boolean,"finalAnswer":string}. Respect role permissions.' },
+    { role: 'user', content: `QUESTION: ${vars.query}\nCONTEXT:\n${vars.context || '(none)'}${vars.toolResults ? `\nTOOL_RESULTS_SO_FAR:\n${vars.toolResults}`: ''}` }
   ];
 
-  // 1) Retrieve context
   const planned = await plan({ prompt });
-  // 2) Decide on tool
-  const decisionResp = await llm.invoke(decisionPrompt(planned));
-  const decision = tryExtractJson(String(decisionResp?.content || '')) || { useTool: false, toolName: 'none', args: {} };
-
-  let toolOutcome = null;
-  if (decision.useTool && TOOLS[decision.toolName]) {
-    try {
-      toolOutcome = await TOOLS[decision.toolName](decision.args || {});
-    } catch (e) {
-      toolOutcome = { error: String(e.message || e) };
-    }
+  emitEvent('ai.plan', { prompt, role });
+  const toolResults = [];
+  let finalAnswer = null;
+  const MAX_STEPS = Number(process.env.AGENT_MAX_STEPS || 3);
+  for (let step = 0; step < MAX_STEPS; step++) {
+    const agg = toolResults.map((r,i)=>`#${i+1} ${r.tool}: ${JSON.stringify(r.outcome).slice(0,600)}`).join('\n');
+    const decisionResp = await llm.invoke(decisionPrompt({ ...planned, toolResults: agg }));
+    const decision = tryExtractJson(String(decisionResp?.content || '')) || { useTool:false, toolName:'none', args:{}, needsAnotherTool:false };
+    emitEvent('ai.tool.decide', { prompt, role, decision });
+    if (!decision.useTool || decision.toolName === 'none') { finalAnswer = decision.finalAnswer || null; break; }
+    if (!allowedTools.includes(decision.toolName)) { toolResults.push({ tool: decision.toolName, denied:true, outcome:{ error: 'permission denied' }}); break; }
+    let outcome; const t0 = Date.now();
+    try { outcome = await TOOLS[decision.toolName](decision.args || {}); } catch(e) { outcome = { error: String(e.message||e) }; }
+    emitEvent('ai.tool.execute', { tool: decision.toolName, ms: Date.now()-t0, partial: !!decision.needsAnotherTool });
+    toolResults.push({ tool: decision.toolName, outcome });
+    if (outcome && outcome.pendingConfirmation) { finalAnswer = outcome.message; break; }
+    if (!decision.needsAnotherTool) break;
   }
-
-  // 3) Final answer with tool result (if any)
-  const finalMessages = [
-    { role: 'system', content: systemPrompt() },
-    { role: 'user', content: `QUESTION: ${planned.query}` },
-    { role: 'user', content: `CONTEXT:\n${planned.context || '(none)'}` },
-    { role: 'user', content: `TOOL_RESULT:\n${toolOutcome ? JSON.stringify(toolOutcome).slice(0, 4000) : '(none)'}` }
-  ];
-  const finalResp = await llm.invoke(finalMessages);
-  return String(finalResp?.content || '').trim();
+  if (!finalAnswer) {
+    const finalMessages = [
+      { role: 'system', content: systemPrompt() },
+      { role: 'user', content: `QUESTION: ${planned.query}` },
+      { role: 'user', content: `CONTEXT:\n${planned.context || '(none)'}` },
+      { role: 'user', content: `TOOL_RESULTS:\n${toolResults.map((r,i)=>`#${i+1} ${r.tool}: ${JSON.stringify(r.outcome).slice(0,1000)}`).join('\n') || '(none)'}` }
+    ];
+    const finalResp = await llm.invoke(finalMessages);
+    finalAnswer = String(finalResp?.content || '').trim();
+  }
+  emitEvent('ai.final', { prompt, role, steps: toolResults.length });
+  try {
+    const logDir = path.join(__dirname, '..', 'data');
+    if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive:true });
+    fs.appendFileSync(path.join(logDir, 'agent_runs.ndjson'), JSON.stringify({ ts:new Date().toISOString(), prompt, role, steps: toolResults, ms: Date.now()-startedOverall })+'\n');
+  } catch(_) {}
+  return finalAnswer;
 }
 
 module.exports = { getRelevantContext, runEaslyAgent };
