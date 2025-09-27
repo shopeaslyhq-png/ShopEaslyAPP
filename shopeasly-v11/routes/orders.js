@@ -69,6 +69,18 @@ router.get('/', async (req, res) => {
   }
 });
 
+// JSON list of orders for programmatic access
+router.get('/api', async (req, res) => {
+  try {
+    const limit = Math.max(1, Math.min(2000, Number(req.query.limit || 500)));
+    const items = await getAllDocuments('orders', limit);
+    res.json(items);
+  } catch (error) {
+    console.error('Error loading orders list:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.get('/new', (req, res) => {
   // Render create order page to match the modal
   res.render('layout', {

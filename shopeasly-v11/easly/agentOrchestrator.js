@@ -143,12 +143,83 @@ async function runEaslyAgent(prompt) {
       if (!Number.isFinite(stock)) throw new Error('stock must be a number');
       const resp = await axios.put(`${url}/inventory/api/${id}`, { stock }, { headers: { 'Content-Type': 'application/json' } });
       return resp.data;
+    },
+    async listOrders(args) {
+      const url = process.env.AGENT_API_BASE || 'http://localhost:10000';
+      const limit = Number.isFinite(Number(args?.limit)) ? Number(args.limit) : 200;
+      const resp = await axios.get(`${url}/orders/api`, { params: { limit } });
+      return Array.isArray(resp.data) ? resp.data : [];
+    },
+    async updateOrderStatus(args) {
+      const url = process.env.AGENT_API_BASE || 'http://localhost:10000';
+      const id = String(args?.id || '').trim();
+      const status = String(args?.status || '').trim();
+      if (!id) throw new Error('id is required');
+      if (!status) throw new Error('status is required');
+      const resp = await axios.patch(`${url}/orders/${id}/status`, { status }, { headers: { 'Content-Type': 'application/json' } });
+      return resp.data;
+    },
+    async createOrder(args) {
+      const url = process.env.AGENT_API_BASE || 'http://localhost:10000';
+      const body = {
+        customerName: String(args?.customerName || '').trim(),
+        product: args?.productId || args?.productSku ? undefined : String(args?.product || '').trim(),
+        productId: args?.productId ? String(args.productId).trim() : undefined,
+        productSku: args?.productSku ? String(args.productSku).trim() : undefined,
+        quantity: Number.parseInt(args?.quantity, 10),
+        price: args?.price !== undefined ? Number(args.price) : undefined,
+        status: args?.status ? String(args.status) : undefined,
+        notes: args?.notes ? String(args.notes) : undefined
+      };
+      if (!body.customerName) throw new Error('customerName is required');
+      if ((body.product == null) && !body.productId && !body.productSku) throw new Error('product or productId or productSku is required');
+      if (!Number.isFinite(body.quantity) || body.quantity < 1) throw new Error('quantity must be >= 1');
+      const resp = await axios.post(`${url}/orders`, body, { headers: { 'Content-Type': 'application/json' } });
+      return resp.data;
+    },
+    async initiateProductCreation(args) {
+      const url = process.env.AGENT_API_BASE || 'http://localhost:10000';
+      const body = {
+        name: String(args?.name || '').trim(),
+        price: Number(args?.price || 0),
+        quantity: Number.isFinite(Number(args?.quantity)) ? Number(args.quantity) : 0,
+        materialsIds: Array.isArray(args?.materialsIds) ? args.materialsIds.map(String) : [],
+        materialsUsage: args?.materialsUsage || {},
+        packagingId: args?.packagingId ? String(args.packagingId) : '',
+        category: args?.category ? String(args.category) : 'Products',
+        sku: args?.sku ? String(args.sku).toUpperCase() : undefined
+      };
+      if (!body.name) throw new Error('name is required');
+      const resp = await axios.post(`${url}/inventory/api/initiate-product`, body, { headers: { 'Content-Type': 'application/json' } });
+      return resp.data;
+    },
+    async getPackingAlerts(args) {
+      const url = process.env.AGENT_API_BASE || 'http://localhost:10000';
+      const threshold = Number.isFinite(Number(args?.threshold)) ? Number(args.threshold) : undefined;
+      const resp = await axios.get(`${url}/inventory/api/packing/alerts`, { params: { threshold } });
+      return resp.data;
+    },
+    async inventoryUsageReport(args) {
+      const url = process.env.AGENT_API_BASE || 'http://localhost:10000';
+      const start = String(args?.start || '').trim();
+      const end = String(args?.end || '').trim();
+      if (!start || !end) throw new Error('start and end (YYYY-MM-DD) are required');
+      const resp = await axios.get(`${url}/inventory/api/usage`, { params: { start, end } });
+      return resp.data;
+    },
+    async bulkImportInventory(args) {
+      const url = process.env.AGENT_API_BASE || 'http://localhost:10000';
+      const items = Array.isArray(args?.items) ? args.items : [];
+      const defaultCategory = args?.defaultCategory ? String(args.defaultCategory) : undefined;
+      if (items.length === 0) throw new Error('items array is required');
+      const resp = await axios.post(`${url}/inventory/api/bulk`, { items, defaultCategory }, { headers: { 'Content-Type': 'application/json' } });
+      return resp.data;
     }
   };
 
   // Ask the model if a tool is needed before final answer
   const decisionPrompt = (vars) => [
-    { role: 'system', content: 'Decide if calling a tool will help. Output strict JSON: {"useTool":boolean, "toolName":"getInventorySummary|createInventoryItem|updateInventoryStock|none", "args":object, "reason":string}. If not needed, set useTool=false and toolName="none".' },
+    { role: 'system', content: 'Decide if calling a tool will help. Output strict JSON: {"useTool":boolean, "toolName":"getInventorySummary|createInventoryItem|updateInventoryStock|updateOrderStatus|createOrder|listOrders|initiateProductCreation|getPackingAlerts|inventoryUsageReport|bulkImportInventory|none", "args":object, "reason":string}. If not needed, set useTool=false and toolName="none".' },
     { role: 'user', content: `QUESTION: ${vars.query}\nCONTEXT:\n${vars.context || '(none)'}` }
   ];
 
