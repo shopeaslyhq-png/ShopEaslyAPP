@@ -8,7 +8,11 @@
 
 const fs = require('fs');
 const path = require('path');
-const { ChromaClient } = require('chromadb');
+let ChromaClient = null;
+try { ({ ChromaClient } = require('chromadb')); } catch (e) {
+  console.error('[ingest] chromadb module not found. Install with `npm install chromadb` at repo root.');
+  process.exit(1);
+}
 const OpenAI = require('openai');
 
 const CHROMA_URL = process.env.CHROMA_URL || 'http://localhost:8000';

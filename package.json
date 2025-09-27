@@ -13,6 +13,7 @@
     "lint": "eslint --config eslint.config.mjs . --ext .js,.cjs --max-warnings=0",
     "stylelint": "npx stylelint \"**/*.css\" --config .stylelintrc.json",
     "smoke": "node scripts/smoke-test.mjs"
+    ,"install:compat": "npm install --legacy-peer-deps"
   },
   "devDependencies": {
     "@types/react": "^19.1.13",
@@ -25,9 +26,9 @@
     "vite": "^5.4.20"
   },
   "dependencies": {
-    "@langchain/core": "^0.2.34",
-    "@langchain/openai": "^0.2.6",
-    "chromadb": "^1.8.0",
+  "@langchain/core": "^0.3.29",
+  "@langchain/openai": "^0.3.17",
+  "chromadb": "^1.8.0",
     "@google/genai": "^1.17.0",
     "@google/generative-ai": "^0.24.1",
     "@tensorflow-models/mobilenet": "^2.1.1",
@@ -42,7 +43,7 @@
     "helmet": "^8.1.0",
     "marked": "^16.2.1",
     "morgan": "^1.10.1",
-    "openai": "^5.20.3",
+  "openai": "^4.59.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "xlsx": "^0.18.5"

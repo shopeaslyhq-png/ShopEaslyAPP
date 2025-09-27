@@ -9,6 +9,7 @@ const { hmacVerify, firebaseAuthVerify } = require('../utils/securityMiddleware'
 const axios = require('axios');
 const { getAllDocuments } = require('../config/firebase');
 const { emitEvent } = require('../utils/securityMiddleware');
+const { checkRagAvailability } = require('../utils/ragHealth');
 
 // AI chat endpoint (secured by optional HMAC + Firebase Auth)
 router.post('/co-pilot', hmacVerify, firebaseAuthVerify, handleAICoPilot);
@@ -29,22 +30,17 @@ router.post('/co-pilot-arch', hmacVerify, firebaseAuthVerify, async (req, res) =
 });
 
 // Lightweight health/info endpoint (no secrets)
-router.get('/health', (req, res) => {
+router.get('/health', async (req, res) => {
   try {
     const hasGemini = Boolean(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
     const hasOpenAI = Boolean(process.env.OPENAI_API_KEY || process.env.OPENAI_APIKEY || process.env.GEAPI_KEY);
     const preferred = hasGemini ? 'gemini' : (hasOpenAI ? 'openai' : null);
+    const rag = await checkRagAvailability();
     res.json({
       ok: true,
-      providers: {
-        gemini: hasGemini,
-        openai: hasOpenAI,
-        preferred
-      },
-      models: {
-        openaiChat: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-        openaiImage: process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1'
-      }
+      providers: { gemini: hasGemini, openai: hasOpenAI, preferred },
+      models: { openaiChat: process.env.OPENAI_MODEL || 'gpt-4o-mini', openaiImage: process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1' },
+      rag
     });
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
