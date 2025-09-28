@@ -72,178 +72,8 @@
                 </div>
             </section>
             
-            <!-- CSV/Excel Import Tab -->
-            <div class="tab-content" data-tab="csv">
-                <div class="tab-section">
-                    <h3>CSV & Excel Import</h3>
-                    <p>Upload a CSV or Excel file with product data to create multiple products at once</p>
-                    
-                    <div class="csv-upload-area">
-                        <div class="upload-section">
-                            <div class="upload-dropzone" id="csvDropzone">
-                                <div class="upload-content">
-                                    <div class="upload-icon">📊</div>
-                                    <h4>Drop CSV or Excel file here or click to browse</h4>
-                                    <p>Supports .csv, .xlsx, .xls • Maximum file size: 10MB</p>
-                                    <button class="btn btn-secondary" id="csvFileBtn" style="padding: 12px 24px; font-size: 16px; font-weight: bold; margin-top: 10px;">
-                                        📁 Choose File
-                                    </button>
-                                    <input type="file" id="csvFileInput" accept=".csv,.xlsx,.xls" style="display:none;">
-                                </div>
-                            </div>
-                            
-                            <div class="csv-actions" style="margin-top: 20px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-                                <label style="display:flex; gap:6px; align-items:center; font-weight:600;">
-                                    Import as
-                                    <select id="importCategory" class="form-input" style="height:34px; padding:2px 8px;">
-                                        <option value="Products">Products</option>
-                                        <option value="Materials" selected>Materials</option>
-                                        <option value="Packing Materials">Packing Materials</option>
-                                    </select>
-                                </label>
-                                <button class="btn btn-outline" id="downloadTemplate" style="margin-right: 10px;">
-                                    📥 Download CSV Template
-                                </button>
-                                <button class="btn btn-outline" id="downloadExcelTemplate" style="margin-right: 10px;">
-                                    📥 Download Excel Template
-                                </button>
-                                <button class="btn btn-outline" id="csvPreview" disabled>
-                                    👀 Preview Data
-                                </button>
-                                <button class="btn btn-primary" id="importCsvBtn" disabled>
-                                    ✅ Import to Inventory
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="csv-requirements">
-                            <h4>File Format Requirements</h4>
-                            <ul>
-                                <li><strong>Required columns:</strong> name, category, price, stock</li>
-                                <li><strong>Optional columns:</strong> description, sku, imageUrl, materials</li>
-                                <li><strong>Example:</strong> "Cool T-Shirt", "Apparel", "25.00", "50", "Amazing design"</li>
-                                <li><strong>Materials:</strong> Separate multiple materials with semicolons</li>
-                                <li><strong>Excel support:</strong> Data should be in the first worksheet</li>
-                                <li><strong>Formats:</strong> CSV (.csv), Excel 2007+ (.xlsx), Excel 97-2003 (.xls)</li>
-                            </ul>
-                        </div>
-                        
-                        <div id="csvPreviewSection" class="csv-preview" style="display:none;">
-                            <h4>Data Preview</h4>
-                            <div id="csvPreviewTable"></div>
-                            <div class="csv-stats">
-                                <span id="csvRowCount">0 products</span>
-                                <span id="csvValidation">Validation pending...</span>
-                                <span id="csvImportHint" class="text-muted" style="margin-left:auto;">Tip: Set "Import as" to Materials for your file.</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- AI Batch Tab -->
-            <div class="tab-content" data-tab="ai-batch">
-                <div class="tab-section">
-                    <h3>AI Batch Generation</h3>
-                    <p>Let AI generate multiple product ideas based on your requirements</p>
-                    
-                    <div class="ai-batch-form">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="batchTheme">Theme/Category</label>
-                                <input type="text" id="batchTheme" class="form-input" placeholder="e.g., Space exploration, Vintage vibes, Minimalist">
-                            </div>
-                            <div class="form-group">
-                                <label for="batchCount">Number of Products</label>
-                                <select id="batchCount" class="form-input">
-                                    <option value="5">5 products</option>
-                                    <option value="10" selected>10 products</option>
-                                    <option value="15">15 products</option>
-                                    <option value="20">20 products</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="batchCategory">Product Category</label>
-                                <select id="batchCategory" class="form-input">
-                                    <option value="mixed">Mixed Categories</option>
-                                    <option value="Apparel">Apparel</option>
-                                    <option value="Drinkware">Drinkware</option>
-                                    <option value="Stickers">Stickers</option>
-                                    <option value="Prints">Prints</option>
-                                    <option value="Accessories">Accessories</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="batchPriceRange">Price Range</label>
-                                <select id="batchPriceRange" class="form-input">
-                                    <option value="budget">Budget ($5-15)</option>
-                                    <option value="mid" selected>Mid-range ($15-35)</option>
-                                    <option value="premium">Premium ($35-75)</option>
-                                    <option value="luxury">Luxury ($75+)</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="batchDescription">Additional Requirements</label>
-                            <textarea id="batchDescription" class="form-input" rows="3" placeholder="Target audience, style preferences, special features..."></textarea>
-                        </div>
-                        
-                        <div class="ai-options">
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="generateImages" checked>
-                                Generate product images with AI
-                            </label>
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="includeVariants">
-                                Create size/color variants where applicable
-                            </label>
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="autoPrice">
-                                Use AI-suggested pricing
-                            </label>
-                        </div>
-                        
-                        <div class="ai-batch-actions">
-                            <button class="btn btn-primary btn-lg" id="generateBatch">
-                                <span class="btn-icon">🤖</span>Generate Product Ideas
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div id="batchResults" class="batch-results" style="display:none;">
-                        <div class="results-header">
-                            <h4>Generated Products</h4>
-                            <div class="results-stats">
-                                <span id="resultsCount">0 products generated</span>
-                                <span id="resultsTime">Generated in 0s</span>
-                            </div>
-                        </div>
-                        
-                        <div id="resultsGrid" class="results-grid"></div>
-                        
-                        <div class="results-actions">
-                            <button class="btn btn-outline" id="selectAllResults">Select All</button>
-                            <button class="btn btn-outline" id="deselectAllResults">Deselect All</button>
-                            <button class="btn btn-primary" id="createSelectedProducts">
-                                Create Selected Products
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <!-- Bulk creation moved to dedicated modal (#bulkCreationModal) to prevent duplication & ID collisions -->
         </div>
-        
-        <div class="modal-actions">
-            <button class="btn btn-secondary" id="cancelBulkCreation">Cancel</button>
-            <button class="btn btn-primary" id="proceedBulkCreation" style="display:none;">
-                Create Products
-            </button>
-        </div>
-    </div>
     </div>
 
 <!-- Side panel markup intentionally removed here: it should exist only once in final cleaned template (provided earlier in refactor) -->
@@ -467,63 +297,83 @@
                         <button class="btn btn-secondary" id="pw-skip-ai">Skip AI Assistance</button>
                     </div>
                     
-                    <!-- External dependencies -->
-                    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js" integrity="sha256-s4Wh05rq6ArlTc95xJMu38xpv8uKXuX4nHCqB6f+GOQ=" crossorigin="anonymous" nonce="<%= cspNonce %>"></script>
-                    <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js" nonce="<%= cspNonce %>"></script>
-                    <script src="/js/assistant-core.js" defer nonce="<%= cspNonce %>"></script>
-                    <script src="/js/assistant-bulk.js" defer nonce="<%= cspNonce %>"></script>
-                    <script src="/js/assistant-extras.js" defer nonce="<%= cspNonce %>"></script>
-                                <button class="btn btn-outline" id="downloadTemplate" style="margin-right: 10px;">
-                                    📥 Download CSV Template
-                                </button>
-                                <button class="btn btn-outline" id="downloadExcelTemplate" style="margin-right: 10px;">
-                                    📥 Download Excel Template
-                                </button>
-                                <button class="btn btn-outline" id="csvPreview" disabled>
-                                    👀 Preview Data
-                                </button>
-                                <button class="btn btn-primary" id="importCsvBtn" disabled>
-                                    ✅ Import to Inventory
-                                </button>
+                    <!-- (Removed duplicated CSV/AI batch + template buttons) -->
+                </div>
+            </section>
+        </div>
+    </div>
+
+<!-- Bulk Creation Modal (CSV Import + AI Batch) -->
+<div id="bulkCreationModal" class="modal-overlay" style="display:none;" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-content" style="max-width:980px;width:95vw;">
+        <button class="modal-close-btn" id="closeBulkCreation" aria-label="Close bulk creation">×</button>
+        <h2 style="margin-top:0;">Bulk Creation</h2>
+        <div class="bulk-creation-tabs">
+            <div class="tab-headers" style="display:flex;gap:.5rem;margin-bottom:1rem;">
+                <button class="tab-header active" data-tab="csv" type="button">CSV / Excel Import</button>
+                <button class="tab-header" data-tab="ai-batch" type="button">AI Batch Generation</button>
+            </div>
+            <!-- CSV TAB -->
+            <div class="tab-content active" data-tab="csv">
+                <div class="tab-section">
+                    <h3>CSV & Excel Import</h3>
+                    <p>Upload a CSV or Excel file with product data to create multiple products at once.</p>
+                    <div class="csv-upload-area">
+                        <div class="upload-section">
+                            <div class="upload-dropzone" id="csvDropzone" role="button" tabindex="0" aria-label="Upload CSV or Excel file">
+                                <div class="upload-content">
+                                    <div class="upload-icon" aria-hidden="true">📊</div>
+                                    <h4>Drop CSV/Excel file or click to browse</h4>
+                                    <p>Supports .csv, .xlsx, .xls • Max 10MB</p>
+                                    <button class="btn btn-secondary" id="csvFileBtn" type="button">📁 Choose File</button>
+                                    <input type="file" id="csvFileInput" accept=".csv,.xlsx,.xls" style="display:none;" />
+                                </div>
+                            </div>
+                            <div class="csv-actions" style="margin-top: 20px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                                <label style="display:flex; gap:6px; align-items:center; font-weight:600;">Import as
+                                    <select id="importCategory" class="form-input" style="height:34px; padding:2px 8px;">
+                                        <option value="Products">Products</option>
+                                        <option value="Materials" selected>Materials</option>
+                                        <option value="Packing Materials">Packing Materials</option>
+                                    </select>
+                                </label>
+                                <button class="btn btn-outline" id="downloadTemplate" type="button">📥 CSV Template</button>
+                                <button class="btn btn-outline" id="downloadExcelTemplate" type="button">📥 Excel Template</button>
+                                <button class="btn btn-outline" id="csvPreview" type="button" disabled>👀 Preview Data</button>
+                                <button class="btn btn-primary" id="importCsvBtn" type="button" disabled>✅ Import to Inventory</button>
                             </div>
                         </div>
-                        
                         <div class="csv-requirements">
                             <h4>File Format Requirements</h4>
                             <ul>
-                                <li><strong>Required columns:</strong> name, category, price, stock</li>
-                                <li><strong>Optional columns:</strong> description, sku, imageUrl, materials</li>
-                                <li><strong>Example:</strong> "Cool T-Shirt", "Apparel", "25.00", "50", "Amazing design"</li>
+                                <li><strong>Required:</strong> name, category, price, stock</li>
+                                <li><strong>Optional:</strong> description, sku, imageUrl, materials</li>
                                 <li><strong>Materials:</strong> Separate multiple materials with semicolons</li>
-                                <li><strong>Excel support:</strong> Data should be in the first worksheet</li>
-                                <li><strong>Formats:</strong> CSV (.csv), Excel 2007+ (.xlsx), Excel 97-2003 (.xls)</li>
+                                <li><strong>Excel:</strong> Data must be in the first worksheet</li>
                             </ul>
                         </div>
-                        
                         <div id="csvPreviewSection" class="csv-preview" style="display:none;">
                             <h4>Data Preview</h4>
                             <div id="csvPreviewTable"></div>
-                            <div class="csv-stats">
+                            <div class="csv-stats" style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
                                 <span id="csvRowCount">0 products</span>
-                                <span id="csvValidation">Validation pending...</span>
-                                <span id="csvImportHint" class="text-muted" style="margin-left:auto;">Tip: Set "Import as" to Materials for your file.</span>
+                                <span id="csvValidation" aria-live="polite">Validation pending...</span>
+                                <span id="csvImportHint" class="text-muted" style="margin-left:auto;">Tip: choose correct import category.</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- AI Batch Tab -->
+            <!-- AI BATCH TAB -->
             <div class="tab-content" data-tab="ai-batch">
                 <div class="tab-section">
                     <h3>AI Batch Generation</h3>
-                    <p>Let AI generate multiple product ideas based on your requirements</p>
-                    
+                    <p>Let AI generate multiple product ideas based on your requirements.</p>
                     <div class="ai-batch-form">
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="batchTheme">Theme/Category</label>
-                                <input type="text" id="batchTheme" class="form-input" placeholder="e.g., Space exploration, Vintage vibes, Minimalist">
+                                <input type="text" id="batchTheme" class="form-input" placeholder="e.g., Space exploration, Vintage vibes, Minimalist" />
                             </div>
                             <div class="form-group">
                                 <label for="batchCount">Number of Products</label>
@@ -535,7 +385,6 @@
                                 </select>
                             </div>
                         </div>
-                        
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="batchCategory">Product Category</label>
@@ -558,34 +407,19 @@
                                 </select>
                             </div>
                         </div>
-                        
                         <div class="form-group">
                             <label for="batchDescription">Additional Requirements</label>
-                            <textarea id="batchDescription" class="form-input" rows="3" placeholder="Target audience, style preferences, special features..."></textarea>
+                            <textarea id="batchDescription" class="form-input" rows="3" placeholder="Target audience, style, special features..."></textarea>
                         </div>
-                        
                         <div class="ai-options">
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="generateImages" checked>
-                                Generate product images with AI
-                            </label>
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="includeVariants">
-                                Create size/color variants where applicable
-                            </label>
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="autoPrice">
-                                Use AI-suggested pricing
-                            </label>
+                            <label class="checkbox-label"><input type="checkbox" id="generateImages" checked /> Generate product images with AI</label>
+                            <label class="checkbox-label"><input type="checkbox" id="includeVariants" /> Create size/color variants</label>
+                            <label class="checkbox-label"><input type="checkbox" id="autoPrice" /> Use AI-suggested pricing</label>
                         </div>
-                        
                         <div class="ai-batch-actions">
-                            <button class="btn btn-primary btn-lg" id="generateBatch">
-                                <span class="btn-icon">🤖</span>Generate Product Ideas
-                            </button>
+                            <button class="btn btn-primary btn-lg" id="generateBatch" type="button"><span class="btn-icon">🤖</span>Generate Product Ideas</button>
                         </div>
                     </div>
-                    
                     <div id="batchResults" class="batch-results" style="display:none;">
                         <div class="results-header">
                             <h4>Generated Products</h4>
@@ -594,366 +428,27 @@
                                 <span id="resultsTime">Generated in 0s</span>
                             </div>
                         </div>
-                        
                         <div id="resultsGrid" class="results-grid"></div>
-                        
                         <div class="results-actions">
-                            <button class="btn btn-outline" id="selectAllResults">Select All</button>
-                            <button class="btn btn-outline" id="deselectAllResults">Deselect All</button>
-                            <button class="btn btn-primary" id="createSelectedProducts">
-                                Create Selected Products
-                            </button>
+                            <button class="btn btn-outline" id="selectAllResults" type="button">Select All</button>
+                            <button class="btn btn-outline" id="deselectAllResults" type="button">Deselect All</button>
+                            <button class="btn btn-primary" id="createSelectedProducts" type="button">Create Selected Products</button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        
         <div class="modal-actions">
-            <button class="btn btn-secondary" id="cancelBulkCreation">Cancel</button>
-            <button class="btn btn-primary" id="proceedBulkCreation" style="display:none;">
-                Create Products
-            </button>
+            <button class="btn btn-secondary" id="cancelBulkCreation" type="button">Cancel</button>
+            <button class="btn btn-primary" id="proceedBulkCreation" type="button" style="display:none;">Create Products</button>
         </div>
     </div>
-    </div>
+</div>
 
-<!-- SheetJS Library for Excel file support -->
-<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<!-- External dependencies (moved to bottom for performance & CSP compliance). SheetJS loaded dynamically by assistant-bulk.js when needed. -->
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js" integrity="sha256-s4Wh05rq6ArlTc95xJMu38xpv8uKXuX4nHCqB6f+GOQ=" crossorigin="anonymous" nonce="<%= cspNonce %>"></script>
+<script src="/js/assistant-core.js" defer nonce="<%= cspNonce %>"></script>
+<script src="/js/assistant-bulk.js" defer nonce="<%= cspNonce %>"></script>
+<script src="/js/assistant-extras.js" defer nonce="<%= cspNonce %>"></script>
 
-<!-- Inline logic fully removed; all behavior now handled by assistant-core.js / assistant-bulk.js / assistant-extras.js -->
-
-// Enhanced message display
-<!-- Duplicate inline assistant functions removed (handled by external scripts) -->
-<!-- Removed residual inline bulk creation script fragment; logic lives in /js/assistant-bulk.js -->
-
-function handleCSVFile(file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        try {
-            const csvText = e.target.result;
-            const parsedData = parseCSV(csvText);
-            
-            bulkCreationState.csvData = parsedData;
-            displayCSVPreview(parsedData);
-            
-            const previewBtn = document.getElementById('csvPreview');
-            if (previewBtn) previewBtn.disabled = false;
-            
-            showToast(`CSV file loaded successfully: ${parsedData.data.length} products found`, 'success');
-            
-        } catch (error) {
-            console.error('CSV parsing error:', error);
-            showToast('Failed to parse CSV file. Please check the format.', 'error');
-        }
-    };
-    
-    reader.readAsText(file);
-}
-
-function handleExcelFile(file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        try {
-            const arrayBuffer = e.target.result;
-            const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-            
-            // Get the first worksheet
-            const sheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[sheetName];
-            
-            // Convert to JSON
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-            
-            if (jsonData.length < 2) {
-                throw new Error('Excel file must have at least a header row and one data row');
-            }
-            
-            // Parse Excel data into our format
-            const headers = jsonData[0].map(h => String(h || '').trim());
-            const data = [];
-            
-            for (let i = 1; i < jsonData.length; i++) {
-                const values = jsonData[i];
-                const row = {};
-                
-                headers.forEach((header, index) => {
-                    row[header] = String(values[index] || '').trim();
-                });
-                
-                // Skip empty rows
-                if (Object.values(row).some(val => val.trim())) {
-                    data.push(row);
-                }
-            }
-            
-            const parsedData = { headers, data };
-            bulkCreationState.csvData = parsedData;
-            displayCSVPreview(parsedData);
-            
-            const previewBtn = document.getElementById('csvPreview');
-            if (previewBtn) previewBtn.disabled = false;
-            
-            showToast(`Excel file loaded successfully: ${data.length} products found from worksheet "${sheetName}"`, 'success');
-            
-        } catch (error) {
-            console.error('Excel parsing error:', error);
-            showToast('Failed to parse Excel file. Please check the format and ensure data is in the first worksheet.', 'error');
-        }
-    };
-    
-    reader.readAsArrayBuffer(file);
-}
-
-function parseCSV(csvText) {
-    const lines = csvText.split('\n').filter(line => line.trim());
-    if (lines.length < 2) {
-        throw new Error('CSV must have at least a header and one data row');
-    }
-    
-    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-    const data = [];
-    
-    for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-        const row = {};
-        
-        headers.forEach((header, index) => {
-            row[header] = values[index] || '';
-        });
-        
-        data.push(row);
-    }
-    
-    return { headers, data };
-}
-
-function downloadCSVTemplate() {
-    const template = `name,category,price,stock,description,sku,imageUrl,materials
-"Cool Space T-Shirt","Apparel","25.00","50","Amazing space-themed design","APP-COOL-001","","Cotton T-Shirt;Fabric Paint"
-"Galaxy Coffee Mug","Drinkware","18.50","30","Perfect for space lovers","DRK-GAL-002","","Ceramic Mug"
-"Retro Sticker Pack","Stickers","8.99","100","Vintage space stickers","STK-RET-003","","Vinyl Sticker Paper"`;
-    
-    const blob = new Blob([template], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'product-template.csv';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-    
-    showToast('CSV template downloaded successfully', 'success');
-}
-
-function downloadExcelTemplate() {
-    try {
-        // Create a new workbook
-        const wb = XLSX.utils.book_new();
-        
-        // Create sample data
-        const data = [
-            ['name', 'category', 'price', 'stock', 'description', 'sku', 'imageUrl', 'materials'],
-            ['Cool Space T-Shirt', 'Apparel', 25.00, 50, 'Amazing space-themed design', 'APP-COOL-001', '', 'Cotton T-Shirt;Fabric Paint'],
-            ['Galaxy Coffee Mug', 'Drinkware', 18.50, 30, 'Perfect for space lovers', 'DRK-GAL-002', '', 'Ceramic Mug'],
-            ['Retro Sticker Pack', 'Stickers', 8.99, 100, 'Vintage space stickers', 'STK-RET-003', '', 'Vinyl Sticker Paper']
-        ];
-        
-        // Create worksheet
-        const ws = XLSX.utils.aoa_to_sheet(data);
-        
-        // Set column widths
-        ws['!cols'] = [
-            { wch: 20 }, // name
-            { wch: 12 }, // category
-            { wch: 8 },  // price
-            { wch: 8 },  // stock
-            { wch: 30 }, // description
-            { wch: 15 }, // sku
-            { wch: 20 }, // imageUrl
-            { wch: 25 }  // materials
-        ];
-        
-        // Add worksheet to workbook
-        XLSX.utils.book_append_sheet(wb, ws, 'Products');
-        
-        // Write file
-        XLSX.writeFile(wb, 'product-template.xlsx');
-        
-        showToast('Excel template downloaded successfully', 'success');
-        
-    } catch (error) {
-        console.error('Error creating Excel template:', error);
-        showToast('Failed to create Excel template', 'error');
-    }
-}
-
-// Display CSV/Excel preview
-function displayCSVPreview(parsedData) {
-    const { headers, data } = parsedData;
-    
-    // Update stats
-    const rowCountEl = document.getElementById('csvRowCount');
-    const validationEl = document.getElementById('csvValidation');
-    const previewSection = document.getElementById('csvPreviewSection');
-    const previewTable = document.getElementById('csvPreviewTable');
-    
-    if (rowCountEl) rowCountEl.textContent = `${data.length} products`;
-    
-    // Validate required columns
-    const requiredColumns = ['name', 'category', 'price', 'stock'];
-    const missingColumns = requiredColumns.filter(col => !headers.includes(col));
-    
-    if (missingColumns.length > 0) {
-        if (validationEl) {
-            validationEl.textContent = `Missing required columns: ${missingColumns.join(', ')}`;
-            validationEl.style.color = '#dc3545';
-        }
-        showToast(`Missing required columns: ${missingColumns.join(', ')}`, 'error');
-    } else {
-        if (validationEl) {
-            validationEl.textContent = 'All required columns present ✓';
-            validationEl.style.color = '#28a745';
-        }
-    }
-    
-    // Create preview table
-    if (previewTable && data.length > 0) {
-        let tableHTML = '<table style="width:100%; border-collapse:collapse; font-size:14px;">';
-        
-        // Headers
-        tableHTML += '<thead><tr>';
-        for (let hi=0; hi<headers.length; hi++) {
-            const header = headers[hi];
-            const isRequired = requiredColumns.includes(header);
-            tableHTML += '<th style="border:1px solid #ddd; padding:8px; background:#f8f9fa;' + (isRequired ? ' font-weight:bold; color:#007bff;' : '') + '\">' + header + (isRequired ? ' *' : '') + '</th>';
-        }
-        tableHTML += '</tr></thead>';
-        
-        // Data rows (first 5 rows)
-        tableHTML += '<tbody>';
-        data.slice(0, 5).forEach(row => {
-            tableHTML += '<tr>';
-            headers.forEach(header => {
-                const value = row[header] || '';
-                tableHTML += `<td style="border:1px solid #ddd; padding:8px;">${value}</td>`;
-            });
-            tableHTML += '</tr>';
-        });
-        tableHTML += '</tbody>';
-        
-        if (data.length > 5) {
-            tableHTML += `<tfoot><tr><td colspan="${headers.length}" style="border:1px solid #ddd; padding:8px; text-align:center; font-style:italic; background:#f8f9fa;">... and ${data.length - 5} more rows</td></tr></tfoot>`;
-        }
-        
-        tableHTML += '</table>';
-        previewTable.innerHTML = tableHTML;
-    }
-    
-    // Show preview section
-    if (previewSection) {
-        previewSection.style.display = 'block';
-    }
-    
-    // Enable preview button
-    const previewBtn = document.getElementById('csvPreview');
-    if (previewBtn) {
-        previewBtn.disabled = false;
-        previewBtn.textContent = '👀 View Full Preview';
-    }
-
-    // Enable import button
-    const importBtn = document.getElementById('importCsvBtn');
-    if (importBtn) importBtn.disabled = data.length === 0;
-}
-
-// Show detailed preview in a modal or expanded view
-function showDetailedPreview(parsedData) {
-    const { headers, data } = parsedData;
-    
-    // Create a modal for detailed preview
-    let previewModal = document.getElementById('detailedPreviewModal');
-    if (!previewModal) {
-        previewModal = document.createElement('div');
-        previewModal.id = 'detailedPreviewModal';
-        previewModal.className = 'modal-overlay';
-        previewModal.style.display = 'none';
-        previewModal.innerHTML = `
-            <div class="modal-content" style="max-width: 90vw; max-height: 90vh; overflow: auto;">
-                <button class="modal-close-btn" onclick="closeDetailedPreview()">×</button>
-                <h2>📊 Data Preview</h2>
-                <div class="preview-stats" style="margin: 15px 0; display: flex; gap: 15px;">
-                    <span class="stat-badge" style="background: #007bff; color: white; padding: 8px 12px; border-radius: 4px; font-weight: bold;">
-                        ${data.length} Products
-                    </span>
-                    <span class="stat-badge" style="background: #28a745; color: white; padding: 8px 12px; border-radius: 4px; font-weight: bold;">
-                        ${headers.length} Columns
-                    </span>
-                </div>
-                <div id="detailedPreviewTable" style="overflow: auto; max-height: 60vh;"></div>
-                <div class="modal-actions" style="margin-top: 20px; text-align: center;">
-                    <button class="btn btn-primary" onclick="proceedWithUpload()">✅ Proceed with Upload</button>
-                    <button class="btn btn-secondary" onclick="closeDetailedPreview()">Cancel</button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(previewModal);
-    }
-    
-    // Populate the table
-    const tableContainer = previewModal.querySelector('#detailedPreviewTable');
-    const requiredColumns = ['name', 'category', 'price', 'stock'];
-    
-    let tableHTML = '<table style="width:100%; border-collapse:collapse; font-size:14px; margin: 10px 0;">';
-    
-    // Headers
-    tableHTML += '<thead><tr style="background: #f8f9fa;">';
-    for (let hi=0; hi<headers.length; hi++) {
-        const header = headers[hi];
-        const isRequired = requiredColumns.includes(header);
-        tableHTML += '<th style="border:1px solid #ddd; padding:12px; text-align:left;' + (isRequired ? ' background:#e3f2fd; font-weight:bold; color:#007bff;' : '') + '\">' + header + (isRequired ? ' *' : '') + '</th>';
-    }
-    tableHTML += '</tr></thead>';
-    
-    // Data rows
-    tableHTML += '<tbody>';
-    data.forEach((row, index) => {
-        const bgColor = index % 2 === 0 ? '#fff' : '#f9f9f9';
-    tableHTML += '<tr style="background:' + bgColor + ';">';
-        headers.forEach(header => {
-            const value = row[header] || '';
-            tableHTML += `<td style="border:1px solid #ddd; padding:10px;">${value}</td>`;
-        });
-        tableHTML += '</tr>';
-    });
-    tableHTML += '</tbody></table>';
-    
-    tableContainer.innerHTML = tableHTML;
-    
-    // Show modal
-    previewModal.style.display = 'flex';
-    document.body.classList.add('no-scroll');
-}
-
-// Close detailed preview
-function closeDetailedPreview() {
-    const modal = document.getElementById('detailedPreviewModal');
-    if (modal) {
-        modal.style.display = 'none';
-        document.body.classList.remove('no-scroll');
-    }
-}
-
-// Proceed with upload (placeholder for actual upload logic)
-function proceedWithUpload() {
-    closeDetailedPreview();
-    if (bulkCreationState.csvData && bulkCreationState.csvData.data.length > 0) {
-        showToast(`Ready to create ${bulkCreationState.csvData.data.length} products!`, 'success');
-        // Here you would typically call your API to create the products
-        // createBulkProducts(bulkCreationState.csvData.data);
-    }
-}
-
-<!-- Inline bulk creation script removed; handled by /js/assistant-bulk.js -->
+<!-- End AI Assistant page -->
