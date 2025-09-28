@@ -156,16 +156,26 @@
       }
     };
     es.onmessage = (ev)=>{
-      // Expect NDJSON or JSON lines with {type, data}
       if(!ev.data) return;
       try {
         const line = JSON.parse(ev.data);
         if(line.type==='ai.reply' && line.text){ addMessageToChat('ai', line.text); }
-        if(/^ai\.tool/.test(line.type)) { /* could render trace later */ }
+        if(/^ai\./.test(line.type)) { appendTraceEvent(line); }
       } catch {}
     };
   }
   EaslyAI.utils.initEventsStream = initEventsStream;
+
+  // --- Agent Trace ---
+  function appendTraceEvent(evt){
+    const box = $('#agent-trace'); if(!box) return; const ts = new Date().toISOString().split('T')[1].replace(/Z$/,'');
+    const safe = escapeHtml(JSON.stringify(evt));
+    const div = document.createElement('div'); div.className='trace-line';
+    div.innerHTML = `<span class="t-ts" style="opacity:.5;">${ts}</span> <span class="t-type" style="color:#60a5fa;">${escapeHtml(evt.type||'?')}</span> <code style="color:#9ca3af;">${safe}</code>`;
+    box.appendChild(div); box.scrollTop = box.scrollHeight;
+  }
+  function clearAgentTrace(){ const box=$('#agent-trace'); if(box) box.innerHTML=''; }
+  EaslyAI.utils.appendTraceEvent=appendTraceEvent; EaslyAI.utils.clearAgentTrace=clearAgentTrace; window.clearAgentTrace=clearAgentTrace;
 
   // --- Voice (basic TTS only; STT handled elsewhere or optionally) ---
   function speakText(text){ try { if(!('speechSynthesis' in window)) return; const u = new SpeechSynthesisUtterance(text); speechSynthesis.speak(u);} catch {} }
@@ -209,8 +219,23 @@
     if(input){ ['input','keyup','paste','cut'].forEach(ev=> input.addEventListener(ev, ()=>{ resizeInput(); updateSendState(); }) ); input.addEventListener('keydown', handleKey); resizeInput(); updateSendState(); setTimeout(()=> input.focus(), 120); }
 
     initLayout();
+
+    // Delegated clicks (quick send, bulk open, capability, trace clear)
+    document.addEventListener('click', e=>{
+      const t = e.target;
+      if(!(t instanceof HTMLElement)) return;
+      const sendEl = t.closest('[data-send]');
+      if(sendEl){ const msg = sendEl.getAttribute('data-send'); if(msg && !$('#ai-input').disabled){ submitMessage(msg); showToast('Command sent','info'); } return; }
+      if(t.closest('[data-bulk-open]')){ try { window.openBulkCreation && window.openBulkCreation(); } catch{} return; }
+      const capEl = t.closest('[data-capability]');
+      if(capEl){ const cap = capEl.getAttribute('data-capability'); handleCapability(cap); return; }
+      if(t.closest('[data-clear-trace]')){ clearAgentTrace(); showToast('Trace cleared','info'); return; }
+    });
     initEventsStream();
     showToast('Assistant ready','success');
   });
+
+  function handleCapability(cap){ if(!cap) return; const map={ analytics:'Show me detailed analytics and performance metrics for my store', voice:'Help me understand voice commands and how to use voice control features', forecasting:'Provide sales forecasting and inventory predictions based on current trends', insights:'Give me business insights and recommendations to improve my store performance' }; const msg = map[cap]; if(msg) submitMessage(msg); }
+  EaslyAI.utils.handleCapability=handleCapability;
 
 })(window);

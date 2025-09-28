@@ -19,6 +19,14 @@ Out of scope:
 - Payment capture and shipping label purchasing (can integrate later)
 - Detailed user/role auth (future hardening)
 
+### 1.1 Legacy Reference
+The original purely client-side SPA (no backend, all in-memory) is archived in `docs/SHOP-EASLY-DESIGN-LEGACY-1.0.md` (Version 1.0.0). Key differences now:
+- Server-backed JSON persistence and SSE vs. ephemeral in-memory state
+- Modularized AI assistant scripts (CSP-ready) vs. monolithic inline block
+- Single-role simplification vs. multi-role UI scaffolding
+- Event bus + audit/log groundwork vs. ad-hoc client logging
+- Guardrailed AI tool loop vs. direct unmediated Gemini calls
+
 ## 2. Key Enhancements in v2.0
 - AI Co-Pilot: session memory, proactive daily digests (planned rollout), forecasting hooks, image/design generation, bulk product ideas + import flows.
 - Dashboard UX: AI overlay card, drill-down analytics. (Granular role-based view variants deferred; single admin persona active.)
@@ -320,6 +328,12 @@ Long-term (6+ months)
 - `shopeasly-v11/utils/eventBus.js`: in-process event emitter powering `/events`
 
 ## 16. Changelog
+
+- 2.0.3 (2025-09-28)
+  - Archived legacy 1.0 SPA design document (`SHOP-EASLY-DESIGN-LEGACY-1.0.md`) for historical context.
+  - Fully removed remaining duplicated inline assistant & bulk creation scripts from `views/easly.ejs`; all logic now in `public/js/assistant-core.js` + `public/js/assistant-bulk.js`.
+  - Began inline handler purge (onclick/data-* migration planned) to finalize CSP hardening phase.
+  - Clarified legacy vs. current architecture deltas in Section 1.1.
 
 - 2.0.2 (2025-09-28)
   - Simplified to single admin persona; removed role selector UI and role fields in event/log payloads (reduces prompt/token noise and complexity).

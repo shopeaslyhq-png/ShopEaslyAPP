@@ -1,485 +1,156 @@
 
 <% layout('layout') %>
 
+<style>
+/* Simplified Dashboard Layout */
+.dashboard-shell { display:flex; gap:1.25rem; align-items:stretch; }
+@media (max-width:960px){ .dashboard-shell { flex-direction:column; } }
+nav.dashboard-nav { flex:0 0 210px; background:var(--panel-bg,rgba(22,22,26,.55)); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:1rem .85rem; backdrop-filter:blur(8px); position:sticky; top:70px; max-height:calc(100dvh - 90px); overflow:auto; }
+@media (max-width:960px){ nav.dashboard-nav { position:static; max-height:none; display:flex; flex-direction:row; overflow:auto; } nav.dashboard-nav ul { flex-direction:row; flex-wrap:wrap; } }
+nav.dashboard-nav h2 { font-size:.75rem; letter-spacing:1px; font-weight:600; opacity:.6; margin:0 0 .75rem; text-transform:uppercase; }
+nav.dashboard-nav ul { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.35rem; }
+nav.dashboard-nav a { display:flex; align-items:center; gap:.55rem; padding:.55rem .65rem; font-size:.8rem; text-decoration:none; color:var(--text-primary,#fff); background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.06); border-radius:8px; transition:.25s; }
+nav.dashboard-nav a:hover, nav.dashboard-nav a:focus { background:rgba(59,130,246,.15); border-color:#3b82f6; outline:none; }
+.dash-main { flex:1 1 auto; display:flex; flex-direction:column; gap:1.25rem; }
+.brand-header { text-align:center; padding:1.25rem .5rem 0; }
+.brand-header .logo { height:56px; width:auto; filter:drop-shadow(0 2px 6px rgba(0,0,0,.4)); }
+.brand-header h1 { margin:.75rem 0 .35rem; font-size:1.65rem; letter-spacing:.5px; }
+.brand-header p { margin:0; font-size:.8rem; opacity:.65; letter-spacing:.75px; text-transform:uppercase; }
+.kpi-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:.75rem; }
+.kpi { background:var(--panel-bg,rgba(28,28,32,.55)); border:1px solid rgba(255,255,255,0.07); border-radius:10px; padding:.75rem .8rem; display:flex; flex-direction:column; gap:.2rem; }
+.kpi span.label { font-size:.6rem; letter-spacing:.75px; text-transform:uppercase; opacity:.6; font-weight:600; }
+.kpi .value { font-size:1.1rem; font-weight:600; }
+.cards-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:1.1rem; align-items:start; }
+.card { background:var(--panel-bg,rgba(24,24,28,.6)); border:1px solid rgba(255,255,255,0.07); border-radius:12px; padding:1rem .95rem 1.05rem; display:flex; flex-direction:column; gap:.65rem; position:relative; }
+.card h2 { font-size:1rem; margin:0; display:flex; align-items:center; gap:.4rem; }
+.empty { font-size:.75rem; opacity:.6; margin: .25rem 0 .35rem; }
+table.simple { width:100%; border-collapse:collapse; font-size:.72rem; }
+table.simple th, table.simple td { padding:.4rem .45rem; text-align:left; border-bottom:1px solid rgba(255,255,255,0.06); vertical-align:middle; }
+table.simple th { font-size:.6rem; text-transform:uppercase; letter-spacing:.75px; opacity:.6; }
+table.simple tbody tr:last-child td { border-bottom:none; }
+.badge-status { display:inline-block; padding:.2rem .45rem; border-radius:6px; font-size:.55rem; font-weight:600; letter-spacing:.5px; }
+.st-pending { background:#f59e0b22; color:#f8b84c; }
+.st-processing { background:#3b82f622; color:#60a5fa; }
+.st-delivered { background:#10b98122; color:#34d399; }
+.alert-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.35rem; max-height:230px; overflow:auto; }
+.alert-list li { font-size:.65rem; line-height:1.25; display:flex; gap:.35rem; align-items:flex-start; }
+.cta-link { margin-top:auto; font-size:.65rem; text-decoration:none; color:#3b82f6; font-weight:600; }
+.ai-panel { display:flex; flex-direction:column; gap:.65rem; }
+.ai-panel p { font-size:.7rem; margin:0; opacity:.75; }
+.ai-quick { display:flex; flex-wrap:wrap; gap:.4rem; }
+.ai-quick button { background:#1e3a8a; border:1px solid #1e40af; color:#fff; padding:.35rem .55rem; font-size:.6rem; border-radius:6px; cursor:pointer; line-height:1; } 
+.ai-quick button:hover { background:#2563eb; border-color:#2563eb; }
+/* Accessibility focus */
+*:focus-visible { outline:2px solid #3b82f6; outline-offset:2px; }
+</style>
 
+<div class="dashboard-shell" aria-label="Dashboard Layout">
+  <nav class="dashboard-nav" role="navigation" aria-label="Primary navigation">
+    <h2>Menu</h2>
+    <ul>
+      <li><a href="/dashboard" aria-current="page">🏠 Dashboard</a></li>
+      <li><a href="/orders">📦 Orders</a></li>
+      <li><a href="/inventory">📊 Inventory</a></li>
+      <li><a href="/easly">🤖 AI Assistant</a></li>
+    </ul>
+  </nav>
+  <main class="dash-main" id="main" tabindex="-1">
+    <header class="brand-header" aria-label="Branding">
+      <img src="/images/shopeasly-logo.png" alt="ShopEasly Logo" class="logo" />
+      <h1>ShopEasly Operations</h1>
+      <p>Unified Dashboard • Inventory • Orders • AI Copilot</p>
+    </header>
 
+    <!-- KPI Row -->
+    <section class="kpi-row" aria-label="Key performance indicators">
+      <div class="kpi"><span class="label">Total Orders</span><div class="value"><%= stats?.totalOrders ?? (orders? orders.length:0) %></div></div>
+      <div class="kpi"><span class="label">Pending</span><div class="value"><%= stats?.pendingOrders ?? 0 %></div></div>
+      <div class="kpi"><span class="label">Processing</span><div class="value"><%= stats?.processingOrders ?? 0 %></div></div>
+      <div class="kpi"><span class="label">Delivered</span><div class="value"><%= stats?.deliveredOrders ?? 0 %></div></div>
+      <div class="kpi"><span class="label">SKUs</span><div class="value"><%= stats?.inventory?.totalSkus ?? 0 %></div></div>
+      <div class="kpi"><span class="label">Low Stock</span><div class="value"><%= stats?.inventory?.lowStockCount ?? 0 %></div></div>
+      <div class="kpi"><span class="label">Out of Stock</span><div class="value"><%= stats?.inventory?.outOfStockCount ?? 0 %></div></div>
+    </section>
 
-<!-- HERO SECTION -->
-<section class="dashboard-hero">
-    <div class="dashboard-hero-bg"></div>
-    <div class="dashboard-hero-content">
-        <img src="/images/shopeasly-logo.png" alt="ShopEasly Logo" class="logo-img-xl" />
-        <h1 class="dashboard-title">Welcome to ShopEasly</h1>
-        <p class="dashboard-subtitle">
-            Operations and order fulfillment dashboard
-        </p>
-    </div>
-</section>
-<div class="page-container">
-
-
-<!-- STORAGE STATUS -->
-<section style="margin-bottom: 2rem;">
-    <div class="status success">
-        Local Storage
-    </div>
-    <% if (typeof error !== 'undefined' && error) { %>
-      <div class="status error"><small><%= error %></small></div>
-    <% } %>
-</section>
-
-<!-- FEATURE TILES: Big buttons for Orders, Inventory, AI -->
-<section class="feature-tiles" style="margin-bottom: 1.5rem;">
-    <a href="/orders" class="feature-tile" aria-label="Go to Orders">
-        <div class="feature-head">
-            <div class="feature-icon">📦</div>
-            <h3>Orders</h3>
-        </div>
-        <div class="feature-meta">
-            <span>Total: <strong><%= stats?.totalOrders ?? 0 %></strong></span>
-            <span>Pending: <strong><%= stats?.pendingOrders ?? 0 %></strong></span>
-            <span>Processing: <strong><%= stats?.processingOrders ?? 0 %></strong></span>
-        </div>
+    <div class="cards-grid" aria-label="Core feature panels">
+      <!-- Recent Orders -->
+      <section class="card" aria-labelledby="recent-orders-h2">
+        <h2 id="recent-orders-h2">📦 Recent Orders</h2>
         <% if (orders && orders.length) { %>
-            <div class="feature-sub">
-                <small>Latest: <%= orders[0].customerName || 'Customer' %> • <%= orders[0].product || 'Product' %></small>
-            </div>
-        <% } %>
-    </a>
-
-    <a href="/inventory" class="feature-tile" aria-label="Go to Inventory">
-        <div class="feature-head">
-            <div class="feature-icon">📊</div>
-            <h3>Inventory</h3>
-        </div>
-        <div class="feature-meta">
-            <span>SKUs: <strong><%= stats?.inventory?.totalSkus ?? 0 %></strong></span>
-            <span>Low: <strong><%= stats?.inventory?.lowStockCount ?? 0 %></strong></span>
-            <span>Out: <strong><%= stats?.inventory?.outOfStockCount ?? 0 %></strong></span>
-        </div>
-        <ul class="feature-list">
-            <% 
-              const ls = (summary?.inventory?.lowStockItems || []).slice(0,3);
-              const os = (summary?.inventory?.outOfStockItems || []).slice(0,3);
-              const merged = [...ls, ...os].slice(0,3);
-              if (merged.length === 0) { 
-            %>
-                <li><small>No alerts. All good.</small></li>
-            <% } else { merged.forEach(item => { %>
-                <li><small><%= item.category || '—' %> — <strong><%= item.name %></strong> • Qty: <%= item.stock %></small></li>
-            <% }) } %>
-        </ul>
-    </a>
-
-    <a href="/easly" class="feature-tile" aria-label="Open Easly AI">
-        <div class="feature-head">
-            <div class="feature-icon">🤖</div>
-            <h3>Easly AI</h3>
-        </div>
-        <p class="feature-welcome">Hi, I’m Easly AI. Tap to get help with orders, inventory, and quick actions.</p>
-        <div class="feature-cta">Open Assistant →</div>
-    </a>
-</section>
-
-<!-- STATS GRID -->
-<section class="stats-grid">
-    <div class="stat-card glass">
-        <h3>Total Orders</h3>
-        <p><%= (typeof stats !== 'undefined' && stats.totalOrders != null) ? stats.totalOrders : (Array.isArray(orders) ? orders.length : 0) %></p>
-    </div>
-    <div class="stat-card glass"><h3>Pending Orders</h3><p><%= stats?.pendingOrders ?? 0 %></p></div>
-    <div class="stat-card glass"><h3>Processing</h3><p><%= stats?.processingOrders ?? 0 %></p></div>
-    <div class="stat-card glass"><h3>Delivered</h3><p><%= stats?.deliveredOrders ?? 0 %></p></div>
-    <div class="stat-card glass"><h3>Total SKUs</h3><p><%= stats?.inventory?.totalSkus ?? 0 %></p></div>
-    <div class="stat-card glass"><h3>Low Stock</h3><p><%= stats?.inventory?.lowStockCount ?? 0 %></p></div>
-    <div class="stat-card glass"><h3>Out of Stock</h3><p><%= stats?.inventory?.outOfStockCount ?? 0 %></p></div>
-</section>
-
-<div class="dashboard-grid">
-    <!-- RECENT ORDERS TABLE -->
-    <section class="dashboard-card">
-        <h2>Recent Orders</h2>
-        <% if (orders && orders.length) { %>
-            <div class="table-wrapper" aria-label="Recent Orders Table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Order ID</th>
-                            <th>Customer</th>
-                            <th>Product</th>
-                            <th>Status</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% orders.slice(0, 5).forEach(order => { %>
-                            <tr>
-                                <td><%= order.id ? order.id.slice(0,8) + '…' : 'N/A' %></td>
-                                <td><%= order.customerName || 'N/A' %></td>
-                                <td><%= order.product || 'N/A' %></td>
-                                <td>
-                                    <span class="status-badge <%= order.status === 'Delivered' ? 'completed' : order.status === 'Processing' ? 'in-production' : 'new' %>">
-                                        <%= order.status || 'Pending' %>
-                                    </span>
-                                </td>
-                                <td>
-                                    <%= order.date || (order.createdAt ? new Date(order.createdAt._seconds*1000).toLocaleDateString() : 'N/A') %>
-                                </td>
-                            </tr>
-                        <% }) %>
-                    </tbody>
-                </table>
-            </div>
+          <div class="table-wrapper" style="overflow:auto; max-height:240px;">
+            <table class="simple" aria-describedby="recent-orders-h2">
+              <thead><tr><th>ID</th><th>Customer</th><th>Product</th><th>Status</th><th>Date</th></tr></thead>
+              <tbody>
+                <% orders.slice(0,6).forEach(o=> { %>
+                  <tr>
+                    <td><%= o.id ? o.id.slice(0,6) : '—' %></td>
+                    <td><%= o.customerName || '—' %></td>
+                    <td><%= o.product || '—' %></td>
+                    <td>
+                      <% const st = (o.status||'Pending').toLowerCase(); %>
+                      <span class="badge-status <%= st==='delivered'?'st-delivered': st==='processing'?'st-processing':'st-pending' %>"><%= o.status || 'Pending' %></span>
+                    </td>
+                    <td><%= o.date || (o.createdAt ? new Date(o.createdAt._seconds*1000).toLocaleDateString(): '—') %></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
         <% } else { %>
-            <div class="empty-state-small">
-                <p>No orders yet. <a href="/orders/new">Create your first order.</a></p>
-
-            </div>
+          <div class="empty">No orders yet. <a href="/orders/new">Create your first order</a>.</div>
         <% } %>
-    </section>
+        <a class="cta-link" href="/orders">View all orders →</a>
+      </section>
 
-        <!-- Inventory Alerts -->
-        <section class="dashboard-card">
-                <h2>Inventory Alerts</h2>
-                <% if (summary && summary.inventory && (summary.inventory.lowStockItems.length || summary.inventory.outOfStockItems.length)) { %>
-                    <% if (summary.inventory.outOfStockItems.length) { %>
-                        <div class="status error" style="margin-bottom: .75rem;">
-                            <strong><%= summary.inventory.outOfStockItems.length %></strong> item(s) out of stock
-                        </div>
-                        <ul class="list-unstyled" style="margin-bottom: 1rem;">
-                            <% summary.inventory.outOfStockItems.slice(0,5).forEach(it => { %>
-                                <li>❌ <strong><%= it.name %></strong> (<%= it.sku %>) — stock: <%= it.stock %></li>
-                            <% }) %>
-                        </ul>
-                    <% } %>
-                    <% if (summary.inventory.lowStockItems.length) { %>
-                        <div class="status warning" style="margin-bottom: .75rem;">
-                            <strong><%= summary.inventory.lowStockItems.length %></strong> item(s) low on stock
-                        </div>
-                        <ul class="list-unstyled">
-                            <% summary.inventory.lowStockItems.slice(0,5).forEach(it => { %>
-                                <li>⚠️ <strong><%= it.name %></strong> (<%= it.sku %>) — stock: <%= it.stock %> (threshold: <%= it.threshold %>)</li>
-                            <% }) %>
-                        </ul>
-                    <% } %>
-                <% } else { %>
-                    <div class="empty-state-small"><p>No alerts right now.</p></div>
-                <% } %>
-        </section>
+      <!-- Inventory Alerts -->
+      <section class="card" aria-labelledby="inv-alerts-h2">
+        <h2 id="inv-alerts-h2">📊 Inventory Alerts</h2>
+        <% const low = summary?.inventory?.lowStockItems || []; const out = summary?.inventory?.outOfStockItems || []; const mergedAlerts = [...out, ...low].slice(0,8); %>
+        <% if (mergedAlerts.length) { %>
+          <ul class="alert-list" aria-live="polite">
+            <% mergedAlerts.forEach(it=> { %>
+              <li>
+                <% const icon = out.find(o=>o.sku===it.sku) ? '❌' : '⚠️'; %>
+                <span><%= icon %></span>
+                <span><strong><%= it.name %></strong> (<%= it.sku %>) — <%= it.stock %> <%= it.stock===0?'left':'in stock' %></span>
+              </li>
+            <% }) %>
+          </ul>
+        <% } else { %>
+          <div class="empty">No low / out-of-stock alerts.</div>
+        <% } %>
+        <a class="cta-link" href="/inventory">Go to inventory →</a>
+      </section>
 
-    <!-- AI ASSISTANT PANEL -->
-    <section class="dashboard-card">
-        <h2>🤖 Easly AI</h2>
-        <p>Your AI co-pilot is ready to help with tasks, inventory, and insights.</p>
-        <div class="quick-actions">
-            <a href="/easly" class="btn btn-primary">Open AI Assistant</a>
+      <!-- AI Assistant -->
+      <section class="card ai-panel" aria-labelledby="ai-panel-h2">
+        <h2 id="ai-panel-h2">🤖 AI Copilot</h2>
+        <p>Ask about orders, stock levels, or generate product ideas. Your AI assistant is always available.</p>
+        <div class="ai-quick" aria-label="Quick AI prompts">
+          <button type="button" data-ai-prompt="Inventory summary">Inventory Summary</button>
+          <button type="button" data-ai-prompt="Pending orders list">Pending Orders</button>
+          <button type="button" data-ai-prompt="Show low stock items">Low Stock</button>
+          <button type="button" data-ai-prompt="Start design brainstorm">Brainstorm</button>
         </div>
-        <div id="aiUpdates" class="ai-updates" style="margin-top:1rem;">
-            <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.25rem;">
-                <span style="font-weight:600;">Live AI Updates</span>
-                <span id="aiUpdatesStatus" title="Events" style="width:8px;height:8px;border-radius:50%;display:inline-block;background:#bbb;"></span>
-            </div>
-            <ul id="aiUpdatesList" class="list-unstyled" style="max-height:140px;overflow:auto;margin:0;padding:0;">
-                <li><small>No updates yet.</small></li>
-            </ul>
-        </div>
-    </section>
-
-    <!-- QUICK ACTIONS -->
-    <section class="dashboard-card">
-        <h2>Quick Actions</h2>
-        <div class="quick-actions">
-            <a href="/orders" class="btn btn-primary">📦 View All Orders</a>
-            <a href="/orders/new" class="btn btn-primary" style="background-color: var(--success);">➕ Create New Order</a>
-            <a href="/inventory" class="btn btn-secondary">📊 Manage Inventory</a>
-            <a href="/easly" class="btn btn-secondary">🤖 Easly AI</a>
-        </div>
-    </section>
+        <a class="cta-link" href="/easly" aria-label="Open full AI assistant interface">Open full assistant →</a>
+      </section>
+    </div>
+  </main>
 </div>
-
-<!-- BUSINESS ANALYTICS -->
-<section class="analytics-section">
-    <div class="section-header">
-        <h2>📊 Analytics</h2>
-        <div class="analytics-controls">
-            <select id="timeRange" class="form-input">
-                <option value="7">Last 7 days</option>
-                <option value="30" selected>Last 30 days</option>
-                <option value="90">Last 90 days</option>
-            </select>
-            <button class="btn btn-secondary" onclick="refreshAnalytics()">🔄 Refresh</button>
-        </div>
-    </div>
-    <div class="charts-grid">
-    <!-- Sales Trend chart removed for no-scroll layout -->
-        <div class="chart-card"><h3>📊 Order Status</h3><p class="chart-subtitle" style="color: var(--text-secondary); margin: 0.25rem 0 0.5rem;"><span id="totalOrdersCount">0 orders</span></p><canvas id="orderStatusChart"></canvas></div>
-        <div class="chart-card"><h3>🏆 Top Products</h3><p class="chart-subtitle" style="color: var(--text-secondary); margin: 0.25rem 0 0.5rem;"><span id="topProductsCount">0 products</span></p><canvas id="topProductsChart"></canvas></div>
-    <!-- Revenue chart removed for no-scroll layout -->
-    </div>
-</section>
-
-<!-- PERFORMANCE METRICS -->
-<section class="metrics-section">
-    <div class="section-header" style="margin-bottom:0.5rem;">
-        <h2 style="font-size:1.2rem; margin:0;">⚡ Key Metrics</h2>
-    </div>
-    <div style="display:flex;gap:1.5rem;flex-wrap:wrap;align-items:center;justify-content:space-between;padding:0.5rem 0 1rem 0;">
-        <span style="font-weight:600;">Low Stock: <span id="lowStockCount"><%= stats?.inventory?.lowStockCount ?? 0 %></span></span>
-        <span style="font-weight:600;">Out of Stock: <span id="outOfStockCount"><%= stats?.inventory?.outOfStockCount ?? 0 %></span></span>
-        <span style="font-weight:600;">Pending Orders: <span id="pendingOrders"><%= stats?.pendingOrders ?? 0 %></span></span>
-        <span style="font-weight:600;">Processing: <span id="processingOrders"><%= stats?.processingOrders ?? 0 %></span></span>
-        <span style="font-weight:600;">Delivered: <span id="deliveredOrders"><%= stats?.deliveredOrders ?? 0 %></span></span>
-    </div>
-</section>
-</div>
-
-<%
-  // Safely serialize dashboard data for inline JS
-  const __dashboardData = JSON.stringify({
-    orders: typeof orders !== 'undefined' ? orders : [],
-    stats: typeof stats !== 'undefined' ? stats : {}
-  });
-  // Prevent </script> breaks and XSS by escaping the < char
-  const __dashboardDataEscaped = __dashboardData.replace(/</g, '\\u003c');
-%>
 
 <script>
-// Dashboard Analytics and Charts
-class DashboardAnalytics {
-    constructor() {
-        this.charts = {};
-        this.data = JSON.parse('<%- __dashboardDataEscaped %>');
-        this.init();
-    }
-
-    init() {
-        this.setupCharts();
-        this.updateMetrics();
-        this.startRealTimeUpdates();
-    }
-
-    setupCharts() {
-    // Order Status Distribution Chart
-    this.createOrderStatusChart();
-
-    // Top Products Chart
-    this.createTopProductsChart();
-        const statusCounts = {
-            'Pending': 0,
-            'Processing': 0,
-            'Shipped': 0,
-            'Delivered': 0
-        };
-
-        this.data.orders.forEach(order => {
-            const status = order.status || 'Pending';
-            if (statusCounts.hasOwnProperty(status)) {
-                statusCounts[status]++;
-            } else {
-                statusCounts['Pending']++;
-            }
-        });
-
-        this.charts.orderStatus = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: Object.keys(statusCounts),
-                datasets: [{
-                    data: Object.values(statusCounts),
-                    backgroundColor: [
-                        '#f59e0b', // Pending - Amber
-                        '#3b82f6', // Processing - Blue
-                        '#8b5cf6', // Shipped - Purple
-                        '#10b981'  // Delivered - Green
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            usePointStyle: true
-                        }
-                    }
-                }
-            }
-        });
-
-        // Update total orders count
-        const elTotalOrders = document.getElementById('totalOrdersCount'); if (elTotalOrders) elTotalOrders.textContent = `${this.data.orders.length} orders`;
-    }
-
-    createTopProductsChart() {
-        const ctx = document.getElementById('topProductsChart').getContext('2d');
-
-        // Calculate product popularity
-        const productCounts = {};
-        this.data.orders.forEach(order => {
-            const product = order.product || 'Unknown Product';
-            productCounts[product] = (productCounts[product] || 0) + 1;
-        });
-
-        // Get top 5 products
-        const sortedProducts = Object.entries(productCounts)
-            .sort(([,a], [,b]) => b - a)
-            .slice(0, 5);
-
-        const labels = sortedProducts.map(([product]) => product.length > 15 ? product.substring(0, 15) + '...' : product);
-        const data = sortedProducts.map(([,count]) => count);
-
-        this.charts.topProducts = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Orders',
-                    data: data,
-                    backgroundColor: 'rgba(99, 102, 241, 0.8)',
-                    borderColor: 'rgb(99, 102, 241)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.1)'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
-                }
-            }
-        });
-
-        const elTop = document.getElementById('topProductsCount'); if (elTop) elTop.textContent = `${Object.keys(productCounts).length} products`;
-    }
-
-
-    updateMetrics() {
-        // Calculate and update KPI metrics
-        const orders = this.data.orders;
-
-        // Average Order Value
-        const totalValue = orders.reduce((sum, order) => {
-            const value = parseFloat(order.total) || Math.floor(Math.random() * 200) + 50;
-            return sum + value;
-        }, 0);
-        const avgOrderValue = orders.length > 0 ? totalValue / orders.length : 0;
-        document.getElementById('avgOrderValue').textContent = '$' + avgOrderValue.toFixed(2);
-
-        // Conversion Rate (simulated)
-        const conversionRate = Math.floor(Math.random() * 15) + 10;
-        document.getElementById('conversionRate').textContent = conversionRate + '%';
-
-        // Processing Time (simulated)
-        const processingHours = Math.floor(Math.random() * 24) + 12;
-        document.getElementById('processingTime').textContent = processingHours + 'h';
-
-        // Customer Satisfaction (simulated)
-        const satisfaction = Math.floor(Math.random() * 10) + 85;
-        document.getElementById('customerSat').textContent = satisfaction + '%';
-    }
-
-    startRealTimeUpdates() {
-        // Update metrics every 30 seconds
-        setInterval(() => {
-            this.updateMetrics();
-        }, 30000);
-    }
-}
-
-// Global functions
-function refreshDashboard() {
-    location.reload();
-}
-
-function refreshAnalytics() {
-    if (window.dashboardAnalytics) {
-        window.dashboardAnalytics.updateMetrics();
-
-        // Show refresh animation
-        const refreshBtn = event.target.closest('button');
-        const icon = refreshBtn.querySelector('.refresh-icon');
-        icon.style.animation = 'spin 1s linear';
-        setTimeout(() => {
-            icon.style.animation = '';
-        }, 1000);
-    }
-}
-
-// Initialize dashboard when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    window.dashboardAnalytics = new DashboardAnalytics();
-
-    // Optional smooth scroll to analytics only when explicitly requested via hash
-    const analyticsSection = document.querySelector('.analytics-section');
-    if (analyticsSection && window.location.hash === '#analytics') {
-        analyticsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    // Live AI updates via SSE (optional)
-    try {
-        if (typeof EventSource !== 'undefined') {
-            const statusDot = document.getElementById('aiUpdatesStatus');
-            const list = document.getElementById('aiUpdatesList');
-            let connected = false;
-            const src = new EventSource('/events');
-            src.onopen = () => { connected = true; if (statusDot) statusDot.style.background = '#10b981'; };
-            src.onerror = () => { if (statusDot) statusDot.style.background = '#f59e0b'; };
-            src.addEventListener('ai.reply', (evt) => {
-                try {
-                    const data = JSON.parse(evt.data || '{}');
-                    const text = (data.payload && data.payload.text) || (data.text) || '';
-                    if (!text) return;
-                    if (list) {
-                        if (list.firstElementChild && list.firstElementChild.tagName === 'LI' && list.firstElementChild.textContent.includes('No updates')) {
-                            list.innerHTML = '';
-                        }
-                        const li = document.createElement('li');
-                        li.innerHTML = `<small>${new Date().toLocaleTimeString()} — ${escapeHtml(text).slice(0,240)}</small>`;
-                        list.prepend(li);
-                        while (list.children.length > 8) list.removeChild(list.lastChild);
-                    }
-                } catch (_) {}
-            });
-        }
-    } catch (_) { /* ignore */ }
+// Minimal delegated handler for AI quick prompts – reuse existing assistant endpoint
+document.addEventListener('click', e=>{
+  const btn = e.target.closest('[data-ai-prompt]');
+  if(!btn) return;
+  const prompt = btn.getAttribute('data-ai-prompt');
+  if(!prompt) return;
+  btn.disabled = true; btn.style.opacity='.6';
+  fetch('/ai/co-pilot', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ textPart: prompt, clientId: 'dash_'+(localStorage.getItem('easlyClientId')||'anon') })})
+    .finally(()=> { btn.disabled=false; btn.style.opacity='1'; });
 });
-
-// Add CSS animation for refresh icon
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-`;
-document.head.appendChild(style);
 </script>
+                    <% } %>
 
-<script>
-// Tiny HTML escaper to avoid injection in AI updates list
-function escapeHtml(s){
-    return String(s||'').replace(/[&<>"']/g, (ch)=>({"&":"&amp;","<":"&lt;",
-    ">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]));
-}
-</script>
-
+                    <% if (summary.inventory.lowStockItems.length) { %>
 
