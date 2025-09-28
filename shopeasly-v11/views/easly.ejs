@@ -1267,6 +1267,14 @@ function renderOptionsChips(options) {
 // Side panel tab switching
 document.addEventListener('DOMContentLoaded', async function() {
     // Load settings first
+    function loadSettings() {
+        try {
+            // Previously loaded user/role/theme prefs; now minimal since single-role admin.
+            const savedArch = localStorage.getItem('easly.archMode');
+            ARCH_MODE = savedArch === '1';
+            if (archModeToggle) archModeToggle.checked = ARCH_MODE;
+        } catch {}
+    }
     loadSettings();
 
     // Initialize input state and focus
@@ -1289,9 +1297,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Load Architect mode + role from localStorage
     try {
         ARCH_MODE = localStorage.getItem('easly.archMode') === '1';
-        USER_ROLE = localStorage.getItem('easly.userRole') || '';
         if (archModeToggle) archModeToggle.checked = ARCH_MODE;
-        if (userRoleSelect) userRoleSelect.value = USER_ROLE;
     } catch {}
 
     // Wire up mode controls
@@ -1300,12 +1306,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         try { localStorage.setItem('easly.archMode', ARCH_MODE ? '1' : '0'); } catch {}
         showToast(`Architect mode ${ARCH_MODE ? 'enabled' : 'disabled'}`, 'info');
     });
-    if (userRoleSelect) userRoleSelect.addEventListener('change', (e) => {
-        USER_ROLE = e.target.value || '';
-        try { localStorage.setItem('easly.userRole', USER_ROLE); } catch {}
-        if (ARCH_MODE)
-            showToast(`Role set to ${USER_ROLE || 'auto'}`, 'info');
-    });
+    // userRoleSelect removed for single-role deployment; listener removed.
 
     // Load chat history
     try {
@@ -1496,12 +1497,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                             <input type="checkbox" id="archModeToggle" style="margin:0;">
                             <span>Architect mode</span>
                         </label>
-                        <select id="userRoleSelect" title="User role (optional)" class="form-input" style="height:32px;padding:2px 8px;font-size:.85rem;width:auto;">
-                            <option value="">Role: auto</option>
-                            <option value="owner">Owner</option>
-                            <option value="manager">Manager</option>
-                            <option value="staff">Staff</option>
-                        </select>
+                        <span class="role-badge" style="background:#222;color:#fff;padding:4px 8px;border-radius:4px;font-size:.7rem;letter-spacing:.5px;">ADMIN</span>
                         <span id="eventsStatusDot" class="status-dot" title="Real-time: unknown" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#bbb;box-shadow:0 0 0 2px rgba(0,0,0,.05);"></span>
                     </div>
                 </div>
@@ -2729,28 +2725,9 @@ function renderOptionsChips(options) {
 }
 
 // Side panel tab switching
-document.addEventListener('DOMContentLoaded', async function() {
-    // Load settings first
-    loadSettings();
-
-    // Initialize input state and focus
-    updateInputState();
-
-    // Focus on input after a brief delay to ensure proper rendering
-    setTimeout(() => {
-        if (input) {
-            input.focus();
-            updateInputState();
-        }
-    }, 100);
-
-    // Hide voice button if not supported
-    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-        const vb = document.getElementById('voiceBtn');
-        if (vb) vb.style.display = 'none';
-    }
-
-    // Load Architect mode + role from localStorage
+/* Duplicate DOMContentLoaded block removed during single-role + refactor cleanup */
+/* Re-wrapped logic in DOMContentLoaded after pruning. */
+document.addEventListener('DOMContentLoaded', async function secondaryInit(){
     try {
         ARCH_MODE = localStorage.getItem('easly.archMode') === '1';
     USER_ROLE = 'admin';
@@ -2904,12 +2881,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                             <input type="checkbox" id="archModeToggle" style="margin:0;">
                             <span>Architect mode</span>
                         </label>
-                        <select id="userRoleSelect" title="User role (optional)" class="form-input" style="height:32px;padding:2px 8px;font-size:.85rem;width:auto;">
-                            <option value="">Role: auto</option>
-                            <option value="owner">Owner</option>
-                            <option value="manager">Manager</option>
-                            <option value="staff">Staff</option>
-                        </select>
+                        <span class="role-badge" style="background:#222;color:#fff;padding:4px 8px;border-radius:4px;font-size:.7rem;letter-spacing:.5px;">ADMIN</span>
                         <span id="eventsStatusDot" class="status-dot" title="Real-time: unknown" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#bbb;box-shadow:0 0 0 2px rgba(0,0,0,.05);"></span>
                     </div>
                 </div>
