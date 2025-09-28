@@ -38,7 +38,14 @@ router.get('/', async (req, res) => {
         pendingOrders: 0,
         processingOrders: 0,
         deliveredOrders: 0,
-        storage: 'local'
+        storage: 'local',
+        inventory: { totalSkus: 0, lowStockCount: 0, outOfStockCount: 0 }
+      },
+      summary: {
+        storage: 'local',
+        orders: { total: 0, byStatus: {}, recent: [] },
+        inventory: { totalSkus: 0, lowStockCount: 0, outOfStockCount: 0, lowStockItems: [], outOfStockItems: [] },
+        notifications: []
       },
       error: error.message
     });

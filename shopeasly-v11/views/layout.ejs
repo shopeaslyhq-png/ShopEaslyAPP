@@ -40,15 +40,15 @@
     <div class="app-container">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <div class="logo">
-                    <img src="/images/shopeasly-logo.png" alt="ShopEasly" style="height:28px; width:auto; margin-right:8px;">
-                    <span>ShopEasly</span>
-                </div>
+                <a href="/" class="logo">
+                    <img src="/images/shopeasly-logo.png" alt="ShopEasly" class="logo-img">
+                    <span class="logo-text">ShopEasly</span>
+                </a>
                 <div class="sidebar-profile">
-                    <div class="avatar" style="width: 32px; height: 32px; background: var(--primary); display:flex; align-items:center; justify-content:center; color: white; font-size: 0.8rem;">SE</div>
-                    <div>
-                        <div style="font-weight:600; font-size:0.9rem;">Powered 3 BROS</div>
-                        <div style="font-size:0.8rem; color: var(--text-secondary);">ShopEasly Operation System</div>
+                    <div class="avatar">SE</div>
+                    <div class="profile-info">
+                        <div class="profile-name">Powered 3 BROS</div>
+                        <div class="profile-role">ShopEasly Operation System</div>
                     </div>
                 </div>
             </div>
@@ -64,36 +64,47 @@
 
             <div class="sidebar-footer">
                 <div class="theme-picker">
-                    <button class="theme-btn" data-theme="light" onclick="setTheme('light')" title="Light Theme">Light</button>
-                    <button class="theme-btn" data-theme="dark" onclick="setTheme('dark')" title="Dark Theme">Dark</button>
+                    <button class="theme-btn" data-theme="light" onclick="setTheme('light')" title="Light Theme">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                    </button>
+                    <button class="theme-btn" data-theme="dark" onclick="setTheme('dark')" title="Dark Theme">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
                 </div>
             </div>
         </aside>
 
         <div id="main-content">
             <header class="main-header">
-                <div style="display:flex; align-items:center; gap:1.2rem;">
-                    <a href="/" class="btn btn-secondary" style="font-size:1.1rem; padding:8px 18px; text-decoration:none; display:flex; align-items:center; gap:0.5rem;">Home</a>
-                    <button id="sidebar-toggle-btn" class="btn btn-secondary" aria-label="Toggle sidebar" title="Toggle sidebar" onclick="toggleSidebar()">Menu</button>
-                    <div>
-                        <h1 style="margin:0; color:var(--text-primary);">ShopEasly</h1>
-                        <p style="margin:4px 0 0 0; color:var(--text-secondary); font-size:0.9em;">Operations & order management</p>
+                <div class="header-start">
+                    <button id="sidebar-toggle-btn" class="btn btn-icon" aria-label="Toggle sidebar" title="Toggle sidebar" onclick="toggleSidebar()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                    </button>
+                    <div class="page-title">
+                        <h1>ShopEasly</h1>
+                        <p>Operations & order management</p>
                     </div>
                 </div>
                 <div class="header-actions">
                     <input type="search" class="search-input form-input" placeholder="Search...">
-                    <button class="btn-icon" title="Notifications">Notifications</button>
-                    <button class="btn-icon" title="Settings">Settings</button>
+                    <button class="btn btn-icon" title="Notifications">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                    </button>
+                    <button class="btn btn-icon" title="Settings">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    </button>
                 </div>
             </header>
 
-            <div id="app-views">
+            <main id="app-views">
                 <%- body %>
-            </div>
+            </main>
         </div>
     </div>
 
-    <button class="ai-fab" onclick="window.location.href='/easly'" title="AI Assistant">AI</button>
+    <button class="ai-fab" onclick="window.location.href='/easly'" title="AI Assistant">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 8-2 2-2-2"></path><path d="m6 8-2 2 2 2"></path><path d="m12 16 2-2 2 2"></path><path d="m18 16 2-2-2-2"></path><rect width="20" height="12" x="2" y="6" rx="2"></rect></svg>
+    </button>
 
     <script>
         function setTheme(theme) {

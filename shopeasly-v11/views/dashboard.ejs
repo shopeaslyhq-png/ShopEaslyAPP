@@ -59,6 +59,11 @@ table.simple tbody tr:last-child td { border-bottom:none; }
       <img src="/images/shopeasly-logo.png" alt="ShopEasly Logo" class="logo" />
       <h1>ShopEasly Operations</h1>
       <p>Unified Dashboard • Inventory • Orders • AI Copilot</p>
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div role="alert" style="margin-top:.75rem; background:#dc2626cc; color:#fff; padding:.5rem .75rem; border-radius:6px; font-size:.7rem;">
+          <strong>Data Load Error:</strong> <%= error %>
+        </div>
+      <% } %>
     </header>
 
     <!-- KPI Row -->
@@ -105,7 +110,7 @@ table.simple tbody tr:last-child td { border-bottom:none; }
       <!-- Inventory Alerts -->
       <section class="card" aria-labelledby="inv-alerts-h2">
         <h2 id="inv-alerts-h2">📊 Inventory Alerts</h2>
-        <% const low = summary?.inventory?.lowStockItems || []; const out = summary?.inventory?.outOfStockItems || []; const mergedAlerts = [...out, ...low].slice(0,8); %>
+  <% const low = (typeof summary !== 'undefined' && summary?.inventory?.lowStockItems) ? summary.inventory.lowStockItems : []; const out = (typeof summary !== 'undefined' && summary?.inventory?.outOfStockItems) ? summary.inventory.outOfStockItems : []; const mergedAlerts = [...out, ...low].slice(0,8); %>
         <% if (mergedAlerts.length) { %>
           <ul class="alert-list" aria-live="polite">
             <% mergedAlerts.forEach(it=> { %>
