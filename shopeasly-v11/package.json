@@ -29,7 +29,7 @@
   "dependencies": {
     "@langchain/core": "^0.2.34",
     "@langchain/openai": "^0.3.6",
-    "chromadb": "^1.8.1",
+  "chromadb": "1.10.5",
     "openai": "^4.58.1",
     "googleapis": "^137.0.0",
     "@google/generative-ai": "^0.24.1",
@@ -44,5 +44,8 @@
   },
   "devDependencies": {
     "cross-env": "^7.0.3"
+  }
+  ,"overrides": {
+    "chromadb/@google/generative-ai": "0.24.1"
   }
 }
