@@ -21,7 +21,7 @@ You are building **Easly AI**, a production-ready assistant that ONLY handles:
 - Local-first: resolve with internal services before external APIs.  
 - Fallback to LLM (Gemini/OpenAI) only when no local intent matches.  
 - Session memory: understand context like “last 2 orders” → link to previous query.  
-- Role awareness:  
+<!-- Removed outdated role awareness section: single-role (admin) environment -->
   - Manager → summaries & reports.  
   - Operator → order actions.  
   - Tech → inventory/material lookups.  

@@ -112,7 +112,7 @@ async function getRelevantContext(query, opts = {}) {
  */
 async function runEaslyAgent(prompt, options = {}) {
   if (!process.env.OPENAI_API_KEY) throw new Error('OPENAI_API_KEY is required (for LLM).');
-  const role = (options.role || '').toLowerCase();
+  // Single-role deployment (admin implicit) – role metadata removed
   const startedOverall = Date.now();
 
   // LLM wrapper (OpenAI Chat)
@@ -260,21 +260,17 @@ async function runEaslyAgent(prompt, options = {}) {
   };
 
   // Role-based permissions
-  const ROLE_TOOL_ALLOW = {
-    viewer: ['getInventorySummary','listOrders','getPackingAlerts','inventoryUsageReport'],
-    operator: ['getInventorySummary','listOrders','getPackingAlerts','inventoryUsageReport','updateInventoryStock','updateOrderStatus','createOrder','initiateProductCreation','createInventoryItem','bulkImportInventory'],
-    admin: Object.keys(TOOLS)
-  };
-  const allowedTools = ROLE_TOOL_ALLOW[role] || Object.keys(TOOLS);
+  // All tools allowed (admin only)
+  const allowedTools = Object.keys(TOOLS);
 
   // Ask the model if a tool is needed before final answer
-  const decisionPrompt = (vars) => [
-    { role: 'system', content: 'Decide next action. Output strict JSON: {"useTool":boolean,"toolName":"getInventorySummary|createInventoryItem|updateInventoryStock|updateOrderStatus|createOrder|listOrders|initiateProductCreation|getPackingAlerts|inventoryUsageReport|bulkImportInventory|deleteInventoryItem|deleteOrder|none","args":object,"reason":string,"needsAnotherTool":boolean,"finalAnswer":string}. Respect role permissions.' },
+    const decisionPrompt = (vars) => [
+      { role: 'system', content: 'Decide next action. Output strict JSON: {"useTool":boolean,"toolName":"getInventorySummary|createInventoryItem|updateInventoryStock|updateOrderStatus|createOrder|listOrders|initiateProductCreation|getPackingAlerts|inventoryUsageReport|bulkImportInventory|deleteInventoryItem|deleteOrder|none","args":object,"reason":string,"needsAnotherTool":boolean,"finalAnswer":string}.' },
     { role: 'user', content: `QUESTION: ${vars.query}\nCONTEXT:\n${vars.context || '(none)'}${vars.toolResults ? `\nTOOL_RESULTS_SO_FAR:\n${vars.toolResults}`: ''}` }
   ];
 
   const planned = await plan({ prompt });
-  emitEvent('ai.plan', { prompt, role });
+  emitEvent('ai.plan', { prompt });
   const toolResults = [];
   let finalAnswer = null;
   const MAX_STEPS = Number(process.env.AGENT_MAX_STEPS || 3);
@@ -282,12 +278,12 @@ async function runEaslyAgent(prompt, options = {}) {
     const agg = toolResults.map((r,i)=>`#${i+1} ${r.tool}: ${JSON.stringify(r.outcome).slice(0,600)}`).join('\n');
     const decisionResp = await llm.invoke(decisionPrompt({ ...planned, toolResults: agg }));
     const decision = tryExtractJson(String(decisionResp?.content || '')) || { useTool:false, toolName:'none', args:{}, needsAnotherTool:false };
-    emitEvent('ai.tool.decide', { prompt, role, decision });
+  emitEvent('ai.tool.decide', { prompt, decision });
     if (!decision.useTool || decision.toolName === 'none') { finalAnswer = decision.finalAnswer || null; break; }
     if (!allowedTools.includes(decision.toolName)) { toolResults.push({ tool: decision.toolName, denied:true, outcome:{ error: 'permission denied' }}); break; }
     let outcome; const t0 = Date.now();
     try { outcome = await TOOLS[decision.toolName](decision.args || {}); } catch(e) { outcome = { error: String(e.message||e) }; }
-    emitEvent('ai.tool.execute', { tool: decision.toolName, ms: Date.now()-t0, partial: !!decision.needsAnotherTool });
+  emitEvent('ai.tool.execute', { tool: decision.toolName, ms: Date.now()-t0, partial: !!decision.needsAnotherTool });
     toolResults.push({ tool: decision.toolName, outcome });
     if (outcome && outcome.pendingConfirmation) { finalAnswer = outcome.message; break; }
     if (!decision.needsAnotherTool) break;
@@ -302,11 +298,11 @@ async function runEaslyAgent(prompt, options = {}) {
     const finalResp = await llm.invoke(finalMessages);
     finalAnswer = String(finalResp?.content || '').trim();
   }
-  emitEvent('ai.final', { prompt, role, steps: toolResults.length });
+  emitEvent('ai.final', { prompt, steps: toolResults.length });
   try {
     const logDir = path.join(__dirname, '..', 'data');
     if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive:true });
-    fs.appendFileSync(path.join(logDir, 'agent_runs.ndjson'), JSON.stringify({ ts:new Date().toISOString(), prompt, role, steps: toolResults, ms: Date.now()-startedOverall })+'\n');
+  fs.appendFileSync(path.join(logDir, 'agent_runs.ndjson'), JSON.stringify({ ts:new Date().toISOString(), prompt, steps: toolResults, ms: Date.now()-startedOverall })+'\n');
   } catch(_) {}
   return finalAnswer;
 }

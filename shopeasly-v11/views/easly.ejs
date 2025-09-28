@@ -86,12 +86,7 @@ body.no-scroll { overflow:hidden; }
                             <input type="checkbox" id="archModeToggle" style="margin:0;">
                             <span>Architect mode</span>
                         </label>
-                        <select id="userRoleSelect" title="User role (optional)" class="form-input" style="height:32px;padding:2px 8px;font-size:.85rem;width:auto;">
-                            <option value="">Role: auto</option>
-                            <option value="owner">Owner</option>
-                            <option value="manager">Manager</option>
-                            <option value="staff">Staff</option>
-                        </select>
+                        <span class="badge" style="background:#1e3a8a;color:#fff;padding:4px 8px;border-radius:6px;font-size:.65rem;letter-spacing:.5px;">ADMIN</span>
                         <span id="eventsStatusDot" class="status-dot" title="Real-time: unknown" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#bbb;box-shadow:0 0 0 2px rgba(0,0,0,.05);"></span>
                     </div>
                 </div>
@@ -2310,7 +2305,6 @@ const input = document.getElementById('ai-input');
 const chatHistory = document.getElementById('ai-chat-history');
 const sendBtn = document.getElementById('sendBtn');
 const archModeToggle = document.getElementById('archModeToggle');
-const userRoleSelect = document.getElementById('userRoleSelect');
 const eventsStatusDot = document.getElementById('eventsStatusDot');
 // Settings modal elements
 const settingsModal = document.getElementById('settingsModal');
@@ -2759,9 +2753,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Load Architect mode + role from localStorage
     try {
         ARCH_MODE = localStorage.getItem('easly.archMode') === '1';
-        USER_ROLE = localStorage.getItem('easly.userRole') || '';
-        if (archModeToggle) archModeToggle.checked = ARCH_MODE;
-        if (userRoleSelect) userRoleSelect.value = USER_ROLE;
+    USER_ROLE = 'admin';
+    if (archModeToggle) archModeToggle.checked = ARCH_MODE;
     } catch {}
 
     // Wire up mode controls
@@ -2770,12 +2763,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         try { localStorage.setItem('easly.archMode', ARCH_MODE ? '1' : '0'); } catch {}
         showToast(`Architect mode ${ARCH_MODE ? 'enabled' : 'disabled'}`, 'info');
     });
-    if (userRoleSelect) userRoleSelect.addEventListener('change', (e) => {
-        USER_ROLE = e.target.value || '';
-        try { localStorage.setItem('easly.userRole', USER_ROLE); } catch {}
-        if (ARCH_MODE)
-            showToast(`Role set to ${USER_ROLE || 'auto'}`, 'info');
-    });
+    // Role selection removed (single admin role)
 
     // Load chat history
     try {

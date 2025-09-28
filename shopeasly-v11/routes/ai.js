@@ -19,11 +19,9 @@ router.post('/co-pilot-arch', hmacVerify, firebaseAuthVerify, async (req, res) =
   try {
     const message = String(req.body?.message || req.body?.prompt || req.body?.textPart || '').trim();
     if (!message) return res.status(400).json({ ok: false, error: 'message is required' });
-    const role = String(req.headers['x-user-role'] || req.body?.role || '').toLowerCase();
-  const text = await runEaslyAgent(message, { role });
-    const decorated = role ? `[${role}] ${text}` : text;
-    try { emitEvent('ai.reply', { text: decorated, source: 'architect', role: role || undefined, clientId: req.body?.clientId }); } catch(_) {}
-    return res.json({ ok: true, text: decorated, role: role || undefined });
+  const text = await runEaslyAgent(message); // single-role deployment (admin implicit)
+  try { emitEvent('ai.reply', { text, source: 'architect', clientId: req.body?.clientId }); } catch(_) {}
+  return res.json({ ok: true, text });
   } catch (err) {
     return res.status(500).json({ ok: false, error: err.message });
   }
