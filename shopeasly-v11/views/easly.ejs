@@ -12,13 +12,57 @@
 .ai-header .ai-mode-controls { gap:.4rem !important; }
 .ai-header.compact { opacity:.35; transition:opacity .35s ease, transform .35s ease; }
 .ai-header.compact:hover, .ai-header.force-visible { opacity:1; }
-.ai-assistant-container { padding-top:0; }
-/* Give chat more vertical room */
-.ai-layout { height:calc(100vh - 60px); display:flex; }
-.ai-chat-container { height:100%; }
-.ai-chat-history { max-height:100%; }
-/* Prevent header covering focus ring or first message */
+/* =========================
+     LAYOUT GRID REFACTOR
+     Fixes overlapping side panel + header overlay issues
+     Structure: container (column) -> header + grid(main)
+     Grid: chat 1fr | panel fixed width, responsive stack on narrow
+     ========================= */
+.ai-assistant-container { padding-top:0; display:flex; flex-direction:column; height:100vh; max-height:100dvh; }
+.ai-layout { flex:1 1 auto; display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:1rem; padding:0 .85rem .85rem; align-items:stretch; height:auto; min-height:0; overflow:hidden; }
+.ai-chat-container { display:flex; flex-direction:column; min-height:0; position:relative; background:var(--panel-bg,rgba(18,18,22,.55)); border:1px solid rgba(255,255,255,0.05); border-radius:10px; padding:.65rem .75rem .55rem; backdrop-filter:blur(6px); }
+.ai-chat-history { flex:1 1 auto; overflow-y:auto; overscroll-behavior:contain; padding-right:.35rem; scrollbar-width:thin; }
+.ai-chat-history::-webkit-scrollbar { width:8px; }
+.ai-chat-history::-webkit-scrollbar-track { background:transparent; }
+.ai-chat-history::-webkit-scrollbar-thumb { background:rgba(255,255,255,.12); border-radius:4px; }
+.ai-input-section { margin-top:.55rem; position:relative; z-index:2; }
+.ai-side-panel { display:flex; flex-direction:column; min-height:0; overflow-y:auto; background:var(--panel-bg,rgba(18,18,22,.55)); border:1px solid rgba(255,255,255,0.05); border-radius:10px; padding:.65rem .75rem .85rem; backdrop-filter:blur(6px); }
+.ai-side-panel .panel-section { flex:0 0 auto; }
+.ai-side-panel .panel-content { flex:1 1 auto; min-height:0; overflow-y:auto; }
+.ai-side-panel::-webkit-scrollbar { width:8px; }
+.ai-side-panel::-webkit-scrollbar-thumb { background:rgba(255,255,255,.12); border-radius:4px; }
+/* Keep header from obscuring first focus element */
 body { scroll-padding-top:70px; }
+/* Responsive stacking on tablets / small screens */
+@media (max-width:1100px){ .ai-layout { grid-template-columns:minmax(0,1fr) 300px; } }
+@media (max-width:980px){
+    .ai-layout { grid-template-columns:1fr; gap:.75rem; }
+    .ai-side-panel { order:2; max-height:38vh; min-height:200px; transition:transform .35s ease, opacity .35s ease; }
+    .ai-side-panel.collapsed { transform:translateY(4px) translateX(0) scale(.98); opacity:0; pointer-events:none; height:0; padding:0; margin:0; border-width:0; }
+    #panelToggleBtn { display:inline-flex; }
+    .ai-chat-container { order:1; }
+}
+/* Auto-hide side panel entirely on very narrow screens when collapsed */
+@media (max-width:640px){
+    .ai-side-panel { position:relative; }
+}
+/* Sticky mini-composer for very short viewports */
+@media (max-height:640px){
+    .ai-input-section { position:sticky; bottom:0; background:linear-gradient(to top, rgba(15,15,18,.95), rgba(15,15,18,.55)); padding-top:.65rem; margin-top:.35rem; backdrop-filter:blur(10px); border-top:1px solid rgba(255,255,255,0.08); }
+    .ai-chat-history { padding-bottom:4.5rem; }
+}
+/* Jump to latest button */
+.jump-latest-btn { position:absolute; right:10px; bottom:80px; background:#2563eb; color:#fff; border:none; padding:.45rem .65rem; font-size:.7rem; border-radius:20px; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.4); display:none; z-index:5; }
+.jump-latest-btn.show { display:inline-flex; align-items:center; gap:.35rem; }
+/* Side panel skeleton loading */
+.panel-skeleton { display:grid; gap:.6rem; }
+.skeleton-line { height:10px; border-radius:4px; background:linear-gradient(90deg, rgba(255,255,255,.07) 25%, rgba(255,255,255,.15) 50%, rgba(255,255,255,.07) 75%); background-size:300% 100%; animation:skeletonPulse 1.4s ease-in-out infinite; }
+@keyframes skeletonPulse { 0% { background-position:0 0;} 100% { background-position: -300% 0;} }
+/* Panel toggle button (mobile) */
+#panelToggleBtn { display:none; background:rgba(255,255,255,.08); color:#fff; border:1px solid rgba(255,255,255,.15); padding:.4rem .55rem; font-size:.65rem; border-radius:6px; cursor:pointer; line-height:1; }
+#panelToggleBtn.active { background:#2563eb; border-color:#2563eb; }
+/* Prevent modals/overlays from causing background scroll shift */
+body.no-scroll { overflow:hidden; }
 </style>
 
 <div class="page-container ai-theme">
@@ -34,6 +78,7 @@ body { scroll-padding-top:70px; }
                     </div>
                 </div>
                 <div class="ai-header-actions">
+                    <button id="panelToggleBtn" title="Toggle side panel" aria-expanded="true">Panel ▾</button>
                     <button id="openProductWizardBtn" class="btn btn-primary">+ Product</button>
                     <button id="openBulkCreationBtn" class="btn btn-secondary" title="Create multiple products">📦 Bulk</button>
                     <div class="ai-mode-controls" style="display:flex;align-items:center;gap:.5rem;margin-left:.75rem;">
@@ -57,6 +102,7 @@ body { scroll-padding-top:70px; }
         <div class="ai-layout">
             <!-- Chat column -->
             <section class="ai-chat-container" aria-label="Chat">
+                <button id="jumpLatestBtn" class="jump-latest-btn" aria-label="Jump to latest messages">↓ New</button>
                 <div class="ai-chat-history" id="ai-chat-history" role="log" aria-live="polite" aria-relevant="additions">
                     <!-- Welcome message -->
                     <div class="chat-message ai-message">
@@ -117,6 +163,1430 @@ body { scroll-padding-top:70px; }
                     </div>
 
                     <div class="panel-content" id="panel-content">
+                                                <!-- Skeleton placeholder shown briefly on load -->
+                                                <div id="panelSkeleton" class="panel-skeleton">
+                                                    <div class="skeleton-line" style="width:65%"></div>
+                                                    <div class="skeleton-line" style="width:40%"></div>
+                                                    <div class="skeleton-line" style="width:78%"></div>
+                                                    <div class="skeleton-line" style="width:55%"></div>
+                                                    <div class="skeleton-line" style="width:90%"></div>
+                                                    <div class="skeleton-line" style="width:30%"></div>
+                                                </div>
+                        <!-- Quick -->
+                        <div data-panel="quick">
+                            <div class="quick-actions" style="margin-bottom:0.5rem;">
+                                <button class="quick-action-btn" onclick="sendQuickMessage('Show me inventory summary')">📊 Inventory Summary</button>
+                                <button class="quick-action-btn" onclick="sendQuickMessage('What are my pending orders?')">📦 Pending Orders</button>
+                                <button class="quick-action-btn" onclick="sendQuickMessage('Generate inventory usage report')">📈 Usage Report</button>
+                                <button class="quick-action-btn" onclick="sendQuickMessage('Start a design brainstorming session')">🎨 Brainstorm Design</button>
+                            </div>
+                            <div class="quick-commands-grid">
+                                <button class="quick-cmd-btn" onclick="sendQuickMessage('Show inventory status')">📦 Inventory Status</button>
+                                <button class="quick-cmd-btn" onclick="sendQuickMessage('List pending orders')">📋 Pending Orders</button>
+                                <button class="quick-cmd-btn" onclick="sendQuickMessage('Generate inventory usage report')">📊 Inventory Usage</button>
+                                <button class="quick-cmd-btn" onclick="openBulkCreation()" style="background: linear-gradient(135deg, #007bff, #0056b3); color: white; font-weight: bold; border: 2px solid #007bff;">📊📂 Bulk Upload</button>
+                                <button class="quick-cmd-btn" onclick="sendQuickMessage('Show low stock items')">⚠️ Low Stock Alert</button>
+                                <button class="quick-cmd-btn" onclick="sendQuickMessage('Show packing materials low stock')">📦⚠️ Packing Low Stock</button>
+                                <button class="quick-cmd-btn" onclick="sendQuickMessage('Start design brainstorm')">🎨 Start Brainstorm</button>
+                                <button class="quick-cmd-btn" onclick="sendQuickMessage('Generate design mockup for Space T-Shirt')">🖼️ Generate Mockup</button>
+                                <button class="quick-cmd-btn" onclick="sendQuickMessage('Create product from last design at $25 qty 10')">🛠️ Create Product</button>
+                                <button class="quick-cmd-btn" onclick="sendQuickMessage('Add packing material 6x9 Poly Mailer dimensions 6x9 in stock 250')">📦➕ Add Packing Material</button>
+                            </div>
+                        </div>
+
+                        <!-- Commands -->
+                        <div data-panel="commands" class="hidden">
+                            <div class="key-terms-container">
+                <div class="terms-category">
+                    <h4>📦 Inventory</h4>
+                    <div class="terms-list">
+                        <div class="term-item" onclick="sendQuickMessage('inventory summary')">
+                            <code>inventory summary</code>
+                            <span>Complete overview</span>
+                        </div>
+                        <div class="term-item" onclick="sendQuickMessage('add 25 to SKU-ABC-123')">
+                            <code>add 25 to SKU-ABC-123</code>
+                            <span>Restock by SKU</span>
+                        </div>
+                        <div class="term-item" onclick="sendQuickMessage('add 50 black t-shirts')">
+                            <code>add [qty] [item]</code>
+                            <span>Restock or create</span>
+                        </div>
+                        <div class="term-item" onclick="sendQuickMessage('add 50 new black t-shirts price 15')">
+                            <code>add [qty] new [item] price [x]</code>
+                            <span>Create new item explicitly</span>
+                        </div>
+                        <div class="term-item" onclick="sendQuickMessage('how many shirts do we have')">
+                            <code>how many [item]</code>
+                            <span>Check stock</span>
+                        </div>
+                        <div class="term-item" onclick="sendQuickMessage('set stock SKU-ABC-123 to 50')">
+                            <code>set stock [sku] to [qty]</code>
+                            <span>Update stock</span>
+                        </div>
+                        <div class="term-item" onclick="sendQuickMessage('show packing materials low stock')">
+                            <code>show packing materials low stock</code>
+                            <span>Packing-only alerts</span>
+                        </div>
+                        <div class="term-item" onclick="sendQuickMessage('add packing material 6x9 Poly Mailer dimensions 6x9 in stock 250')">
+                            <code>add packing material [name] dimensions [LxW(xH) unit] stock [qty]</code>
+                            <span>Add packing material</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="terms-category">
+                    <h4>📋 Orders</h4>
+                    <div class="terms-list">
+                        <div class="term-item" onclick="sendQuickMessage('order status')">
+                            <code>order status</code>
+                            <span>Orders overview</span>
+                        </div>
+                        <div class="term-item" onclick="sendQuickMessage('mark order ORD-123 as delivered')">
+                            <code>mark order [id] as [status]</code>
+                            <span>Update status</span>
+                        </div>
+                        <div class="term-item" onclick="sendQuickMessage('create order for John Smith')">
+                            <code>create order for [customer]</code>
+                            <span>New order</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="terms-category">
+                    <h4>🎨 Design</h4>
+                    <div class="terms-list">
+                        <div class="term-item" onclick="sendQuickMessage('start design brainstorm')">
+                            <code>start design brainstorm</code>
+                            <span>Begin session</span>
+                        </div>
+                        <div class="term-item" onclick="sendQuickMessage('generate design mockup for retro space t-shirt')">
+                            <code>generate design mockup for [theme] [product]</code>
+                            <span>Create mockup</span>
+                        </div>
+                        <div class="term-item" onclick="sendQuickMessage('create product from last design at $25 qty 10')">
+                            <code>create product from last design at $[price] qty [n]</code>
+                            <span>Add to inventory</span>
+                        </div>
+                        <div class="term-item" onclick="sendQuickMessage('attach image https://example.com/pic.jpg for SKU-123')">
+                            <code>attach image [url] for [sku]</code>
+                            <span>Link images</span>
+                        </div>
+                        <div class="terms-legend">
+                            <small>
+                                <strong>Legend:</strong><br>
+                                <code>[qty]</code> = quantity (e.g., 50)<br>
+                                <code>[item]</code> = product name<br>
+                                <code>[sku]</code> = SKU code<br>
+                                <code>[status]</code> = pending, processing, shipped, delivered
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                        </div>
+
+                        <!-- Reference -->
+                        <div data-panel="reference" class="hidden">
+                            <div class="capabilities-grid">
+                                <div class="capability-card" onclick="triggerCapability('analytics')" title="Analytics & reports"><div class="capability-icon">📊</div><span>Analytics</span></div>
+                                <div class="capability-card" onclick="triggerCapability('voice')" title="Voice controls"><div class="capability-icon">🎤</div><span>Voice</span></div>
+                                <div class="capability-card" onclick="triggerCapability('forecasting')" title="Forecasting"><div class="capability-icon">📈</div><span>Forecasting</span></div>
+                                <div class="capability-card" onclick="triggerCapability('insights')" title="Insights"><div class="capability-icon">💡</div><span>Insights</span></div>
+                            </div>
+                        </div>
+                        <!-- Trace -->
+                        <div data-panel="trace" class="hidden">
+                          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;">
+                            <h4 style="margin:0;font-size:0.95rem;">🛰️ Agent Trace</h4>
+                            <button class="btn btn-sm btn-secondary" onclick="clearAgentTrace()">Clear</button>
+                          </div>
+                          <div id="agent-trace" style="max-height:320px;overflow:auto;font-family:var(--mono-font,monospace);font-size:11px;line-height:1.3;background:var(--code-bg,#111);padding:.5rem;border-radius:6px;border:1px solid var(--border-color,#333);"></div>
+                          <small style="display:block;margin-top:.5rem;color:var(--text-secondary);">Shows live ai.plan / ai.tool.decide / ai.tool.execute / ai.final events.</small>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="ai-loading-overlay" id="loadingOverlay" style="display: none;">
+    <div class="loading-content">
+        <div class="ai-thinking-animation">
+            <div class="thinking-dots">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+        </div>
+        <p>AI is thinking...</p>
+    </div>
+</div>
+
+</div>
+
+<!-- Settings Modal -->
+<div id="settingsModal" class="modal-overlay" style="display: none;" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-content">
+        <button class="modal-close-btn" id="closeSettingsBtn" aria-label="Close settings">×</button>
+        <h2 style="margin-bottom: 1rem;">Settings</h2>
+        <div class="settings-options">
+            <label class="setting-item">
+                <input type="checkbox" id="voiceResponsesToggle" onchange="updateSetting('voiceResponses', this.checked)">
+                <span>Voice responses</span>
+            </label>
+            <label class="setting-item">
+                <input type="checkbox" id="autoSuggestionsToggle" onchange="updateSetting('autoSuggestions', this.checked)">
+                <span>Auto-suggestions</span>
+            </label>
+            <label class="setting-item">
+                <input type="checkbox" id="showTimestampsToggle" onchange="updateSetting('showTimestamps', this.checked)">
+                <span>Show timestamps</span>
+            </label>
+        </div>
+    </div>
+    
+</div>
+
+<!-- Image Generator Modal -->
+<div id="imageGenModal" class="modal-overlay" style="display: none;" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-content">
+        <button class="modal-close-btn" id="closeImageGenBtn" aria-label="Close image generator">×</button>
+        <h2 style="margin-bottom: 1rem;">Generate Design Image</h2>
+        <form id="imageGenForm">
+            <div class="form-group">
+                <label for="genDescription">Describe the design</label>
+                <input id="genDescription" class="form-input" type="text" placeholder="e.g., retro space astronaut with neon colors" required />
+            </div>
+            <div class="form-group">
+                <label for="genProduct">Target product (optional)</label>
+                <select id="genProduct" class="form-input">
+                    <option value="">(none)</option>
+                    <option value="t-shirt">T-Shirt</option>
+                    <option value="hoodie">Hoodie</option>
+                    <option value="mug">Mug</option>
+                    <option value="sticker">Sticker</option>
+                    <option value="poster">Poster</option>
+                </select>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Generate</button>
+            </div>
+        </form>
+        <small class="text-muted">Images are generated using your configured provider and saved locally for easy reuse.</small>
+    </div>
+</div>
+
+<!-- Product Wizard Modal -->
+<div id="productWizard" class="modal-overlay" style="display:none;" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-content" style="max-width:720px; width:95vw;">
+        <button class="modal-close-btn" id="closeProductWizard" aria-label="Close product wizard">×</button>
+        <div class="wizard-header">
+            <h2>Create Product</h2>
+            <div class="wizard-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="pw-progress"></div>
+                </div>
+                <span class="progress-text" id="pw-progress-text">Step 1 of 5</span>
+            </div>
+        </div>
+        <ol id="pw-steps" style="display:flex; gap:0.75rem; list-style:none; padding:0; margin:0 0 1rem 0;">
+            <li class="pw-step" data-step="1"><span class="step-icon">📷</span>Image</li>
+            <li class="pw-step" data-step="2"><span class="step-icon">🧱</span>Materials</li>
+            <li class="pw-step" data-step="3"><span class="step-icon">🏷️</span>Details</li>
+            <li class="pw-step" data-step="4"><span class="step-icon">🤖</span>AI Assist</li>
+            <li class="pw-step" data-step="5"><span class="step-icon">✅</span>Review</li>
+        </ol>
+        <div id="pw-body">
+            <!-- Step 1: Image -->
+            <section class="pw-panel" data-step="1">
+                <div class="step-header">
+                    <h3>Product Image</h3>
+                    <p class="step-description">Add or generate an image for your product</p>
+                </div>
+                
+                <div class="image-options">
+                    <div class="form-group">
+                        <label class="form-label-enhanced">📁 Upload existing image</label>
+                        <input type="file" id="pw-upload" accept="image/*" class="form-input" />
+                        <small class="form-hint">Supports JPG, PNG, GIF (max 10MB)</small>
+                    </div>
+                    
+                    <div class="divider">OR</div>
+                    
+                    <div class="form-group">
+                        <label class="form-label-enhanced">🎨 Generate with AI</label>
+                        <div class="input-with-button">
+                            <input type="text" id="pw-gen-prompt" class="form-input" placeholder="e.g., retro astronaut neon style for t-shirt" />
+                            <button class="btn btn-secondary" id="pw-generate">
+                                <span class="btn-icon">✨</span>Generate
+                            </button>
+                        </div>
+                        <small class="form-hint">Describe the style and theme for AI image generation</small>
+                    </div>
+                </div>
+                
+                <div id="pw-image-preview" class="image-preview-enhanced" style="display:none;">
+                    <img id="pw-image" src="" alt="preview" />
+                    <div class="image-actions">
+                        <button class="btn btn-sm btn-secondary" id="pw-regenerate">🔄 Regenerate</button>
+                        <button class="btn btn-sm btn-secondary" id="pw-remove-image">🗑️ Remove</button>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Step 2: Materials & Packaging -->
+            <section class="pw-panel hidden" data-step="2">
+                <div class="step-header">
+                    <h3>Materials & Packaging</h3>
+                    <p class="step-description">Select materials and packaging for this product</p>
+                </div>
+                
+                <div class="materials-section">
+                    <div class="form-group">
+                        <label class="form-label-enhanced">🧱 Required Materials</label>
+                        <div id="pw-materials" class="selection-list"></div>
+                        <div class="materials-summary" id="pw-materials-summary" style="display:none;">
+                            <span class="summary-text">0 materials selected</span>
+                            <span class="estimated-cost">Est. cost: $0.00</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label-enhanced">📦 Packaging (optional)</label>
+                        <div id="pw-packaging" class="selection-list"></div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Step 3: Product Details -->
+            <section class="pw-panel hidden" data-step="3">
+                <div class="step-header">
+                    <h3>Product Details</h3>
+                    <p class="step-description">Basic product information</p>
+                </div>
+                
+                <div class="product-details-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label-enhanced">📝 Product Name</label>
+                            <input type="text" id="pw-name-manual" class="form-input" placeholder="e.g., Vintage Space T-Shirt" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label-enhanced">🏷️ Category</label>
+                            <select id="pw-category" class="form-input">
+                                <option value="Apparel">👕 Apparel</option>
+                                <option value="Accessories">👜 Accessories</option>
+                                <option value="Drinkware">☕ Drinkware</option>
+                                <option value="Prints">🖼️ Prints</option>
+                                <option value="Stickers">🏷️ Stickers</option>
+                                <option value="Custom">⚙️ Custom</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label-enhanced">💰 Price ($)</label>
+                            <input type="number" step="0.01" id="pw-price-manual" class="form-input" placeholder="0.00" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label-enhanced">📦 Initial Stock</label>
+                            <input type="number" id="pw-qty-manual" class="form-input" value="10" min="0" />
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label-enhanced">📋 Description (optional)</label>
+                        <textarea id="pw-description" class="form-input" rows="3" placeholder="Brief product description..."></textarea>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Step 4: AI Assistance -->
+            <section class="pw-panel hidden" data-step="4">
+                <div class="step-header">
+                    <h3>AI Product Enhancement</h3>
+                    <p class="step-description">Let AI help optimize your product details</p>
+                </div>
+                
+                <div class="ai-assistance">
+                    <div class="form-group">
+                        <label class="form-label-enhanced">🎯 Product Type Hint</label>
+                        <input type="text" id="pw-type" class="form-input" placeholder="e.g., T-Shirt, Mug, Sticker" />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label-enhanced">💡 Additional Context</label>
+                        <input type="text" id="pw-hints" class="form-input" placeholder="Target audience, style, special features..." />
+                    </div>
+                    
+                    <div class="ai-actions">
+                        <button class="btn btn-primary" id="pw-suggest">
+                            <span class="btn-icon">🤖</span>Get AI Suggestions
+                        </button>
+                        <button class="btn btn-secondary" id="pw-skip-ai">Skip AI Assistance</button>
+                    </div>
+                    
+                    <div id="pw-suggestion" class="ai-suggestions" style="display:none;">
+                        <div class="suggestions-header">
+                            <h4>AI Suggestions</h4>
+                            <small>Review and modify these AI-generated suggestions</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label-enhanced">📝 Suggested Name</label>
+                            <input type="text" id="pw-name" class="form-input" />
+                            <button class="btn btn-sm btn-secondary apply-suggestion" data-target="pw-name-manual">Apply</button>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label-enhanced">💰 Suggested Price</label>
+                                <input type="number" step="0.01" id="pw-price" class="form-input" />
+                                <button class="btn btn-sm btn-secondary apply-suggestion" data-target="pw-price-manual">Apply</button>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label-enhanced">🏷️ Suggested SKU</label>
+                                <input type="text" id="pw-sku" class="form-input" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Step 5: Review & Create -->
+            <section class="pw-panel hidden" data-step="5">
+                <div class="step-header">
+                    <h3>Review & Create</h3>
+                    <p class="step-description">Review all details before creating your product</p>
+                </div>
+                
+                <div id="pw-review" class="product-review"></div>
+                
+                <div class="creation-options">
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="pw-create-variants"> 
+                            Create size/color variants
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="pw-auto-reorder"> 
+                            Enable auto-reorder when stock is low
+                        </label>
+                    </div>
+                    
+                    <div class="form-actions-enhanced">
+                        <button class="btn btn-primary btn-lg" id="pw-create">
+                            <span class="btn-icon">🚀</span>Create Product
+                        </button>
+                        <button class="btn btn-secondary" id="pw-save-draft">
+                            <span class="btn-icon">💾</span>Save as Draft
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <div class="form-actions" style="margin-top:1rem; display:flex; justify-content:space-between;">
+            <button class="btn" id="pw-prev">Back</button>
+            <button class="btn btn-primary" id="pw-next">Next</button>
+        </div>
+    </div>
+    </div>
+
+<!-- Bulk Product Creation Modal -->
+<div id="bulkCreationModal" class="modal-overlay" style="display:none;" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-content" style="max-width:900px; width:95vw;">
+        <button class="modal-close-btn" id="closeBulkCreation" aria-label="Close bulk creation">×</button>
+        <div class="modal-header">
+            <h2>📦 Bulk Product Creation</h2>
+            <p>Create multiple products quickly using templates, CSV import, or AI generation</p>
+        </div>
+        
+        <div class="bulk-creation-tabs">
+            <div class="tab-headers">
+                <button class="tab-header active" data-tab="templates">🎯 Templates</button>
+                <button class="tab-header" data-tab="csv">📊 CSV/Excel Import</button>
+                <button class="tab-header" data-tab="ai-batch">🤖 AI Batch</button>
+            </div>
+            
+            <!-- Templates Tab -->
+            <div class="tab-content active" data-tab="templates">
+                <div class="tab-section">
+                    <h3>Quick Start Templates</h3>
+                    <p>Select a template to create multiple products with pre-configured settings</p>
+                    
+                    <div class="templates-grid">
+                        <div class="template-card" data-template="apparel">
+                            <div class="template-icon">👕</div>
+                            <div class="template-info">
+                                <h4>Apparel Collection</h4>
+                                <p>T-shirts, hoodies, and clothing items with size variants</p>
+                                <div class="template-features">
+                                    <span class="feature-tag">Sizes: S-XXL</span>
+                                    <span class="feature-tag">Multiple Colors</span>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary template-btn">Use Template</button>
+                        </div>
+                        
+                        <div class="template-card" data-template="drinkware">
+                            <div class="template-icon">☕</div>
+                            <div class="template-info">
+                                <h4>Drinkware Set</h4>
+                                <p>Mugs, tumblers, and bottles in various styles</p>
+                                <div class="template-features">
+                                    <span class="feature-tag">Multiple Sizes</span>
+                                    <span class="feature-tag">Custom Designs</span>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary template-btn">Use Template</button>
+                        </div>
+                        
+                        <div class="template-card" data-template="stickers">
+                            <div class="template-icon">🏷️</div>
+                            <div class="template-info">
+                                <h4>Sticker Pack</h4>
+                                <p>Various sticker designs and sizes</p>
+                                <div class="template-features">
+                                    <span class="feature-tag">Different Shapes</span>
+                                    <span class="feature-tag">Bulk Pricing</span>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary template-btn">Use Template</button>
+                        </div>
+                        
+                        <div class="template-card" data-template="seasonal">
+                            <div class="template-icon">🎄</div>
+                            <div class="template-info">
+                                <h4>Seasonal Collection</h4>
+                                <p>Holiday and seasonal themed products</p>
+                                <div class="template-features">
+                                    <span class="feature-tag">Limited Time</span>
+                                    <span class="feature-tag">Themed Designs</span>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary template-btn">Use Template</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- CSV/Excel Import Tab -->
+            <div class="tab-content" data-tab="csv">
+                <div class="tab-section">
+                    <h3>CSV & Excel Import</h3>
+                    <p>Upload a CSV or Excel file with product data to create multiple products at once</p>
+                    
+                    <div class="csv-upload-area">
+                        <div class="upload-section">
+                            <div class="upload-dropzone" id="csvDropzone">
+                                <div class="upload-content">
+                                    <div class="upload-icon">📊</div>
+                                    <h4>Drop CSV or Excel file here or click to browse</h4>
+                                    <p>Supports .csv, .xlsx, .xls • Maximum file size: 10MB</p>
+                                    <button class="btn btn-secondary" id="csvFileBtn" style="padding: 12px 24px; font-size: 16px; font-weight: bold; margin-top: 10px;">
+                                        📁 Choose File
+                                    </button>
+                                    <input type="file" id="csvFileInput" accept=".csv,.xlsx,.xls" style="display:none;">
+                                </div>
+                            </div>
+                            
+                            <div class="csv-actions" style="margin-top: 20px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                                <label style="display:flex; gap:6px; align-items:center; font-weight:600;">
+                                    Import as
+                                    <select id="importCategory" class="form-input" style="height:34px; padding:2px 8px;">
+                                        <option value="Products">Products</option>
+                                        <option value="Materials" selected>Materials</option>
+                                        <option value="Packing Materials">Packing Materials</option>
+                                    </select>
+                                </label>
+                                <button class="btn btn-outline" id="downloadTemplate" style="margin-right: 10px;">
+                                    📥 Download CSV Template
+                                </button>
+                                <button class="btn btn-outline" id="downloadExcelTemplate" style="margin-right: 10px;">
+                                    📥 Download Excel Template
+                                </button>
+                                <button class="btn btn-outline" id="csvPreview" disabled>
+                                    👀 Preview Data
+                                </button>
+                                <button class="btn btn-primary" id="importCsvBtn" disabled>
+                                    ✅ Import to Inventory
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="csv-requirements">
+                            <h4>File Format Requirements</h4>
+                            <ul>
+                                <li><strong>Required columns:</strong> name, category, price, stock</li>
+                                <li><strong>Optional columns:</strong> description, sku, imageUrl, materials</li>
+                                <li><strong>Example:</strong> "Cool T-Shirt", "Apparel", "25.00", "50", "Amazing design"</li>
+                                <li><strong>Materials:</strong> Separate multiple materials with semicolons</li>
+                                <li><strong>Excel support:</strong> Data should be in the first worksheet</li>
+                                <li><strong>Formats:</strong> CSV (.csv), Excel 2007+ (.xlsx), Excel 97-2003 (.xls)</li>
+                            </ul>
+                        </div>
+                        
+                        <div id="csvPreviewSection" class="csv-preview" style="display:none;">
+                            <h4>Data Preview</h4>
+                            <div id="csvPreviewTable"></div>
+                            <div class="csv-stats">
+                                <span id="csvRowCount">0 products</span>
+                                <span id="csvValidation">Validation pending...</span>
+                                <span id="csvImportHint" class="text-muted" style="margin-left:auto;">Tip: Set "Import as" to Materials for your file.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI Batch Tab -->
+            <div class="tab-content" data-tab="ai-batch">
+                <div class="tab-section">
+                    <h3>AI Batch Generation</h3>
+                    <p>Let AI generate multiple product ideas based on your requirements</p>
+                    
+                    <div class="ai-batch-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="batchTheme">Theme/Category</label>
+                                <input type="text" id="batchTheme" class="form-input" placeholder="e.g., Space exploration, Vintage vibes, Minimalist">
+                            </div>
+                            <div class="form-group">
+                                <label for="batchCount">Number of Products</label>
+                                <select id="batchCount" class="form-input">
+                                    <option value="5">5 products</option>
+                                    <option value="10" selected>10 products</option>
+                                    <option value="15">15 products</option>
+                                    <option value="20">20 products</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="batchCategory">Product Category</label>
+                                <select id="batchCategory" class="form-input">
+                                    <option value="mixed">Mixed Categories</option>
+                                    <option value="Apparel">Apparel</option>
+                                    <option value="Drinkware">Drinkware</option>
+                                    <option value="Stickers">Stickers</option>
+                                    <option value="Prints">Prints</option>
+                                    <option value="Accessories">Accessories</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="batchPriceRange">Price Range</label>
+                                <select id="batchPriceRange" class="form-input">
+                                    <option value="budget">Budget ($5-15)</option>
+                                    <option value="mid" selected>Mid-range ($15-35)</option>
+                                    <option value="premium">Premium ($35-75)</option>
+                                    <option value="luxury">Luxury ($75+)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="batchDescription">Additional Requirements</label>
+                            <textarea id="batchDescription" class="form-input" rows="3" placeholder="Target audience, style preferences, special features..."></textarea>
+                        </div>
+                        
+                        <div class="ai-options">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="generateImages" checked>
+                                Generate product images with AI
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="includeVariants">
+                                Create size/color variants where applicable
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="autoPrice">
+                                Use AI-suggested pricing
+                            </label>
+                        </div>
+                        
+                        <div class="ai-batch-actions">
+                            <button class="btn btn-primary btn-lg" id="generateBatch">
+                                <span class="btn-icon">🤖</span>Generate Product Ideas
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="batchResults" class="batch-results" style="display:none;">
+                        <div class="results-header">
+                            <h4>Generated Products</h4>
+                            <div class="results-stats">
+                                <span id="resultsCount">0 products generated</span>
+                                <span id="resultsTime">Generated in 0s</span>
+                            </div>
+                        </div>
+                        
+                        <div id="resultsGrid" class="results-grid"></div>
+                        
+                        <div class="results-actions">
+                            <button class="btn btn-outline" id="selectAllResults">Select All</button>
+                            <button class="btn btn-outline" id="deselectAllResults">Deselect All</button>
+                            <button class="btn btn-primary" id="createSelectedProducts">
+                                Create Selected Products
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal-actions">
+            <button class="btn btn-secondary" id="cancelBulkCreation">Cancel</button>
+            <button class="btn btn-primary" id="proceedBulkCreation" style="display:none;">
+                Create Products
+            </button>
+        </div>
+    </div>
+    </div>
+
+<!-- Duplicate script block removed (variables already declared earlier) -->
+const settingsModal = document.getElementById('settingsModal');
+const openSettingsBtn = document.getElementById('openSettingsBtn');
+const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+// Image generator modal elements
+const imageGenModal = document.getElementById('imageGenModal');
+const openGenBtn = document.getElementById('openGenBtn');
+const closeImageGenBtn = document.getElementById('closeImageGenBtn');
+const imageGenForm = document.getElementById('imageGenForm');
+const genDescription = document.getElementById('genDescription');
+const genProduct = document.getElementById('genProduct');
+
+function openSettings() {
+    if (!settingsModal) return;
+    settingsModal.style.display = 'flex';
+    settingsModal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('no-scroll');
+}
+
+function closeSettings() {
+    if (!settingsModal) return;
+    settingsModal.style.display = 'none';
+    settingsModal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('no-scroll');
+}
+
+if (openSettingsBtn) openSettingsBtn.addEventListener('click', openSettings);
+if (closeSettingsBtn) closeSettingsBtn.addEventListener('click', closeSettings);
+if (settingsModal) settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) closeSettings(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && settingsModal && settingsModal.style.display !== 'none') closeSettings(); });
+
+function openImageGen() {
+    if (!imageGenModal) return;
+    imageGenModal.style.display = 'flex';
+    imageGenModal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('no-scroll');
+    setTimeout(() => genDescription && genDescription.focus(), 50);
+}
+function closeImageGen() {
+    if (!imageGenModal) return;
+    imageGenModal.style.display = 'none';
+    imageGenModal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('no-scroll');
+}
+if (openGenBtn) openGenBtn.addEventListener('click', openImageGen);
+if (closeImageGenBtn) closeImageGenBtn.addEventListener('click', closeImageGen);
+if (imageGenModal) imageGenModal.addEventListener('click', (e) => { if (e.target === imageGenModal) closeImageGen(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && imageGenModal && imageGenModal.style.display !== 'none') closeImageGen(); });
+
+if (imageGenForm) imageGenForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const desc = (genDescription?.value || '').trim();
+    const prod = (genProduct?.value || '').trim();
+    if (!desc) return;
+    const phrase = `generate design mockup for ${desc}${prod ? ' ' + prod : ''}`;
+    closeImageGen();
+    submitMessage(phrase);
+});
+// Stable client id for chat history
+const clientId = (() => {
+    try {
+        let id = localStorage.getItem('easlyClientId');
+        if (!id) { id = 'cli_' + Math.random().toString(36).slice(2); localStorage.setItem('easlyClientId', id); }
+        return id;
+    } catch { return 'cli_' + Math.random().toString(36).slice(2); }
+})();
+
+// Auto-resize textarea and toggle send button state
+function updateInputState() {
+    if (!input || !sendBtn) return;
+
+    // Auto-resize textarea
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+
+    // Enable/disable send button based on content
+    const hasContent = input.value.trim().length > 0;
+    sendBtn.disabled = !hasContent || input.disabled;
+
+    // Update button visual state
+    if (hasContent && !input.disabled) {
+        sendBtn.classList.add('enabled');
+        sendBtn.classList.remove('disabled');
+    } else {
+        sendBtn.classList.add('disabled');
+        sendBtn.classList.remove('enabled');
+    }
+}
+
+// Add multiple event listeners for comprehensive input handling
+if (input) {
+    input.addEventListener('input', updateInputState);
+    input.addEventListener('keyup', updateInputState);
+    input.addEventListener('paste', () => setTimeout(updateInputState, 10));
+    input.addEventListener('cut', () => setTimeout(updateInputState, 10));
+}
+
+// Handle keyboard shortcuts
+function handleKeyDown(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        // Directly call the submit handler to avoid flashing
+        const prompt = input.value.trim();
+        if (prompt) {
+            submitMessage(prompt);
+        }
+        return false;
+    }
+}
+
+// Enhanced form submission with better UI
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const prompt = input.value.trim();
+    if (!prompt) return;
+
+    submitMessage(prompt);
+});
+
+// Consolidated submit function to prevent flashing
+async function submitMessage(prompt) {
+    if (!prompt || input.disabled) return;
+
+    // Add user message with enhanced styling
+    addMessageToChat('user', prompt);
+    input.value = '';
+    input.style.height = 'auto';
+    input.disabled = true;
+    updateInputState(); // Update button state after clearing input
+
+    // Show enhanced loading state
+    showLoading();
+    addThinkingMessage();
+
+    try {
+        const payload = { textPart: prompt, clientId };
+        // Attach role hint if Architect mode is enabled
+        if (ARCH_MODE && USER_ROLE) payload.role = USER_ROLE;
+        if (window.__attachedImageB64) payload.imagePart = window.__attachedImageB64;
+        const endpoint = ARCH_MODE ? '/ai/co-pilot-arch' : '/ai/co-pilot';
+        const headers = { 'Content-Type': 'application/json' };
+        if (ARCH_MODE && USER_ROLE) headers['x-user-role'] = USER_ROLE;
+        const res = await fetch(endpoint, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(payload)
+        });
+        if (!res.ok) { throw new Error(`HTTP ${res.status}`); }
+        const data = await res.json();
+
+        // Remove thinking message
+        removeThinkingMessage();
+        hideLoading();
+
+        // Add AI response with enhanced formatting
+        let responseText = '';
+        if (data.response) {
+            responseText = data.response;
+        } else if (data.text) {
+            responseText = data.text;
+        } else {
+            responseText = JSON.stringify(data, null, 2);
+        }
+
+        // If disambiguation options exist, render them as clickable chips that send the suggested text
+        let renderedWithOptions = false;
+        if (Array.isArray(data.options) && data.options.length) {
+            addMessageToChat('ai', responseText + renderOptionsChips(data.options));
+            renderedWithOptions = true;
+        } else {
+            addMessageToChat('ai', responseText);
+        }
+        if (data.action) addActionCard(data.action);
+
+        // Handle UI commands like opening the Product Wizard
+        if (data.uiCommand && data.uiCommand.type === 'openProductWizard') {
+            try { if (window.openProductWizard) window.openProductWizard(); } catch {}
+        }
+
+    } catch (error) {
+        console.error('AI request failed:', error);
+        removeThinkingMessage();
+        hideLoading();
+        addMessageToChat('ai', 'Sorry, I encountered an error while processing your request. Please try again.');
+        showToast('Failed to get AI response. Please try again.', 'error');
+    }
+    finally {
+        input.disabled = false;
+        updateInputState(); // Properly update button state
+        input.focus();
+        // Clear attachment after send
+        clearAttachment();
+    }
+}
+
+// Quick message function with enhanced feedback
+function sendQuickMessage(message) {
+    if (input.disabled) return;
+
+    // Find the button that was clicked and add loading state
+    const buttons = document.querySelectorAll('.quick-cmd-btn, .quick-action-btn');
+    buttons.forEach(btn => {
+        if (btn.textContent.includes(message.split(' ')[1])) {
+            btn.classList.add('loading');
+            btn.style.opacity = '0.7';
+            btn.style.pointerEvents = 'none';
+
+            // Reset after 3 seconds
+            setTimeout(() => {
+                btn.classList.remove('loading');
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = 'auto';
+            }, 3000);
+        }
+    });
+
+    // Add visual feedback
+    showToast('Sending command...', 'info');
+    submitMessage(message);
+}
+
+// Capability trigger function with enhanced feedback
+function triggerCapability(capability) {
+    if (input.disabled) return;
+
+    const capabilityMessages = {
+        'analytics': 'Show me detailed analytics and performance metrics for my store',
+        'voice': 'Help me understand voice commands and how to use voice control features',
+        'forecasting': 'Provide sales forecasting and inventory predictions based on current trends',
+        'insights': 'Give me business insights and recommendations to improve my store performance'
+    };
+
+    const message = capabilityMessages[capability];
+    if (message) {
+        // Find and animate the clicked capability card
+        const cards = document.querySelectorAll('.capability-card');
+        cards.forEach(card => {
+            const text = card.textContent.toLowerCase();
+            if (text.includes(capability)) {
+                card.classList.add('loading');
+                card.style.opacity = '0.7';
+                card.style.pointerEvents = 'none';
+
+                // Reset after 3 seconds
+                setTimeout(() => {
+                    card.classList.remove('loading');
+                    card.style.opacity = '1';
+                    card.style.pointerEvents = 'auto';
+                }, 3000);
+            }
+        });
+
+        // Add visual feedback
+        showToast(`Activating ${capability} capability...`, 'info');
+        submitMessage(message);
+    }
+}
+
+// Image attachment handlers
+const attachBtn = document.getElementById('attachBtn');
+const imageInput = document.getElementById('imageInput');
+const attachmentPreview = document.getElementById('attachmentPreview');
+window.__attachedImageB64 = null;
+
+if (attachBtn && imageInput) {
+    attachBtn.addEventListener('click', () => imageInput.click());
+    imageInput.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            const result = reader.result; // data URL
+            if (typeof result === 'string') {
+                // Store base64 portion for backend; also render preview
+                window.__attachedImageB64 = result.split(',')[1];
+                renderAttachmentChip(result);
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+function renderAttachmentChip(dataUrl) {
+    if (!attachmentPreview) return;
+    attachmentPreview.innerHTML = '';
+    const chip = document.createElement('div');
+    chip.className = 'attachment-chip';
+    chip.innerHTML = `<img src="${dataUrl}" alt="attachment" /><button type="button" class="remove-attachment" aria-label="Remove image">✕</button>`;
+    attachmentPreview.appendChild(chip);
+    attachmentPreview.style.display = 'block';
+    const btn = chip.querySelector('.remove-attachment');
+    btn.addEventListener('click', clearAttachment);
+}
+
+function clearAttachment() {
+    window.__attachedImageB64 = null;
+    if (attachmentPreview) {
+        attachmentPreview.style.display = 'none';
+        attachmentPreview.innerHTML = '';
+    }
+    if (imageInput) imageInput.value = '';
+}
+
+// Voice recording functions
+function toggleVoiceRecording() {
+    if (isRecording) {
+        stopVoiceRecording();
+    } else {
+        startVoiceRecording();
+    }
+}
+
+function startVoiceRecording() {
+    if (!recognition) {
+        showToast('Speech recognition is not supported in your browser.', 'error');
+        return;
+    }
+
+    // Proactively request microphone permission for better UX
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(() => {
+                isRecording = true;
+                document.getElementById('voiceBtn').classList.add('recording');
+                document.getElementById('voiceStatus').style.display = 'flex';
+                recognition.start();
+            })
+            .catch((err) => {
+                console.warn('Microphone permission error:', err && err.name);
+                showToast('Microphone access denied. Please allow access to use voice input.', 'error');
+            });
+    } else {
+        // Fallback: try starting recognition (may still prompt in some browsers)
+        try {
+            isRecording = true;
+            document.getElementById('voiceBtn').classList.add('recording');
+            document.getElementById('voiceStatus').style.display = 'flex';
+            recognition.start();
+        } catch (e) {
+            showToast('Microphone not available on this device.', 'error');
+            stopVoiceRecording();
+        }
+    }
+}
+
+function stopVoiceRecording() {
+    isRecording = false;
+    document.getElementById('voiceBtn').classList.remove('recording');
+    document.getElementById('voiceStatus').style.display = 'none';
+    if (recognition) {
+        recognition.stop();
+    }
+}
+
+// Enhanced message display
+function addMessageToChat(sender, message) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${sender}-message`;
+
+    const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+    messageDiv.innerHTML = `
+        <div class="message-avatar">
+            <div class="avatar-${sender}">${sender === 'user' ? '👤' : '🤖'}</div>
+        </div>
+        <div class="message-content">
+            <div class="message-header">
+                <span class="sender-name">${sender === 'user' ? 'You' : 'Easly AI'}</span>
+                <div class="message-tools">
+                    <span class="message-time" data-dynamic-ts>${time}</span>
+                    ${sender === 'ai' ? '<button class="speak-btn" title="Speak" aria-label="Speak response">🔊</button>' : ''}
+                </div>
+            </div>
+            <div class="message-text">
+                ${formatMessage(message)}
+            </div>
+        </div>
+    `;
+
+    chatHistory.appendChild(messageDiv);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+
+    // Add fade-in animation
+    messageDiv.style.opacity = '0';
+    messageDiv.style.transform = 'translateY(10px)';
+    setTimeout(() => {
+        messageDiv.style.transition = 'all 0.3s ease';
+        messageDiv.style.opacity = '1';
+        messageDiv.style.transform = 'translateY(0)';
+    }, 10);
+
+    if (sender === 'ai') {
+        const btn = messageDiv.querySelector('.speak-btn');
+        if (btn) {
+            btn.addEventListener('click', () => speakText(stripHtml(message)));
+        }
+        if (isTTSEnabled()) {
+            speakText(stripHtml(message));
+        }
+    }
+}
+
+// Render option chips (for disambiguation)
+function renderOptionsChips(options) {
+    try {
+        const html = options.map((opt, idx) => `<button class="chip option-chip" data-send="${(opt.send||opt.label||'').replace(/"/g,'&quot;')}">${opt.label || opt.send}</button>`).join(' ');
+        // Attach a temporary container id to bind events after insertion
+        setTimeout(() => {
+            document.querySelectorAll('.option-chip').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const toSend = btn.getAttribute('data-send') || btn.textContent;
+                    submitMessage(toSend);
+                });
+            });
+        }, 0);
+        return `<div class="options-wrap" style="margin-top:.5rem; display:flex; flex-wrap:wrap; gap:.5rem;">${html}</div>`;
+    } catch { return ''; }
+}
+
+// Side panel tab switching
+document.addEventListener('DOMContentLoaded', async function() {
+    // Load settings first
+    loadSettings();
+
+    // Initialize input state and focus
+    updateInputState();
+
+    // Focus on input after a brief delay to ensure proper rendering
+    setTimeout(() => {
+        if (input) {
+            input.focus();
+            updateInputState();
+        }
+    }, 100);
+
+    // Hide voice button if not supported
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+        const vb = document.getElementById('voiceBtn');
+        if (vb) vb.style.display = 'none';
+    }
+
+    // Load Architect mode + role from localStorage
+    try {
+        ARCH_MODE = localStorage.getItem('easly.archMode') === '1';
+        USER_ROLE = localStorage.getItem('easly.userRole') || '';
+        if (archModeToggle) archModeToggle.checked = ARCH_MODE;
+        if (userRoleSelect) userRoleSelect.value = USER_ROLE;
+    } catch {}
+
+    // Wire up mode controls
+    if (archModeToggle) archModeToggle.addEventListener('change', (e) => {
+        ARCH_MODE = !!e.target.checked;
+        try { localStorage.setItem('easly.archMode', ARCH_MODE ? '1' : '0'); } catch {}
+        showToast(`Architect mode ${ARCH_MODE ? 'enabled' : 'disabled'}`, 'info');
+    });
+    if (userRoleSelect) userRoleSelect.addEventListener('change', (e) => {
+        USER_ROLE = e.target.value || '';
+        try { localStorage.setItem('easly.userRole', USER_ROLE); } catch {}
+        if (ARCH_MODE)
+            showToast(`Role set to ${USER_ROLE || 'auto'}`, 'info');
+    });
+
+    // Load chat history
+    try {
+        const r = await fetch(`/ai/history?clientId=${encodeURIComponent(clientId)}&limit=50`);
+        const j = await r.json();
+        if (Array.isArray(j.items)) {
+            for (const it of j.items) {
+                addMessageToChat(it.role === 'assistant' ? 'ai' : 'user', it.text || '');
+                if (it.role === 'assistant' && it.action) addActionCard(it.action);
+            }
+        }
+    } catch {}
+
+    // Add welcome message animation
+    setTimeout(() => {
+        const welcomeMessage = chatHistory.querySelector('.chat-message');
+        if (welcomeMessage) {
+            welcomeMessage.style.opacity = '0';
+            welcomeMessage.style.transform = 'translateY(20px)';
+            welcomeMessage.style.transition = 'all 0.5s ease';
+
+            setTimeout(() => {
+                welcomeMessage.style.opacity = '1';
+                welcomeMessage.style.transform = 'translateY(0)';
+            }, 100);
+        }
+    }, 500);
+
+    console.log('Enhanced AI Assistant page loaded successfully');
+
+    // Initialize real-time events (SSE); gracefully degrade if disabled
+    initEventsStream();
+
+    // Header compacting behavior
+    const header = document.querySelector('.ai-header');
+    let lastScrollY = window.scrollY;
+    let forceVisibleTimeout = null;
+    function applyHeaderState(){
+        if (!header) return;
+        const down = window.scrollY > 40 && window.scrollY > lastScrollY;
+        header.classList.toggle('compact', down);
+        lastScrollY = window.scrollY;
+    }
+    window.addEventListener('scroll', applyHeaderState, { passive:true });
+    window.addEventListener('mousemove', (e)=>{
+        if (!header) return;
+        if (e.clientY < 80) {
+            header.classList.add('force-visible');
+            clearTimeout(forceVisibleTimeout);
+            forceVisibleTimeout = setTimeout(()=> header.classList.remove('force-visible'), 1200);
+        }
+    });
+    // Ensure initial state
+    applyHeaderState();
+
+    // Remove panel skeleton after slight delay
+    setTimeout(()=>{ const sk = document.getElementById('panelSkeleton'); if (sk) sk.remove(); }, 450);
+
+    // Side panel toggle (desktop + mobile) - integrate only if not already initialized
+    (function(){
+        if (window.__panelToggleBound) return; // guard
+        const panelToggleBtn = document.getElementById('panelToggleBtn');
+        const sidePanel = document.querySelector('.ai-side-panel');
+        function setPanelCollapsed(collapsed, init){
+            if (!sidePanel) return;
+            if (collapsed) {
+                sidePanel.classList.add('collapsed');
+                if (panelToggleBtn) { panelToggleBtn.classList.add('active'); panelToggleBtn.setAttribute('aria-expanded','false'); panelToggleBtn.textContent='Panel ▸'; }
+            } else {
+                sidePanel.classList.remove('collapsed');
+                if (panelToggleBtn) { panelToggleBtn.classList.remove('active'); panelToggleBtn.setAttribute('aria-expanded','true'); panelToggleBtn.textContent='Panel ▾'; }
+            }
+            if (!init) { try { localStorage.setItem('easly.ai.panelCollapsed', collapsed ? '1':'0'); } catch {} }
+        }
+        if (panelToggleBtn) {
+            panelToggleBtn.addEventListener('click', ()=>{
+                const collapsed = sidePanel?.classList.contains('collapsed');
+                setPanelCollapsed(!collapsed);
+            });
+        }
+        try { const saved = localStorage.getItem('easly.ai.panelCollapsed') === '1'; setPanelCollapsed(saved, true); } catch {}
+        window.__panelToggleBound = true;
+    })();
+
+    // Jump to latest button logic
+    const chatHist = document.getElementById('ai-chat-history');
+    const jumpBtn = document.getElementById('jumpLatestBtn');
+    function nearBottom(){ if(!chatHist) return true; return (chatHist.scrollHeight - chatHist.scrollTop - chatHist.clientHeight) < 120; }
+    function updateJump(){ if(!chatHist||!jumpBtn) return; if(nearBottom()) jumpBtn.classList.remove('show'); }
+    if (chatHist) {
+        chatHist.addEventListener('scroll', ()=>{ if(!nearBottom()) jumpBtn.classList.add('show'); else jumpBtn.classList.remove('show'); });
+    }
+    if (jumpBtn) jumpBtn.addEventListener('click', ()=>{ if(!chatHist) return; chatHist.scrollTo({ top: chatHist.scrollHeight, behavior:'smooth'}); setTimeout(updateJump, 400); });
+    // Hook into existing addMessageToChat to auto-scroll only if user is already at bottom
+    if (!window.__wrappedAddMessageToChat && window.addMessageToChat) {
+        const _addMessageToChat = window.addMessageToChat;
+        window.addMessageToChat = function(){
+            const wasNear = nearBottom();
+            _addMessageToChat.apply(this, arguments);
+            if (wasNear) { try { chatHist.scrollTo({ top: chatHist.scrollHeight, behavior:'smooth'}); } catch {} }
+            updateJump();
+        };
+        window.__wrappedAddMessageToChat = true;
+    }
+});
+
+// Insert enhancements near existing DOMContentLoaded logic
+(function(){
+  // Defer until after primary DOMContentLoaded in case this snippet loads earlier
+  function initEnhancements(){
+    const sidePanel = document.querySelector('.ai-side-panel');
+    const toggleBtn = document.getElementById('panelToggleBtn');
+    const chatHistoryEl = document.getElementById('ai-chat-history');
+    const jumpBtn = document.getElementById('jumpLatestBtn');
+    const skeleton = document.getElementById('panelSkeleton');
+    let autoStick = true; // whether we auto-scroll to bottom on new messages
+    let lastScrollBottom = 0;
+
+    // Remove skeleton after slight delay (simulating load)
+    if (skeleton) setTimeout(()=>{ skeleton.remove(); }, 650);
+
+    // Panel toggle for mobile
+    if (toggleBtn && sidePanel) {
+      toggleBtn.addEventListener('click', ()=>{
+        const collapsed = sidePanel.classList.toggle('collapsed');
+        toggleBtn.classList.toggle('active', !collapsed);
+        toggleBtn.setAttribute('aria-expanded', String(!collapsed));
+        toggleBtn.textContent = collapsed ? 'Panel ▸' : 'Panel ▾';
+      });
+    }
+
+    // Smooth scroll to bottom helper
+    function scrollToBottom(smooth=true){
+      if (!chatHistoryEl) return;
+      const behavior = smooth ? 'smooth' : 'auto';
+      chatHistoryEl.scrollTo({ top: chatHistoryEl.scrollHeight + 512, behavior });
+      lastScrollBottom = chatHistoryEl.scrollHeight - chatHistoryEl.scrollTop - chatHistoryEl.clientHeight;
+    }
+
+    // Observe chat mutations to auto-stick
+    if (chatHistoryEl) {
+      const observer = new MutationObserver((muts)=>{
+        if (autoStick) scrollToBottom(true);
+      });
+      observer.observe(chatHistoryEl, { childList:true, subtree:false });
+
+      chatHistoryEl.addEventListener('scroll', ()=>{
+        const distanceFromBottom = chatHistoryEl.scrollHeight - chatHistoryEl.scrollTop - chatHistoryEl.clientHeight;
+        // Show jump button if user moved >120px from bottom
+        if (distanceFromBottom > 120) {
+          autoStick = false;
+          if (jumpBtn) jumpBtn.classList.add('show');
+        } else {
+          autoStick = true;
+          if (jumpBtn) jumpBtn.classList.remove('show');
+        }
+      }, { passive:true });
+    }
+
+    if (jumpBtn) jumpBtn.addEventListener('click', ()=>{ autoStick = true; scrollToBottom(true); });
+
+    // Initial stick
+    scrollToBottom(false);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initEnhancements); else initEnhancements();
+})();
+// End enhancements
+</script>
+
+<div class="page-container ai-theme">
+    <div class="ai-assistant-container">
+        <!-- Header -->
+        <header class="ai-header">
+            <div class="ai-header-content">
+                <div class="ai-title-section">
+                    <img class="ai-logo" src="/images/shopeasly-logo.png" alt="Easly AI" />
+                    <div class="ai-title-text">
+                        <h1>Easly AI</h1>
+                        <p>Creative + Operations Copilot</p>
+                    </div>
+                </div>
+                <div class="ai-header-actions">
+                    <button id="panelToggleBtn" title="Toggle side panel" aria-expanded="true">Panel ▾</button>
+                    <button id="openProductWizardBtn" class="btn btn-primary">+ Product</button>
+                    <button id="openBulkCreationBtn" class="btn btn-secondary" title="Create multiple products">📦 Bulk</button>
+                    <div class="ai-mode-controls" style="display:flex;align-items:center;gap:.5rem;margin-left:.75rem;">
+                        <label title="Send messages to the architect tool-loop endpoint" style="display:flex;align-items:center;gap:.35rem;cursor:pointer;user-select:none;font-size:.9rem;color:var(--text-secondary);">
+                            <input type="checkbox" id="archModeToggle" style="margin:0;">
+                            <span>Architect mode</span>
+                        </label>
+                        <select id="userRoleSelect" title="User role (optional)" class="form-input" style="height:32px;padding:2px 8px;font-size:.85rem;width:auto;">
+                            <option value="">Role: auto</option>
+                            <option value="owner">Owner</option>
+                            <option value="manager">Manager</option>
+                            <option value="staff">Staff</option>
+                        </select>
+                        <span id="eventsStatusDot" class="status-dot" title="Real-time: unknown" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#bbb;box-shadow:0 0 0 2px rgba(0,0,0,.05);"></span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main layout: chat left, panel right -->
+        <div class="ai-layout">
+            <!-- Chat column -->
+            <section class="ai-chat-container" aria-label="Chat">
+                <button id="jumpLatestBtn" class="jump-latest-btn" aria-label="Jump to latest messages">↓ New</button>
+                <div class="ai-chat-history" id="ai-chat-history" role="log" aria-live="polite" aria-relevant="additions">
+                    <!-- Welcome message -->
+                    <div class="chat-message ai-message">
+                        <div class="message-avatar"><div class="avatar-ai">🤖</div></div>
+                        <div class="message-content">
+                            <div class="message-header">
+                                <span class="sender-name">Easly AI</span>
+                                <span class="message-time">Just now</span>
+                            </div>
+                            <div class="message-text"><p>Welcome! How can I help you today?</p></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Composer -->
+                <div class="ai-input-section">
+                    <form id="ai-form" class="ai-form">
+                        <div class="input-wrapper">
+                            <textarea id="ai-input" class="form-input ai-input" rows="1" placeholder="Message Easly…" aria-label="Type a message" autocomplete="off" autocapitalize="sentences" spellcheck="true" maxlength="4000" onkeydown="handleKeyDown(event)"></textarea>
+                            <div class="input-actions">
+                                <button type="button" class="attach-btn" id="attachBtn" title="Attach image" aria-label="Attach image">📎</button>
+                                <button type="button" class="attach-btn" id="openGenBtn" title="Generate design image" aria-label="Generate design image">🖼️</button>
+                                <button type="button" class="voice-btn" id="voiceBtn" onclick="toggleVoiceRecording()" title="Voice Input" aria-label="Start voice input"><span class="voice-icon">🎤</span></button>
+                                <button type="submit" class="send-btn" id="sendBtn" title="Send Message" aria-label="Send message" disabled><span class="send-icon">➤</span></button>
+                            </div>
+                        </div>
+                    </form>
+                    <input type="file" id="imageInput" accept="image/*" style="display:none" />
+                    <div id="attachmentPreview" class="attachment-preview" style="display:none"></div>
+
+                    <!-- Voice Status -->
+                    <div class="voice-status" id="voiceStatus" style="display: none;">
+                        <div class="voice-animation"><div class="voice-wave"></div><div class="voice-wave"></div><div class="voice-wave"></div></div>
+                        <span class="voice-text">Listening...</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right panel -->
+            <aside class="ai-side-panel">
+                <div class="panel-section" id="brand-card-section">
+                    <div class="brand-card" id="brand-card">
+                        <img src="/images/shopeasly-logo.png" alt="Easly AI" class="brand-logo" />
+                        <div>
+                            <div class="brand-title">Easly AI</div>
+                            <small class="text-muted">Creative + Operations Copilot</small>
+                        </div>
+                        <button class="brand-dismiss" id="brand-dismiss" title="Hide">✕</button>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <div class="panel-tabs">
+                        <button class="panel-tab active" data-tab="quick">Quick</button>
+                        <button class="panel-tab" data-tab="commands">Commands</button>
+                        <button class="panel-tab" data-tab="reference">Reference</button>
+                        <button class="panel-tab" data-tab="trace" title="Agent reasoning trace">Trace</button>
+                    </div>
+
+                    <div class="panel-content" id="panel-content">
+                                                <!-- Skeleton placeholder shown briefly on load -->
+                                                <div id="panelSkeleton" class="panel-skeleton">
+                                                    <div class="skeleton-line" style="width:65%"></div>
+                                                    <div class="skeleton-line" style="width:40%"></div>
+                                                    <div class="skeleton-line" style="width:78%"></div>
+                                                    <div class="skeleton-line" style="width:55%"></div>
+                                                    <div class="skeleton-line" style="width:90%"></div>
+                                                    <div class="skeleton-line" style="width:30%"></div>
+                                                </div>
                         <!-- Quick -->
                         <div data-panel="quick">
                             <div class="quick-actions" style="margin-bottom:0.5rem;">
@@ -1265,288 +2735,6 @@ function renderOptionsChips(options) {
 }
 
 // Side panel tab switching
-document.addEventListener('DOMContentLoaded', () => {
-    const tabs = document.querySelectorAll('.panel-tab');
-    const panels = document.querySelectorAll('[data-panel]');
-    const brandCard = document.getElementById('brand-card');
-    const brandDismiss = document.getElementById('brand-dismiss');
-    const brandKey = 'easly.brandCard.hidden';
-    try {
-        const hidden = localStorage.getItem(brandKey) === '1';
-        if (hidden && brandCard) brandCard.parentElement.classList.add('hidden');
-    } catch (_) {}
-
-    if (brandDismiss) {
-        brandDismiss.addEventListener('click', () => {
-            const sec = document.getElementById('brand-card-section');
-            if (sec) sec.classList.add('hidden');
-            try { localStorage.setItem(brandKey, '1'); } catch (_) {}
-        });
-    }
-
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            tabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            const active = tab.getAttribute('data-tab');
-            panels.forEach(p => {
-                p.classList.toggle('hidden', p.getAttribute('data-panel') !== active);
-            });
-        });
-    });
-});
-
-function stripHtml(html) {
-    const tmp = document.createElement('div');
-    tmp.innerHTML = html;
-    return tmp.textContent || tmp.innerText || '';
-}
-
-// Settings management
-const aiSettings = {
-    voiceResponses: true,
-    autoSuggestions: true,
-    showTimestamps: false
-};
-
-// Load settings from localStorage
-function loadSettings() {
-    try {
-        const saved = localStorage.getItem('easlyAISettings');
-        if (saved) {
-            Object.assign(aiSettings, JSON.parse(saved));
-        }
-    } catch (e) {
-        console.warn('Failed to load settings:', e);
-    }
-
-    // Apply settings to UI
-    const voiceToggle = document.getElementById('voiceResponsesToggle');
-    const autoToggle = document.getElementById('autoSuggestionsToggle');
-    const timestampToggle = document.getElementById('showTimestampsToggle');
-
-    if (voiceToggle) voiceToggle.checked = aiSettings.voiceResponses;
-    if (autoToggle) autoToggle.checked = aiSettings.autoSuggestions;
-    if (timestampToggle) timestampToggle.checked = aiSettings.showTimestamps;
-}
-
-// Save settings to localStorage
-function saveSettings() {
-    try {
-        localStorage.setItem('easlyAISettings', JSON.stringify(aiSettings));
-    } catch (e) {
-        console.warn('Failed to save settings:', e);
-    }
-}
-
-// Update setting and apply changes
-function updateSetting(key, value) {
-    aiSettings[key] = value;
-    saveSettings();
-
-    // Apply setting immediately
-    applySetting(key, value);
-
-    // Show feedback
-    showToast(`${key.replace(/([A-Z])/g, ' $1').toLowerCase()} ${value ? 'enabled' : 'disabled'}`, 'success');
-}
-
-// Apply setting changes to the interface
-function applySetting(key, value) {
-    switch (key) {
-        case 'showTimestamps':
-            // Toggle timestamp visibility
-            const timestamps = document.querySelectorAll('.message-time');
-            timestamps.forEach(ts => {
-                ts.style.display = value ? 'inline' : 'none';
-            });
-            break;
-        case 'autoSuggestions':
-            // Toggle all quick action groups visibility (main input + side panel)
-            const qaGroups = document.querySelectorAll('.quick-actions');
-            qaGroups.forEach(el => { el.style.display = value ? 'flex' : 'none'; });
-            break;
-        case 'voiceResponses':
-            // This is handled in the TTS function
-            break;
-    }
-}
-
-function isTTSEnabled() {
-    return aiSettings.voiceResponses;
-}
-
-function speakText(text) {
-    if (!('speechSynthesis' in window)) {
-        showToast('Text-to-speech is not supported in your browser.', 'error');
-        return;
-    }
-    try {
-        const utter = new SpeechSynthesisUtterance(text);
-        utter.rate = 1.0; // natural speed
-        utter.pitch = 1.0;
-        // Prefer an English voice if available
-        const voices = window.speechSynthesis.getVoices();
-        const en = voices.find(v => /en-/i.test(v.lang));
-        if (en) utter.voice = en;
-        window.speechSynthesis.cancel(); // stop any ongoing speech
-        window.speechSynthesis.speak(utter);
-    } catch (e) {
-        console.warn('TTS error:', e);
-    }
-}
-
-function addActionCard(action) {
-    const card = document.createElement('div');
-    card.className = 'chat-message ai-message';
-    const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    card.innerHTML = `
-        <div class="message-avatar"><div class="avatar-ai">🤖</div></div>
-        <div class="message-content">
-            <div class="message-header">
-                <span class="sender-name">Easly AI</span>
-                <span class="message-time">${time}</span>
-            </div>
-            <div class="message-text">
-                <div class="card action-card">
-                    <div class="card-body">
-                        <p><strong>Proposed action:</strong> ${action.type}</p>
-                        <pre class="json-response">${JSON.stringify(action.payload, null, 2)}</pre>
-                        <div class="mt-2">
-                            <button class="btn btn-primary" id="confirm-${Date.now()}">Confirm</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-    chatHistory.appendChild(card);
-    chatHistory.scrollTop = chatHistory.scrollHeight;
-    const btn = card.querySelector('button');
-    btn.addEventListener('click', async () => {
-        btn.disabled = true;
-        try {
-            await performAction(action);
-            showToast('Action completed', 'success');
-        } catch (e) {
-            console.error(e);
-            showToast('Action failed: ' + (e.message||e), 'error');
-        } finally {
-            btn.disabled = false;
-        }
-    });
-}
-
-async function performAction(action) {
-    const { endpoint, method, payload } = action;
-    const res = await fetch(endpoint, {
-        method: method || 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload||{})
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res.json().catch(()=>({ ok:true }));
-}
-
-// Format message content
-function formatMessage(message) {
-    // Handle JSON responses
-    if (message.startsWith('{') || message.startsWith('[')) {
-        try {
-            const parsed = JSON.parse(message);
-            return `<pre class="json-response">${JSON.stringify(parsed, null, 2)}</pre>`;
-        } catch (e) {
-            // Not valid JSON, treat as regular text
-        }
-    }
-
-    // Convert markdown to HTML using marked.js if available
-    if (typeof marked !== 'undefined' && marked.parse) {
-        try {
-            return marked.parse(message);
-        } catch (e) {
-            console.warn('Marked.js parsing failed:', e);
-            // Fallback to manual markdown-like formatting
-        }
-    }
-
-    // Fallback: Handle basic markdown-like formatting manually
-    message = message.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    message = message.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    message = message.replace(/`(.*?)`/g, '<code>$1</code>');
-
-    // Convert line breaks to paragraphs
-    const paragraphs = message.split('\n\n').filter(p => p.trim());
-    if (paragraphs.length > 1) {
-        return paragraphs.map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
-    } else {
-        return `<p>${message.replace(/\n/g, '<br>')}</p>`;
-    }
-}
-
-// Loading and thinking states
-function addThinkingMessage() {
-    const thinkingDiv = document.createElement('div');
-    thinkingDiv.className = 'chat-message ai-message thinking-message';
-    thinkingDiv.innerHTML = `
-        <div class="message-avatar">
-            <div class="avatar-ai">🤖</div>
-        </div>
-        <div class="message-content">
-            <div class="message-header">
-                <span class="sender-name">Easly AI</span>
-                <span class="message-time">Now</span>
-            </div>
-            <div class="message-text">
-                <div class="thinking-indicator">
-                    <div class="thinking-dots">
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                    </div>
-                    <span>Thinking...</span>
-                </div>
-            </div>
-        </div>
-    `;
-
-    chatHistory.appendChild(thinkingDiv);
-    chatHistory.scrollTop = chatHistory.scrollHeight;
-}
-
-function removeThinkingMessage() {
-    const thinkingMessage = chatHistory.querySelector('.thinking-message');
-    if (thinkingMessage) {
-        thinkingMessage.remove();
-    }
-}
-
-function showLoading() {
-    document.getElementById('loadingOverlay').style.display = 'flex';
-}
-
-function hideLoading() {
-    document.getElementById('loadingOverlay').style.display = 'none';
-}
-
-// Toast notification function
-function showToast(message, type = 'info') {
-    // Create toast if it doesn't exist
-    let toast = document.getElementById('toast-notification');
-    if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'toast-notification';
-        document.body.appendChild(toast);
-    }
-
-    toast.textContent = message;
-    toast.className = `show ${type}`;
-
-    setTimeout(() => {
-        toast.classList.remove('show');
-    }, 3000);
-}
-
-// Initialize page
 document.addEventListener('DOMContentLoaded', async function() {
     // Load settings first
     loadSettings();
@@ -1644,1248 +2832,115 @@ document.addEventListener('DOMContentLoaded', async function() {
     applyHeaderState();
 });
 
-// Enhanced AI Assistant initialization complete
-
-// Real-time events via Server-Sent Events (SSE)
-function initEventsStream() {
-    if (!window.EventSource) {
-        if (eventsStatusDot) { eventsStatusDot.style.background = '#bbb'; eventsStatusDot.title = 'Real-time: unsupported'; }
-        return;
-    }
-    let opened = false;
-    let closed = false;
-    try {
-        const es = new EventSource('/events');
-        const setOnline = () => { if (eventsStatusDot) { eventsStatusDot.style.background = '#28a745'; eventsStatusDot.title = 'Real-time: connected'; } };
-        const setOffline = (reason) => { if (eventsStatusDot) { eventsStatusDot.style.background = '#dc3545'; eventsStatusDot.title = 'Real-time: ' + (reason || 'disconnected'); } };
-        es.onopen = () => { opened = true; setOnline(); };
-        es.onerror = () => {
-            if (!opened) {
-                // Likely disabled on server (404) — stop trying
-                setOffline('disabled');
-                try { es.close(); closed = true; } catch {}
-            } else {
-                setOffline('error');
-            }
-        };
-        // Known event types from server emissions (subscribe selectively)
-        const onEvt = (e) => {
-            try {
-                const evt = JSON.parse(e.data || '{}');
-                if (evt && evt.type) {
-                    handleIncomingEvent(evt);
-                }
-            } catch {}
-        };
-        es.addEventListener('inventory.update', onEvt);
-        es.addEventListener('inventory.lowStock', onEvt);
-        es.addEventListener('order.created', onEvt);
-        es.addEventListener('order.updated', onEvt);
-        es.addEventListener('ai.action', onEvt);
-        // Fallback generic handler
-        es.onmessage = onEvt;
-        // Safety timeout: if not opened in 3s, assume disabled
-        setTimeout(() => { if (!opened && !closed) { setOffline('disabled'); try { es.close(); } catch {} } }, 3000);
-    } catch (_) {
-        if (eventsStatusDot) { eventsStatusDot.style.background = '#bbb'; eventsStatusDot.title = 'Real-time: unavailable'; }
-    }
-}
-
-function handleIncomingEvent(evt) {
-    // Show compact toast; add richer cards later if desired
-    const { type, payload } = evt;
-    if (type === 'order.created') {
-        showToast(`New order ${payload?.id || ''} created`, 'success');
-    } else if (type === 'order.updated') {
-        showToast(`Order ${payload?.id || ''} updated to ${payload?.status || ''}`, 'info');
-    } else if (type === 'inventory.lowStock') {
-        showToast(`Low stock: ${payload?.name || payload?.sku || ''}`, 'warning');
-    } else if (type === 'inventory.update') {
-        showToast(`Inventory updated: ${payload?.name || payload?.sku || ''}`, 'info');
-    } else if (/^ai\./.test(type)) {
-        appendAgentTrace(type, payload);
-    } else {
-        // Generic informational toast
-        showToast(`Event: ${type}`, 'info');
-    }
-}
-
-// Agent trace logging
-function appendAgentTrace(type, payload) {
-    const box = document.getElementById('agent-trace');
-    if (!box) return;
-    const ts = new Date().toISOString().split('T')[1].replace('Z','');
-    const line = document.createElement('div');
-    const pretty = JSON.stringify(payload || {}, null, 0);
-    line.textContent = `[${ts}] ${type} ${pretty}`;
-    line.style.padding = '2px 0';
-    line.style.borderBottom = '1px solid rgba(255,255,255,0.06)';
-    if (type === 'ai.final') line.style.color = '#4ade80';
-    else if (type === 'ai.tool.execute') line.style.color = '#60a5fa';
-    else if (type === 'ai.tool.decide') line.style.color = '#fbbf24';
-    else if (type === 'ai.plan') line.style.color = '#a78bfa';
-    box.appendChild(line);
-    while (box.children.length > 400) box.removeChild(box.firstChild);
-    box.scrollTop = box.scrollHeight;
-}
-function clearAgentTrace(){ const box=document.getElementById('agent-trace'); if(box) box.innerHTML=''; }
-
-// --- Product Wizard Logic ---
+// Insert enhancements near existing DOMContentLoaded logic
 (function(){
-    const wiz = document.getElementById('productWizard');
-    const openBtn = document.getElementById('openProductWizardBtn');
-    const closeBtn = document.getElementById('closeProductWizard');
-    const nextBtn = document.getElementById('pw-next');
-    const prevBtn = document.getElementById('pw-prev');
-    const steps = Array.from(document.querySelectorAll('.pw-panel'));
-    const stepDots = Array.from(document.querySelectorAll('.pw-step'));
-    let cur = 1;
-    const state = { imageUrl: '', materialsIds: [], packagingId: '', suggestion: null };
+  // Defer until after primary DOMContentLoaded in case this snippet loads earlier
+  function initEnhancements(){
+    const sidePanel = document.querySelector('.ai-side-panel');
+    const toggleBtn = document.getElementById('panelToggleBtn');
+    const chatHistoryEl = document.getElementById('ai-chat-history');
+    const jumpBtn = document.getElementById('jumpLatestBtn');
+    const skeleton = document.getElementById('panelSkeleton');
+    let autoStick = true; // whether we auto-scroll to bottom on new messages
+    let lastScrollBottom = 0;
 
-    function setStep(n){
-        cur = Math.max(1, Math.min(4, n));
-        steps.forEach(s => s.classList.toggle('hidden', Number(s.getAttribute('data-step')) !== cur));
-        stepDots.forEach(d => d.classList.toggle('active', Number(d.getAttribute('data-step')) === cur));
-        prevBtn.disabled = cur === 1; nextBtn.style.display = cur === 4 ? 'none' : 'inline-block';
-    }
-    function open(){ wiz.style.display = 'flex'; wiz.setAttribute('aria-hidden','false'); document.body.classList.add('no-scroll'); setStep(1); }
-    function close(){ wiz.style.display = 'none'; wiz.setAttribute('aria-hidden','true'); document.body.classList.remove('no-scroll'); }
-    // Expose globally for AI uiCommand
-    window.openProductWizard = open;
-    window.closeProductWizard = close;
-    if (openBtn) openBtn.addEventListener('click', open);
-// Enhanced Product Wizard JavaScript
-(() => {
-    const wiz = document.getElementById('product-wizard');
-    const closeBtn = document.getElementById('closeProductWizard');
-    const nextBtn = document.getElementById('pw-next');
-    const prevBtn = document.getElementById('pw-prev');
-    const progressFill = document.getElementById('pw-progress');
-    const progressText = document.getElementById('pw-progress-text');
-    
-    let currentStep = 1;
-    const totalSteps = 5;
-    const state = {
-        imageUrl: '',
-        materialsIds: [],
-        packagingId: '',
-        suggestion: null
-    };
+    // Remove skeleton after slight delay (simulating load)
+    if (skeleton) setTimeout(()=>{ skeleton.remove(); }, 650);
 
-    function setStep(step) {
-        if (step < 1 || step > totalSteps) return;
-        
-        // Hide all panels
-        document.querySelectorAll('.pw-panel').forEach(panel => {
-            panel.classList.add('hidden');
-        });
-        
-        // Show current panel
-        const currentPanel = document.querySelector(`.pw-panel[data-step="${step}"]`);
-        if (currentPanel) {
-            currentPanel.classList.remove('hidden');
-        }
-        
-        // Update step indicators
-        document.querySelectorAll('.pw-step').forEach((stepEl, index) => {
-            stepEl.classList.remove('active', 'completed');
-            if (index + 1 < step) {
-                stepEl.classList.add('completed');
-            } else if (index + 1 === step) {
-                stepEl.classList.add('active');
-            }
-        });
-        
-        // Update progress
-        const progress = (step / totalSteps) * 100;
-        if (progressFill) progressFill.style.width = `${progress}%`;
-        if (progressText) progressText.textContent = `Step ${step} of ${totalSteps}`;
-        
-        // Update navigation buttons
-        if (prevBtn) prevBtn.style.display = step === 1 ? 'none' : 'inline-flex';
-        if (nextBtn) {
-            nextBtn.style.display = step === totalSteps ? 'none' : 'inline-flex';
-            nextBtn.textContent = step === totalSteps - 1 ? 'Review' : 'Next';
-        }
-        
-        currentStep = step;
-        
-        // Load data for specific steps
-        if (step === 2 && !document.getElementById('pw-materials').hasChildNodes()) {
-            loadInventory();
-        }
-        if (step === 5) {
-            updateReview();
-        }
+    // Panel toggle for mobile
+    if (toggleBtn && sidePanel) {
+      toggleBtn.addEventListener('click', ()=>{
+        const collapsed = sidePanel.classList.toggle('collapsed');
+        toggleBtn.classList.toggle('active', !collapsed);
+        toggleBtn.setAttribute('aria-expanded', String(!collapsed));
+        toggleBtn.textContent = collapsed ? 'Panel ▸' : 'Panel ▾';
+      });
     }
 
-    function open() {
-        if (!wiz) return;
-        wiz.style.display = 'flex';
-        setStep(1);
-        state.imageUrl = '';
-        state.materialsIds = [];
-        state.packagingId = '';
-        state.suggestion = null;
-        document.body.classList.add('no-scroll');
+    // Smooth scroll to bottom helper
+    function scrollToBottom(smooth=true){
+      if (!chatHistoryEl) return;
+      const behavior = smooth ? 'smooth' : 'auto';
+      chatHistoryEl.scrollTo({ top: chatHistoryEl.scrollHeight + 512, behavior });
+      lastScrollBottom = chatHistoryEl.scrollHeight - chatHistoryEl.scrollTop - chatHistoryEl.clientHeight;
     }
 
-    function close() {
-        if (!wiz) return;
-        wiz.style.display = 'none';
-        document.body.classList.remove('no-scroll');
-    }
+    // Observe chat mutations to auto-stick
+    if (chatHistoryEl) {
+      const observer = new MutationObserver((muts)=>{
+        if (autoStick) scrollToBottom(true);
+      });
+      observer.observe(chatHistoryEl, { childList:true, subtree:false });
 
-    // Global function for opening wizard
-    window.openProductWizard = open;
-
-    // Event listeners
-    if (closeBtn) closeBtn.addEventListener('click', close);
-    if (wiz) wiz.addEventListener('click', e => { if (e.target === wiz) close(); });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape' && wiz && wiz.style.display !== 'none') close(); });
-
-    // Step 1: Image upload or generate
-    const up = document.getElementById('pw-upload');
-    const genBtn = document.getElementById('pw-generate');
-    const genPrompt = document.getElementById('pw-gen-prompt');
-    const imgPrevWrap = document.getElementById('pw-image-preview');
-    const imgPrev = document.getElementById('pw-image');
-    const regenerateBtn = document.getElementById('pw-regenerate');
-    const removeImageBtn = document.getElementById('pw-remove-image');
-    
-    if (up) up.addEventListener('change', async (e) => {
-        const file = e.target.files && e.target.files[0]; 
-        if (!file) return;
-        
-        const rd = new FileReader();
-        rd.onload = async () => {
-            const dataUrl = rd.result;
-            try {
-                const r = await fetch('/inventory/api/images/upload', { 
-                    method:'POST', 
-                    headers:{'Content-Type':'application/json'}, 
-                    body: JSON.stringify({ imageBase64: dataUrl }) 
-                });
-                const j = await r.json(); 
-                if (!r.ok) throw new Error(j.error||('HTTP '+r.status));
-                
-                state.imageUrl = j.imageUrl; 
-                imgPrev.src = j.imageUrl; 
-                imgPrevWrap.style.display='block';
-                showToast('Image uploaded successfully', 'success');
-            } catch(err) { 
-                showToast('Upload failed: '+(err.message||err), 'error'); 
-            }
-        };
-        rd.readAsDataURL(file);
-    });
-    
-    async function generateImage() {
-        const prompt = (genPrompt?.value||'').trim(); 
-        if (!prompt) {
-            showToast('Please enter a description for the image', 'info');
-            return;
-        }
-        
-        genBtn.disabled = true;
-        genBtn.innerHTML = '<span class="spinner" style="display:block;"></span>Generating...';
-        
-        try {
-            const r = await fetch('/ai/generate-image', { 
-                method:'POST', 
-                headers:{'Content-Type':'application/json'}, 
-                body: JSON.stringify({ prompt }) 
-            });
-            const j = await r.json(); 
-            if (!r.ok) throw new Error(j.error||('HTTP '+r.status));
-            
-            state.imageUrl = j.url; 
-            imgPrev.src = j.url; 
-            imgPrevWrap.style.display='block';
-            showToast('Image generated successfully', 'success');
-        } catch(err) { 
-            showToast('Generation failed: '+(err.message||err), 'error'); 
-        } finally { 
-            genBtn.disabled = false;
-            genBtn.innerHTML = '<span class="btn-icon">✨</span>Generate';
-        }
-    }
-    
-    if (genBtn) genBtn.addEventListener('click', generateImage);
-    if (regenerateBtn) regenerateBtn.addEventListener('click', generateImage);
-    if (removeImageBtn) removeImageBtn.addEventListener('click', () => {
-        state.imageUrl = '';
-        imgPrevWrap.style.display = 'none';
-        if (up) up.value = '';
-        if (genPrompt) genPrompt.value = '';
-    });
-
-    // Step 2: Materials & packaging
-    const domMats = document.getElementById('pw-materials');
-    const domPkg = document.getElementById('pw-packaging');
-    const matsSummary = document.getElementById('pw-materials-summary');
-    
-    async function loadInventory() {
-        try {
-            const r = await fetch('/inventory/api'); 
-            const items = await r.json();
-            const mats = (items||[]).filter(i => /materials?/i.test(String(i.category||'')));
-            const pkgs = (items||[]).filter(i => /^packing\s*materials?/i.test(String(i.category||'')));
-            renderList(domMats, mats, true);
-            renderList(domPkg, pkgs, false);
-        } catch(err) {
-            showToast('Failed to load inventory', 'error');
-        }
-    }
-    
-    function renderList(container, items, multi) {
-        if (!container) return; 
-        container.innerHTML = '';
-        
-        if (items.length === 0) {
-            container.innerHTML = '<p style="text-align:center; color:var(--text-secondary); padding:2rem;">No items available</p>';
-            return;
-        }
-        
-        items.forEach(it => {
-            const row = document.createElement('label'); 
-            row.className='pw-row';
-            row.innerHTML = `
-                <input type="${multi?'checkbox':'radio'}" name="${multi?'pw-mats':'pw-pkg'}" value="${it.id}" />
-                <div style="flex:1;">
-                    <div style="font-weight:600;">${it.name}</div>
-                    <div style="font-size:0.8rem; color:var(--text-secondary);">${it.sku} | Stock: ${Number(it.stock||0)} | $${Number(it.price||0).toFixed(2)}</div>
-                </div>
-            `;
-            container.appendChild(row);
-            
-            // Add change listener for materials summary
-            if (multi) {
-                const input = row.querySelector('input');
-                input.addEventListener('change', updateMaterialsSummary);
-            }
-        });
-    }
-    
-    function updateMaterialsSummary() {
-        const selectedMats = Array.from(document.querySelectorAll('input[name="pw-mats"]:checked'));
-        const count = selectedMats.length;
-        
-        if (matsSummary) {
-            if (count > 0) {
-                matsSummary.style.display = 'flex';
-                matsSummary.querySelector('.summary-text').textContent = `${count} material${count !== 1 ? 's' : ''} selected`;
-                // You could calculate estimated cost here if needed
-                matsSummary.querySelector('.estimated-cost').textContent = 'Est. cost: $0.00';
-            } else {
-                matsSummary.style.display = 'none';
-            }
-        }
-    }
-
-    // Step 3: Manual details
-    const nameManual = document.getElementById('pw-name-manual');
-    const priceManual = document.getElementById('pw-price-manual');
-    const qtyManual = document.getElementById('pw-qty-manual');
-    const categorySelect = document.getElementById('pw-category');
-    const descriptionField = document.getElementById('pw-description');
-
-    // Step 4: AI suggestions
-    const btnSuggest = document.getElementById('pw-suggest');
-    const btnSkipAI = document.getElementById('pw-skip-ai');
-    const inputType = document.getElementById('pw-type');
-    const inputHints = document.getElementById('pw-hints');
-    const wrapSuggest = document.getElementById('pw-suggestion');
-    const inputName = document.getElementById('pw-name');
-    const inputPrice = document.getElementById('pw-price');
-    const inputSku = document.getElementById('pw-sku');
-
-    if (btnSuggest) btnSuggest.addEventListener('click', async () => {
-        collectSelections();
-        btnSuggest.disabled = true;
-        btnSuggest.innerHTML = '<span class="spinner" style="display:block;"></span>Getting Suggestions...';
-        
-        try {
-            const body = { 
-                imageUrl: state.imageUrl, 
-                materialsIds: state.materialsIds, 
-                packagingId: state.packagingId, 
-                productType: (inputType?.value||'').trim(), 
-                hints: (inputHints?.value||'').trim() 
-            };
-            const r = await fetch('/ai/suggest-product', { 
-                method:'POST', 
-                headers:{'Content-Type':'application/json'}, 
-                body: JSON.stringify(body) 
-            });
-            const j = await r.json(); 
-            if (!r.ok) throw new Error(j.error||('HTTP '+r.status));
-            
-            state.suggestion = j; 
-            wrapSuggest.style.display='block';
-            inputName.value = j.name || '';
-            inputPrice.value = Number(j.price||0).toFixed(2);
-            inputSku.value = (j.sku||'').toUpperCase();
-            
-            showToast('AI suggestions generated', 'success');
-        } catch(err) { 
-            showToast('Suggestion failed: '+(err.message||err), 'error'); 
-        } finally { 
-            btnSuggest.disabled = false;
-            btnSuggest.innerHTML = '<span class="btn-icon">🤖</span>Get AI Suggestions';
-        }
-    });
-
-    if (btnSkipAI) btnSkipAI.addEventListener('click', () => {
-        setStep(5); // Skip to review
-    });
-
-    // Apply suggestion buttons
-    document.addEventListener('click', (e) => {
-        if (e.target.classList.contains('apply-suggestion')) {
-            const targetId = e.target.dataset.target;
-            const sourceId = e.target.previousElementSibling.id;
-            const targetEl = document.getElementById(targetId);
-            const sourceEl = document.getElementById(sourceId);
-            
-            if (targetEl && sourceEl) {
-                targetEl.value = sourceEl.value;
-                showToast('Applied suggestion', 'success');
-            }
-        }
-    });
-
-    // Step 5: Review & Create
-    const review = document.getElementById('pw-review');
-    const btnCreate = document.getElementById('pw-create');
-    const btnSaveDraft = document.getElementById('pw-save-draft');
-    
-    function updateReview() {
-        if (!review) return;
-        
-        collectSelections();
-        
-        const finalName = (nameManual?.value||'').trim() || (inputName?.value||'').trim() || 'Untitled Product';
-        const finalPrice = Number(priceManual?.value || inputPrice?.value || 0);
-        const finalQty = Number(qtyManual?.value || 10);
-        const finalCategory = categorySelect?.value || 'Products';
-        const finalDescription = descriptionField?.value || '';
-        
-        review.innerHTML = `
-            <div class="review-section">
-                <h4>📋 Product Information</h4>
-                <div class="review-item">
-                    <span class="review-label">Name:</span>
-                    <span class="review-value">${finalName}</span>
-                </div>
-                <div class="review-item">
-                    <span class="review-label">Price:</span>
-                    <span class="review-value">$${finalPrice.toFixed(2)}</span>
-                </div>
-                <div class="review-item">
-                    <span class="review-label">Initial Stock:</span>
-                    <span class="review-value">${finalQty}</span>
-                </div>
-                <div class="review-item">
-                    <span class="review-label">Category:</span>
-                    <span class="review-value">${finalCategory}</span>
-                </div>
-                ${finalDescription ? `
-                <div class="review-item">
-                    <span class="review-label">Description:</span>
-                    <span class="review-value">${finalDescription}</span>
-                </div>
-                ` : ''}
-            </div>
-            <div class="review-section">
-                <h4>🖼️ Image</h4>
-                <div class="review-item">
-                    <span class="review-label">Image:</span>
-                    <span class="review-value">${state.imageUrl ? '✅ Attached' : '❌ None'}</span>
-                </div>
-            </div>
-            <div class="review-section">
-                <h4>🧱 Materials & Packaging</h4>
-                <div class="review-item">
-                    <span class="review-label">Materials:</span>
-                    <span class="review-value">${state.materialsIds.length} selected</span>
-                </div>
-                <div class="review-item">
-                    <span class="review-label">Packaging:</span>
-                    <span class="review-value">${state.packagingId ? '✅ Selected' : '❌ None'}</span>
-                </div>
-            </div>
-        `;
-    }
-    
-    if (btnCreate) btnCreate.addEventListener('click', async () => {
-        collectSelections();
-        
-        const finalName = (nameManual?.value||'').trim() || (inputName?.value||'').trim();
-        const finalPrice = Number(priceManual?.value || inputPrice?.value || 0);
-        const finalQty = Number(qtyManual?.value || 10);
-        const finalCategory = categorySelect?.value || 'Products';
-        const finalDescription = descriptionField?.value || '';
-        
-        if (!finalName) { 
-            showToast('Product name is required', 'error'); 
-            setStep(3); // Go back to details step
-            return; 
-        }
-        if (!Number.isFinite(finalPrice) || finalPrice < 0) { 
-            showToast('Valid price is required', 'error'); 
-            setStep(3);
-            return; 
-        }
-        
-        btnCreate.disabled = true;
-        btnCreate.innerHTML = '<span class="spinner" style="display:block;"></span>Creating Product...';
-        
-        try {
-            const payload = {
-                name: finalName,
-                price: finalPrice,
-                quantity: finalQty,
-                materialsIds: state.materialsIds,
-                packagingId: state.packagingId,
-                category: finalCategory,
-                imageUrl: state.imageUrl,
-                description: finalDescription
-            };
-            
-            const r = await fetch('/inventory/api/initiate-product', { 
-                method:'POST', 
-                headers:{'Content-Type':'application/json'}, 
-                body: JSON.stringify(payload) 
-            });
-            const j = await r.json(); 
-            if (!r.ok) throw new Error(j.error||('HTTP '+r.status));
-            
-            showToast(`✅ Created ${j.name} (${j.sku})`, 'success');
-            close();
-            
-            // Optionally refresh inventory or redirect
-            if (window.location.pathname.includes('inventory')) {
-                setTimeout(() => window.location.reload(), 1000);
-            }
-        } catch(err) { 
-            showToast('Creation failed: '+(err.message||err), 'error'); 
-        } finally {
-            btnCreate.disabled = false;
-            btnCreate.innerHTML = '<span class="btn-icon">🚀</span>Create Product';
-        }
-    });
-
-    if (btnSaveDraft) btnSaveDraft.addEventListener('click', () => {
-        // TODO: Implement draft saving functionality
-        showToast('Draft saving not yet implemented', 'info');
-    });
-
-    function collectSelections() {
-        const mats = Array.from(document.querySelectorAll('input[name="pw-mats"]:checked')).map(el => el.value);
-        state.materialsIds = mats;
-        const pkg = document.querySelector('input[name="pw-pkg"]:checked');
-        state.packagingId = pkg ? pkg.value : '';
-    }
-
-    function validateStep(step) {
-        switch(step) {
-            case 1:
-                return true; // Image is optional
-            case 2:
-                return true; // Materials are optional
-            case 3:
-                const name = (nameManual?.value||'').trim();
-                if (!name) {
-                    showToast('Product name is required', 'error');
-                    return false;
-                }
-                return true;
-            case 4:
-                return true; // AI assistance is optional
-            case 5:
-                return true; // Review step
-            default:
-                return true;
-        }
-    }
-
-    if (nextBtn) nextBtn.addEventListener('click', async () => {
-        if (!validateStep(currentStep)) return;
-        
-        if (currentStep === 2) collectSelections();
-        if (currentStep === 2 && !domMats.hasChildNodes()) await loadInventory();
-        
-        setStep(currentStep + 1);
-    });
-    
-    if (prevBtn) prevBtn.addEventListener('click', () => setStep(currentStep - 1));
-    
-    // Make steps clickable
-    document.addEventListener('click', (e) => {
-        if (e.target.closest('.pw-step')) {
-            const stepEl = e.target.closest('.pw-step');
-            const step = parseInt(stepEl.dataset.step);
-            if (step <= currentStep + 1) { // Allow going to current step + 1
-                setStep(step);
-            }
-        }
-    });
-})();
-
-// ====== ENHANCED PRODUCT WIZARD FUNCTIONALITY ======
-
-// Enhanced state management with validation
-let productWizardState = {
-    currentStep: 1,
-    totalSteps: 5,
-    isValid: {},
-    data: {
-        imageFile: null,
-        imageBase64: null,
-        imageUrl: null,
-        materials: [],
-        packaging: null,
-        name: '',
-        category: 'Apparel',
-        price: '',
-        quantity: 10,
-        description: '',
-        productType: '',
-        hints: '',
-        aiSuggestions: null,
-        sku: ''
-    }
-};
-
-// Enhanced step validation
-function validateStep(step) {
-    switch (step) {
-        case 1: // Image step
-            const hasImage = productWizardState.data.imageBase64 || productWizardState.data.imageUrl;
-            productWizardState.isValid[1] = hasImage;
-            return hasImage;
-            
-        case 2: // Materials step
-            const hasMaterials = productWizardState.data.materials.length > 0;
-            productWizardState.isValid[2] = hasMaterials;
-            return hasMaterials;
-            
-        case 3: // Details step
-            const name = document.getElementById('pw-name-manual')?.value?.trim();
-            const price = document.getElementById('pw-price-manual')?.value;
-            const hasValidDetails = name && price && parseFloat(price) > 0;
-            productWizardState.isValid[3] = hasValidDetails;
-            
-            if (hasValidDetails) {
-                // Save form data
-                productWizardState.data.name = name;
-                productWizardState.data.price = parseFloat(price);
-                productWizardState.data.quantity = parseInt(document.getElementById('pw-qty-manual')?.value || 10);
-                productWizardState.data.category = document.getElementById('pw-category')?.value || 'Apparel';
-                productWizardState.data.description = document.getElementById('pw-description')?.value?.trim() || '';
-            }
-            
-            return hasValidDetails;
-            
-        case 4: // AI step (always valid, optional)
-            productWizardState.data.productType = document.getElementById('pw-type')?.value?.trim() || '';
-            productWizardState.data.hints = document.getElementById('pw-hints')?.value?.trim() || '';
-            productWizardState.isValid[4] = true;
-            return true;
-            
-        case 5: // Review step
-            productWizardState.isValid[5] = true;
-            updateReviewSection();
-            return true;
-            
-        default:
-            return true;
-    }
-}
-
-// Enhanced image handling with better error handling
-async function handleImageUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    // Validate file type and size
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (!validTypes.includes(file.type)) {
-        showToast('Please select a valid image file (JPG, PNG, GIF, WebP)', 'error');
-        return;
-    }
-    
-    if (file.size > 10 * 1024 * 1024) { // 10MB limit
-        showToast('Image file must be less than 10MB', 'error');
-        return;
-    }
-    
-    try {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const base64 = e.target.result.split(',')[1];
-            productWizardState.data.imageFile = file;
-            productWizardState.data.imageBase64 = base64;
-            productWizardState.data.imageUrl = e.target.result;
-            
-            showImagePreview(e.target.result);
-            validateStep(1);
-            updateStepIndicators();
-        };
-        reader.readAsDataURL(file);
-    } catch (error) {
-        console.error('Failed to process image:', error);
-        showToast('Failed to process image', 'error');
-    }
-}
-
-// Enhanced AI image generation with better prompts
-async function handleImageGeneration(customPrompt) {
-    const promptInput = document.getElementById('pw-gen-prompt');
-    const prompt = customPrompt || promptInput?.value?.trim();
-    
-    if (!prompt) {
-        showToast('Please enter a description for the image', 'error');
-        return;
-    }
-    
-    try {
-        const generateBtn = document.getElementById('pw-generate');
-        if (generateBtn) {
-            generateBtn.disabled = true;
-            generateBtn.innerHTML = '<span class="btn-icon">⏳</span>Generating...';
-        }
-        
-        // Enhanced prompt for better results
-        const enhancedPrompt = `High-resolution product design: ${prompt}. Professional, clean, suitable for print-on-demand. White background, centered composition, commercial quality.`;
-        
-        const response = await fetch('/ai/generate-image', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: enhancedPrompt })
-        });
-        
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        
-        const data = await response.json();
-        
-        if (data.imageUrl) {
-            productWizardState.data.imageUrl = data.imageUrl;
-            productWizardState.data.imageBase64 = null;
-            showImagePreview(data.imageUrl);
-            validateStep(1);
-            updateStepIndicators();
-            showToast('Image generated successfully', 'success');
+      chatHistoryEl.addEventListener('scroll', ()=>{
+        const distanceFromBottom = chatHistoryEl.scrollHeight - chatHistoryEl.scrollTop - chatHistoryEl.clientHeight;
+        // Show jump button if user moved >120px from bottom
+        if (distanceFromBottom > 120) {
+          autoStick = false;
+          if (jumpBtn) jumpBtn.classList.add('show');
         } else {
-            throw new Error('No image URL returned');
+          autoStick = true;
+          if (jumpBtn) jumpBtn.classList.remove('show');
         }
-    } catch (error) {
-        console.error('Failed to generate image:', error);
-        showToast('Failed to generate image. Please try again with a different description.', 'error');
-    } finally {
-        const generateBtn = document.getElementById('pw-generate');
-        if (generateBtn) {
-            generateBtn.disabled = false;
-            generateBtn.innerHTML = '<span class="btn-icon">✨</span>Generate';
-        }
+      }, { passive:true });
     }
-}
 
-// Enhanced materials and packaging loading
-async function loadInventoryData() {
-    try {
-        showLoadingInStep('Loading materials and packaging...');
-        
-        // Load materials with better error handling
-        const materialsResponse = await fetch('/api/inventory?category=Materials');
-        let materials = [];
-        if (materialsResponse.ok) {
-            const allItems = await materialsResponse.json();
-            materials = allItems.filter(item => item.category === 'Materials' || item.category === 'Packing Materials');
-        }
-        
-        // Load packaging options
-        const packagingResponse = await fetch('/api/inventory?category=Packing Materials');
-        let packaging = [];
-        if (packagingResponse.ok) {
-            const allItems = await packagingResponse.json();
-            packaging = allItems.filter(item => item.category === 'Packing Materials');
-        }
-        
-        renderMaterialsSelection(materials);
-        renderPackagingSelection(packaging);
-        
-    } catch (error) {
-        console.error('Failed to load inventory data:', error);
-        showToast('Failed to load inventory data. Some features may be limited.', 'error');
-        
-        // Provide fallback empty selections
-        renderMaterialsSelection([]);
-        renderPackagingSelection([]);
-    } finally {
-        hideLoadingInStep();
-    }
-}
+    if (jumpBtn) jumpBtn.addEventListener('click', ()=>{ autoStick = true; scrollToBottom(true); });
 
-function showLoadingInStep(message) {
-    const container = document.getElementById('pw-materials');
-    if (container) {
-        container.innerHTML = `<div class="loading-message">${message}</div>`;
-    }
-}
+    // Initial stick
+    scrollToBottom(false);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initEnhancements); else initEnhancements();
+})();
+// End enhancements
+</script>
 
-function hideLoadingInStep() {
-    // This will be handled by the render functions
-}
-
-// Enhanced materials rendering with better UI
-function renderMaterialsSelection(materials) {
-    const container = document.getElementById('pw-materials');
-    if (!container) return;
-    
-    if (materials.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <p>No materials found in inventory.</p>
-                <small>You can still create the product and add materials later.</small>
-            </div>
-        `;
-        return;
-    }
-    
-    container.innerHTML = materials.map(material => `
-        <div class="material-item ${material.stock <= 0 ? 'out-of-stock' : ''}" data-material-id="${material.id}">
-            <label class="material-label">
-                <input type="checkbox" class="material-checkbox" value="${material.id}" ${material.stock <= 0 ? 'disabled' : ''}>
-                <div class="material-content">
-                    <div class="material-header">
-                        <div class="material-name">${material.name}</div>
-                        ${material.stock <= 0 ? '<span class="stock-badge out-of-stock">Out of Stock</span>' : ''}
-                        ${material.stock > 0 && material.stock < 10 ? '<span class="stock-badge low-stock">Low Stock</span>' : ''}
-                    </div>
-                    <div class="material-details">
-                        <span class="material-stock">Stock: ${material.stock}</span>
-                        <span class="material-cost">$${(material.cost || 0).toFixed(2)}</span>
-                        ${material.sku ? `<span class="material-sku">SKU: ${material.sku}</span>` : ''}
+<div class="page-container ai-theme">
+    <div class="ai-assistant-container">
+        <!-- Header -->
+        <header class="ai-header">
+            <div class="ai-header-content">
+                <div class="ai-title-section">
+                    <img class="ai-logo" src="/images/shopeasly-logo.png" alt="Easly AI" />
+                    <div class="ai-title-text">
+                        <h1>Easly AI</h1>
+                        <p>Creative + Operations Copilot</p>
                     </div>
                 </div>
-            </label>
-        </div>
-    `).join('');
-    
-    // Add event listeners with validation
-    container.querySelectorAll('.material-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', () => {
-            updateMaterialsSelection();
-            validateStep(2);
-            updateStepIndicators();
-        });
-    });
-}
-
-// Enhanced packaging rendering
-function renderPackagingSelection(packaging) {
-    const container = document.getElementById('pw-packaging');
-    if (!container) return;
-    
-    if (packaging.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <p>No packaging options found.</p>
-                <small>Packaging is optional for product creation.</small>
-            </div>
-        `;
-        return;
-    }
-    
-    container.innerHTML = `
-        <div class="packaging-item" data-packaging-id="">
-            <label class="packaging-label">
-                <input type="radio" name="packaging" class="packaging-radio" value="" checked>
-                <div class="packaging-content">
-                    <div class="packaging-name">No Packaging</div>
-                    <div class="packaging-details">
-                        <span class="packaging-note">Skip packaging for this product</span>
+                <div class="ai-header-actions">
+                    <button id="panelToggleBtn" title="Toggle side panel" aria-expanded="true">Panel ▾</button>
+                    <button id="openProductWizardBtn" class="btn btn-primary">+ Product</button>
+                    <button id="openBulkCreationBtn" class="btn btn-secondary" title="Create multiple products">📦 Bulk</button>
+                    <div class="ai-mode-controls" style="display:flex;align-items:center;gap:.5rem;margin-left:.75rem;">
+                        <label title="Send messages to the architect tool-loop endpoint" style="display:flex;align-items:center;gap:.35rem;cursor:pointer;user-select:none;font-size:.9rem;color:var(--text-secondary);">
+                            <input type="checkbox" id="archModeToggle" style="margin:0;">
+                            <span>Architect mode</span>
+                        </label>
+                        <select id="userRoleSelect" title="User role (optional)" class="form-input" style="height:32px;padding:2px 8px;font-size:.85rem;width:auto;">
+                            <option value="">Role: auto</option>
+                            <option value="owner">Owner</option>
+                            <option value="manager">Manager</option>
+                            <option value="staff">Staff</option>
+                        </select>
+                        <span id="eventsStatusDot" class="status-dot" title="Real-time: unknown" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#bbb;box-shadow:0 0 0 2px rgba(0,0,0,.05);"></span>
                     </div>
-                </div>
-            </label>
-        </div>
-        ${packaging.map(pkg => `
-            <div class="packaging-item ${pkg.stock <= 0 ? 'out-of-stock' : ''}" data-packaging-id="${pkg.id}">
-                <label class="packaging-label">
-                    <input type="radio" name="packaging" class="packaging-radio" value="${pkg.id}" ${pkg.stock <= 0 ? 'disabled' : ''}>
-                    <div class="packaging-content">
-                        <div class="packaging-header">
-                            <div class="packaging-name">${pkg.name}</div>
-                            ${pkg.stock <= 0 ? '<span class="stock-badge out-of-stock">Out of Stock</span>' : ''}
-                        </div>
-                        <div class="packaging-details">
-                            <span class="packaging-dimensions">${pkg.dimensions || 'N/A'}</span>
-                            <span class="packaging-stock">Stock: ${pkg.stock}</span>
-                            ${pkg.sku ? `<span class="packaging-sku">SKU: ${pkg.sku}</span>` : ''}
-                        </div>
-                    </div>
-                </label>
-            </div>
-        `).join('')}
-    `;
-    
-    // Add event listeners
-    container.querySelectorAll('.packaging-radio').forEach(radio => {
-        radio.addEventListener('change', updatePackagingSelection);
-    });
-}
-
-// Enhanced materials selection with cost calculation
-function updateMaterialsSelection() {
-    const selected = Array.from(document.querySelectorAll('.material-checkbox:checked'));
-    productWizardState.data.materials = selected.map(cb => cb.value);
-    
-    // Update summary with enhanced information
-    const summary = document.getElementById('pw-materials-summary');
-    if (summary) {
-        const count = selected.length;
-        summary.style.display = count > 0 ? 'flex' : 'none';
-        
-        if (count > 0) {
-            summary.querySelector('.summary-text').textContent = `${count} material${count !== 1 ? 's' : ''} selected`;
-            
-            // Calculate more accurate estimated cost
-            let estimatedCost = 0;
-            selected.forEach(checkbox => {
-                const materialItem = checkbox.closest('.material-item');
-                const costText = materialItem.querySelector('.material-cost').textContent;
-                const cost = parseFloat(costText.replace('$', '')) || 0;
-                estimatedCost += cost;
-            });
-            
-            summary.querySelector('.estimated-cost').textContent = `Est. cost: $${estimatedCost.toFixed(2)}`;
-        }
-    }
-}
-
-// Enhanced step indicators
-function updateStepIndicators() {
-    document.querySelectorAll('.pw-step').forEach((step, index) => {
-        const stepNumber = index + 1;
-        const isValid = productWizardState.isValid[stepNumber];
-        
-        step.classList.remove('active', 'completed', 'invalid');
-        
-        if (stepNumber === productWizardState.currentStep) {
-            step.classList.add('active');
-        } else if (stepNumber < productWizardState.currentStep || isValid) {
-            step.classList.add('completed');
-        } else if (isValid === false) {
-            step.classList.add('invalid');
-        }
-    });
-}
-
-// Enhanced review section
-function updateReviewSection() {
-    const container = document.getElementById('pw-review');
-    if (!container) return;
-    
-    const { data } = productWizardState;
-    
-    container.innerHTML = `
-        <div class="review-grid">
-            <div class="review-section">
-                <h4>📷 Product Image</h4>
-                ${data.imageUrl ? `
-                    <div class="review-image-container">
-                        <img src="${data.imageUrl}" alt="Product preview" class="review-image">
-                        <div class="image-info">
-                            ${data.imageBase64 ? 'Uploaded image' : 'AI generated image'}
-                        </div>
-                    </div>
-                ` : '<p class="review-missing">⚠️ No image selected</p>'}
-            </div>
-            
-            <div class="review-section">
-                <h4>📋 Product Details</h4>
-                <div class="review-details">
-                    <div class="detail-row">
-                        <strong>Name:</strong> 
-                        <span>${data.name || '<span class="missing">Not set</span>'}</span>
-                    </div>
-                    <div class="detail-row">
-                        <strong>Category:</strong> 
-                        <span>${data.category}</span>
-                    </div>
-                    <div class="detail-row">
-                        <strong>Price:</strong> 
-                        <span class="price">$${data.price || '0.00'}</span>
-                    </div>
-                    <div class="detail-row">
-                        <strong>Initial Stock:</strong> 
-                        <span>${data.quantity}</span>
-                    </div>
-                    ${data.description ? `
-                        <div class="detail-row">
-                            <strong>Description:</strong> 
-                            <span class="description">${data.description}</span>
-                        </div>
-                    ` : ''}
                 </div>
             </div>
-            
-            <div class="review-section">
-                <h4>🧱 Materials & Packaging</h4>
-                <div class="review-materials">
-                    ${data.materials.length > 0 ? `
-                        <div class="materials-count">${data.materials.length} material${data.materials.length !== 1 ? 's' : ''} selected</div>
-                        <div class="materials-list">
-                            ${data.materials.map(id => {
-                                const item = document.querySelector(`[data-material-id="${id}"]`);
-                                const name = item?.querySelector('.material-name')?.textContent || 'Unknown';
-                                return `<span class="material-tag">${name}</span>`;
-                            }).join('')}
-                        </div>
-                    ` : '<span class="review-warning">⚠️ No materials selected</span>'}
-                    
-                    ${data.packaging ? `
-                        <div class="packaging-info">
-                            <strong>Packaging:</strong> Selected
-                        </div>
-                    ` : '<div class="packaging-info">No packaging selected</div>'}
-                </div>
-            </div>
-            
-            ${data.aiSuggestions ? `
-                <div class="review-section">
-                    <h4>🤖 AI Suggestions</h4>
-                    <div class="review-ai">
-                        ${data.aiSuggestions.name ? `
-                            <div class="ai-suggestion">
-                                <strong>Suggested Name:</strong> ${data.aiSuggestions.name}
-                            </div>
-                        ` : ''}
-                        ${data.aiSuggestions.price ? `
-                            <div class="ai-suggestion">
-                                <strong>Suggested Price:</strong> $${data.aiSuggestions.price}
-                            </div>
-                        ` : ''}
-                        ${data.aiSuggestions.sku ? `
-                            <div class="ai-suggestion">
-                                <strong>Suggested SKU:</strong> ${data.aiSuggestions.sku}
-                            </div>
-                        ` : ''}
-                    </div>
-                </div>
-            ` : ''}
-        </div>
-        
-        <div class="review-summary">
-            <h4>📊 Summary</h4>
-            <div class="summary-stats">
-                <div class="stat">
-                    <span class="stat-label">Total Investment:</span>
-                    <span class="stat-value">~$${calculateTotalCost().toFixed(2)}</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-label">Potential Revenue:</span>
-                    <span class="stat-value">$${(data.price * data.quantity).toFixed(2)}</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-label">Estimated Profit:</span>
-                    <span class="stat-value profit">$${((data.price * data.quantity) - calculateTotalCost()).toFixed(2)}</span>
-                </div>
-            </div>
-        </div>
-    `;
-}
+        </header>
 
-function calculateTotalCost() {
-    const { data } = productWizardState;
-    let total = 0;
-    
-    // Add material costs
-    data.materials.forEach(id => {
-        const item = document.querySelector(`[data-material-id="${id}"]`);
-        if (item) {
-            const costText = item.querySelector('.material-cost')?.textContent || '$0.00';
-            const cost = parseFloat(costText.replace('$', '')) || 0;
-            total += cost * data.quantity; // Cost per unit * quantity
-        }
-    });
-    
-    // Add packaging cost if selected
-    if (data.packaging) {
-        // Assume packaging cost (this would come from actual data)
-        total += 0.50 * data.quantity; // $0.50 per unit for packaging
-    }
-    
-    return total;
-}
-
-// Enhanced product creation with better error handling
-async function createProduct() {
-    try {
-        const createBtn = document.getElementById('pw-create');
-        if (createBtn) {
-            createBtn.disabled = true;
-            createBtn.innerHTML = '<span class="btn-icon">⏳</span>Creating Product...';
-        }
-        
-        // Final validation
-        if (!validateStep(1) || !validateStep(2) || !validateStep(3)) {
-            showToast('Please complete all required steps', 'error');
-            return;
-        }
-        
-        const { data } = productWizardState;
-        
-        // Prepare enhanced product data
-        const productData = {
-            name: data.name,
-            category: data.category,
-            price: data.price,
-            stock: data.quantity,
-            description: data.description,
-            imageBase64: data.imageBase64,
-            imageUrl: data.imageUrl,
-            materials: data.materials,
-            packaging: data.packaging,
-            sku: data.aiSuggestions?.sku || generateSKU(data.name, data.category),
-            createVariants: document.getElementById('pw-create-variants')?.checked || false,
-            autoReorder: document.getElementById('pw-auto-reorder')?.checked || false,
-            productType: data.productType,
-            hints: data.hints,
-            createdVia: 'product-wizard',
-            estimatedCost: calculateTotalCost()
-        };
-        
-        const response = await fetch('/api/inventory', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(productData)
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || `HTTP ${response.status}`);
-        }
-        
-        const result = await response.json();
-        
-        showToast('Product created successfully!', 'success');
-        closeProductWizard();
-        
-        // Clear any saved draft
-        try {
-            localStorage.removeItem('productWizardDraft');
-        } catch (e) {}
-        
-        // Add detailed success message to chat
-        addMessageToChat('ai', `✅ **Product Created Successfully!**
-
-**${data.name}** has been added to your inventory:
-- **SKU:** ${result.sku || productData.sku}
-- **Price:** $${data.price}
-- **Initial Stock:** ${data.quantity} units
-- **Category:** ${data.category}
-${data.materials.length > 0 ? `- **Materials:** ${data.materials.length} selected` : ''}
-${data.packaging ? '- **Packaging:** Configured' : ''}
-
-The product is now available in your inventory and ready for orders!`);
-        
-    } catch (error) {
-        console.error('Failed to create product:', error);
-        showToast(`Failed to create product: ${error.message}`, 'error');
-    } finally {
-        const createBtn = document.getElementById('pw-create');
-        if (createBtn) {
-            createBtn.disabled = false;
-            createBtn.innerHTML = '<span class="btn-icon">🚀</span>Create Product';
-        }
-    }
-}
-
-// Generate SKU helper function
-function generateSKU(name, category) {
-    const namePrefix = name.substring(0, 3).toUpperCase();
-    const categoryPrefix = category.substring(0, 3).toUpperCase();
-    const randomSuffix = Math.random().toString(36).substring(2, 5).toUpperCase();
-    return `${categoryPrefix}-${namePrefix}-${randomSuffix}`;
-}
-
-// Expose enhanced functions globally
-window.openProductWizard = openProductWizard;
-window.handleImageUpload = handleImageUpload;
-window.handleImageGeneration = handleImageGeneration;
-window.validateStep = validateStep;
-
-// ====== BULK CREATION FUNCTIONALITY ======
-
-let bulkCreationState = {
-    activeTab: 'templates',
-    csvData: null,
-    csvFile: null,
-    selectedTemplate: null,
-    batchResults: [],
-    selectedResults: []
-};
-
-function openBulkCreation() {
-    const modal = document.getElementById('bulkCreationModal');
-    if (!modal) return;
-    
-    modal.style.display = 'flex';
-    modal.setAttribute('aria-hidden', 'false');
-    document.body.classList.add('no-scroll');
-    
-    // Reset state
-    bulkCreationState = {
-        activeTab: 'templates',
-        csvData: null,
-        csvFile: null,
-        selectedTemplate: null,
-        batchResults: [],
-        selectedResults: []
-    };
-    
-    // Set active tab
-    switchBulkTab('templates');
-}
-
-function closeBulkCreation() {
-    const modal = document.getElementById('bulkCreationModal');
-    if (!modal) return;
-    
-    modal.style.display = 'none';
-    modal.setAttribute('aria-hidden', 'true');
-    document.body.classList.remove('no-scroll');
-}
-
-function switchBulkTab(tabName) {
-    // Update tab headers
-    document.querySelectorAll('.tab-header').forEach(header => {
-        header.classList.remove('active');
-        if (header.getAttribute('data-tab') === tabName) {
-            header.classList.add('active');
-        }
-    });
-    
-    // Update tab content
-    document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.remove('active');
-        if (content.getAttribute('data-tab') === tabName) {
-            content.classList.add('active');
-        }
-    });
-    
-    bulkCreationState.activeTab = tabName;
-}
-
-// Template handling
-function handleTemplateSelection(templateType) {
-    bulkCreationState.selectedTemplate = templateType;
-    
-    // Show loading and start template creation
-    showToast(`Setting up ${templateType} template...`, 'info');
+        <!-- Main layout: chat left, panel right -->
+        <div class="ai-layout">
+            <!-- Chat column -->
+            <section class="ai-chat-container" aria-label="Chat">
+                <button id="jumpLatestBtn" class="jump-latest-btn" aria-label="Jump to latest messages">↓ New</button>
+                <div class="ai-chat-history" id="ai-chat-history" role="log" aria-live="polite" aria-relevant="additions">
+                    <!-- Welcome message -->
+                    <div class="chat-message ai-message">
+                        <div class="message-avatar"><div class="avatar-ai">🤖</div></div>
+                        <div class="message-content">
+                            <div class="message-header">
+                                <span class="sender-name">Easly AI</span>
+                                <span class="message-time">Just now</span>
     
     // Open product wizard with template defaults
     closeBulkCreation();
@@ -3183,10 +3238,11 @@ function displayCSVPreview(parsedData) {
         
         // Headers
         tableHTML += '<thead><tr>';
-        headers.forEach(header => {
+        for (let hi=0; hi<headers.length; hi++) {
+            const header = headers[hi];
             const isRequired = requiredColumns.includes(header);
-            tableHTML += `<th style="border:1px solid #ddd; padding:8px; background:#f8f9fa; ${isRequired ? 'font-weight:bold; color:#007bff;' : ''}">${header}${isRequired ? ' *' : ''}</th>`;
-        });
+            tableHTML += '<th style="border:1px solid #ddd; padding:8px; background:#f8f9fa;' + (isRequired ? ' font-weight:bold; color:#007bff;' : '') + '\">' + header + (isRequired ? ' *' : '') + '</th>';
+        }
         tableHTML += '</tr></thead>';
         
         // Data rows (first 5 rows)
@@ -3267,17 +3323,18 @@ function showDetailedPreview(parsedData) {
     
     // Headers
     tableHTML += '<thead><tr style="background: #f8f9fa;">';
-    headers.forEach(header => {
+    for (let hi=0; hi<headers.length; hi++) {
+        const header = headers[hi];
         const isRequired = requiredColumns.includes(header);
-        tableHTML += `<th style="border:1px solid #ddd; padding:12px; text-align:left; ${isRequired ? 'background:#e3f2fd; font-weight:bold; color:#007bff;' : ''}">${header}${isRequired ? ' *' : ''}</th>`;
-    });
+        tableHTML += '<th style="border:1px solid #ddd; padding:12px; text-align:left;' + (isRequired ? ' background:#e3f2fd; font-weight:bold; color:#007bff;' : '') + '\">' + header + (isRequired ? ' *' : '') + '</th>';
+    }
     tableHTML += '</tr></thead>';
     
     // Data rows
     tableHTML += '<tbody>';
     data.forEach((row, index) => {
         const bgColor = index % 2 === 0 ? '#fff' : '#f9f9f9';
-        tableHTML += `<tr style="background: ${bgColor};">`;
+    tableHTML += '<tr style="background:' + bgColor + ';">';
         headers.forEach(header => {
             const value = row[header] || '';
             tableHTML += `<td style="border:1px solid #ddd; padding:10px;">${value}</td>`;
