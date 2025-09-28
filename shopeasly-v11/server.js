@@ -28,31 +28,34 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(compression());
 
 // Configure helmet with custom CSP for Easly AI functionality
+// Generate a simple nonce per request for future externalized inline <script> blocks
+app.use((req, res, next) => {
+    res.locals.cspNonce = Buffer.from(Date.now().toString(36) + Math.random().toString(36).slice(2, 10)).toString('base64');
+    next();
+});
+
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            // Allow inline scripts temporarily for EJS; consider nonces in production
             scriptSrc: [
                 "'self'",
-                "'unsafe-inline'",
+                // We rely on external modules only; inline scripts should migrate or use nonce
+                (req, res) => `'nonce-${res.locals.cspNonce}'`,
                 "https://cdn.jsdelivr.net",
                 "https://unpkg.com"
             ],
             scriptSrcElem: [
                 "'self'",
-                "'unsafe-inline'",
+                (req, res) => `'nonce-${res.locals.cspNonce}'`,
                 "https://cdn.jsdelivr.net",
                 "https://unpkg.com"
             ],
-            // Allow inline event handlers for now
-            scriptSrcAttr: [
-                "'self'",
-                "'unsafe-inline'"
-            ],
+            // Event handler attributes now removed across key views; disallow unsafe-inline
+            scriptSrcAttr: ["'self'"],
             styleSrc: [
                 "'self'",
-                "'unsafe-inline'",
+                "'unsafe-inline'", // keep for now due to embedded <style>; will remove after extraction
                 "https://cdn.jsdelivr.net",
                 "https://fonts.googleapis.com"
             ],
@@ -80,7 +83,10 @@ app.use(helmet({
     }
 }));
 
-app.use(morgan('combined'));
+// Suppress noisy platform health probes from access logs to reduce log volume
+app.use(morgan('combined', {
+    skip: (req) => req.path === '/health'
+}));
 
 // Parse request bodies
 // Capture raw body for HMAC if needed
