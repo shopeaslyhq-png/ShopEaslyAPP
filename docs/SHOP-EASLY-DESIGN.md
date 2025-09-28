@@ -1,18 +1,18 @@
 # ShopEasly APP — Comprehensive Design Document
 
-Version: 2.0.1
-Date: 2025-09-24
+Version: 2.0.2
+Date: 2025-09-28
 Owner: shopeaslyhq-png
 
 ## 1. Purpose and Scope
-ShopEasly APP v2.0 is an enhanced operations system for a print and fulfillment workshop. It centralizes orders, inventory (products, raw materials, packing), production flows, and introduces a proactive AI co-pilot with session memory, forecasting, role-awareness, and real-time updates. This document defines the end-to-end design: context, architecture, modules, data, APIs, UX, non-functionals, and the app’s role across the workshop lifecycle.
+ShopEasly APP v2.0 is an enhanced operations system for a print and fulfillment workshop. It centralizes orders, inventory (products, raw materials, packing), production flows, and introduces a proactive AI co-pilot with session memory, forecasting hooks, and real-time updates. Earlier multi-role UI distinctions were simplified to a single admin persona in this iteration to streamline maintenance. Future reinstatement of granular roles remains a roadmap option. This document defines the end-to-end design: context, architecture, modules, data, APIs, UX, non-functionals, and the app’s role across the workshop lifecycle.
 
 Goals:
 - Single place to manage orders and inventory with real data (no hallucinations)
 - Fast, no-scroll operational dashboards with modal flows
-- AI co-pilot for quick lookups, guided actions, and asset generation
-- Proactive intelligence: daily digests, forecasting, role-aware guidance
-- Real-time operations: updates via WebSockets and a centralized event bus
+- AI co-pilot for quick lookups, guided actions, asset generation, and bulk product creation/import
+- Proactive intelligence: daily digests & forecasting hooks (expanding)
+- Real-time operations: updates via Server-Sent Events (SSE) + centralized event bus
 - Local-friendly: runs with JSON storage; can grow to cloud backends later
 
 Out of scope:
@@ -20,20 +20,18 @@ Out of scope:
 - Detailed user/role auth (future hardening)
 
 ## 2. Key Enhancements in v2.0
-- AI Co-Pilot: session memory, proactive daily digests, forecasting hooks, visual output support (charts), creative flows for designers.
-- Dashboard UX: AI overlay card, drill-down analytics, role-based views for managers, operators, techs, and packers.
-- System: real-time updates via WebSockets, centralized event bus, dual storage (JSON + Firestore/Postgres ready), richer observability metrics.
-- Security & Reliability: role-based guardrails, AI audit trails, shared validation layer, HMAC + optional Firebase Auth.
-- Workflow Extensions: production tracking (jobs/stations), shipping integrations, designer ideation pipeline.
+- AI Co-Pilot: session memory, proactive daily digests (planned rollout), forecasting hooks, image/design generation, bulk product ideas + import flows.
+- Dashboard UX: AI overlay card, drill-down analytics. (Granular role-based view variants deferred; single admin persona active.)
+- System: real-time updates via SSE + centralized event bus, dual storage strategy (JSON now; Firestore/Postgres ready), richer observability metrics.
+- Security & Reliability: simplified single-role model, AI audit trails foundation (history + ndjson logs), shared validation layer, HMAC + optional Firebase Auth (opt-in), CSP hardening path.
+- Workflow Extensions: production tracking (planned), shipping integrations (planned), designer ideation pipeline (foundational image + creative assistant flows in place).
 
 ## 2. System Context
-Actors:
-- Operator: creates/updates orders, monitors progress
-- Production Tech: checks inventory, deducts materials, fulfills
-- Packer/Shipper: uses packing list and packing materials
-- Manager: reviews dashboard, low-stock alerts, usage
-- Designer: generates images/designs and product concepts
-- AI Co-Pilot: assists with data lookups and light actions
+Actors (current simplified deployment):
+- Admin (single persona): full operational + creative capabilities (encompasses former operator/tech/packer/manager/designer roles)
+- AI Co-Pilot: assists with data lookups, bulk ideation, creative generation, and guided flows
+
+Historical / potential future distinct actors (deferred): Operator, Production Tech, Packer/Shipper, Manager, Designer.
 
 External systems (optional/extendable):
 - OpenAI / Gemini APIs (image/text)—optional
@@ -46,7 +44,7 @@ Runtime topology:
 - Client-side enhancements for modals, tabs, upload, and AI overlay
 - Storage: local JSON files in `shopeasly-v11/data/*.json` via a Firestore-like shim
 - Optional: Vite/React source `src/` for future UI; currently EJS pages are primary
-- Real-time: optional SSE channel for live updates (`GET /events`, gated by USE_EVENTS); centralized event bus emitting domain events for dashboards and AI digests
+- Real-time: SSE channel for live updates (`/events` or consolidated AI events stream) gated by `USE_EVENTS`; centralized event bus emits domain events consumed by dashboards and AI assistant.
 - Data backends: dual storage strategy (local JSON now; Firestore/Postgres target with migration path)
 
 Key packages and layers:
@@ -56,6 +54,7 @@ Key packages and layers:
 - Data access: `config/firebase.js` (local JSON CRUD)
 - Business logic: `utils/*` (orders, inventory, dashboard summary, sheets)
 - AI: `easly/aiHandlerEnhanced.js` (local intents + LLM fallback), voice/tone via `utils/ToneManager.js` + `config/voice.json`
+  - Front-end assistant modular scripts: `public/js/assistant-core.js`, `public/js/assistant-bulk.js` (extracted from prior large inline script in `views/easly.ejs` for maintainability & CSP)
 - AI (architect blueprint): Gemini function-calling loop with tools; system instructions at `config/system-instructions.js`; local tools at `utils/localDataService.js`
 - Real-time: Server-Sent Events stream `/events` (enabled when `USE_EVENTS` is set) backed by a lightweight EventEmitter bus in `utils/eventBus.js`; `utils/securityMiddleware.emitEvent` writes to file and emits to the bus
 
@@ -103,13 +102,13 @@ Deployment:
 - data/
   - inventory.json, orders.json, ai_history.json, ai_logs.ndjson, ideas.json, sessions.json
 
-## 4.1 AI Architecture: Architect + Copilot
-Roles:
-- Architect (blueprints): provides the Gemini multi-step function-calling loop and security patterns.
-- Copilot (builder): fleshes out routes and filtering logic from comments and signatures.
+## 4.1 AI Architecture: Modes (Standard + Architect)
+Modes:
+- Architect Mode (optional toggle): Gemini multi-step tool loop for blueprint reasoning / more complex sequences.
+- Standard Mode: faster local intent resolution + selective LLM usage.
 
 Core components:
-- `config/system-instructions.js`: system prompt and guardrails for Gemini.
+-- `config/system-instructions.js`: system prompt and guardrails for Gemini (trimmed: removed multi-role permission language; single-admin context assumed).
 - `utils/localDataService.js`: data tools available to the model via function-calling.
 - `easly/aiHandlerEnhanced.js`:
   - Default behavior: local intent handling; strict real-data guardrails; optional LLM fallback (Gemini/OpenAI).
@@ -120,8 +119,9 @@ Core components:
     4) repeat until no functionCalls
     5) return final concise text
   - Tools return JSON; loop supports multiple parallel calls via Promise.all.
- - Session memory: short-term context captured in `data/sessions.json` to power batch actions like “mark the last 2 orders as shipped”.
- - Proactive digests: scheduled summaries (via dashboard/report services) can surface daily sales, low stock, and pending orders.
+ - Session memory: short-term context captured in `data/sessions.json` (used for follow-up references e.g. “last design”).
+ - Proactive digests: scheduled summaries (planned) will surface daily sales, low stock, pending orders.
+ - Front-end refactor: monolithic inline assistant script removed; modular scripts handle SSE lifecycle w/ exponential backoff, UI state, bulk CSV/XLSX import, message sanitation (DOMPurify), accessibility improvements, and toast system.
 
 ## 5. Data Model
 All collections are arrays of objects in JSON files; each document includes `id`, `createdAt`, `updatedAt`.
@@ -241,7 +241,7 @@ AI Co-Pilot
 - Security: CSP `upgrade-insecure-requests`; secrets in env; no API keys exposed client-side; optional HMAC verification + Firebase Auth on AI webhook; idempotency support
 - Privacy: no third-party trackers; data stays local unless configured
 - Extensibility: replace local JSON with Firestore/Postgres by swapping `config/firebase.js`
-- Real-time: SSE for inventory/orders updates; event bus emits domain events consumed by UI and AI digest jobs. Client shows a small status dot in Easly AI header (grey=unknown, green=connected, red=disabled/error).
+- Real-time: SSE for inventory/orders/assistant events; event bus emits domain events consumed by UI and (future) digest jobs. Client status dot reflects connection state (grey=unknown, green=connected, amber=reconnecting, red=error/disabled). Exponential backoff reconnect implemented in `assistant-core.js`.
 
 ## 10. Error Handling & Edge Cases
 - Inventory import: skip rows missing `name` or `sku`; basic CSV parsing; SheetJS for XLSX
@@ -292,22 +292,23 @@ OAuth server
 
 ## 14. Roadmap
 Short-term (0–2 weeks)
-- Implement session memory in Easly AI.
-- AI daily digest alerts on dashboard.
-- Role-aware AI responses with scoped actions.
-- Real-time updates via WebSockets.
+- Finalize CSP hardening (remove remaining inline handlers; drop `unsafe-inline`).
+- AI daily digest alerts surface on dashboard.
+- SSE robustness metrics & connection diagnostics UI.
+- Optional: reintroduce granular roles if product requirement returns.
 
 Mid-term (2–3 months)
 - AI forecasting module for stock and sales trends.
 - Advanced dashboard analytics with drill-down charts.
 - Google Sheets export auto-sync.
-- Audit logs for AI-triggered actions.
+- Audit logs & tamper-evident event chain for AI-triggered actions.
 
 Long-term (6+ months)
 - Migration from JSON to Firestore/Postgres with migrations.
 - Production line job/station tracking.
 - Shipping/payment integrations.
 - Extensible plugin system for Easly AI.
+- Fine-grained RBAC & audit-grade compliance logging.
 
 ## 15. Appendix – Key Files
 - `shopeasly-v11/routes/*`: Express endpoints
@@ -319,12 +320,26 @@ Long-term (6+ months)
 - `shopeasly-v11/utils/eventBus.js`: in-process event emitter powering `/events`
 
 ## 16. Changelog
+
+- 2.0.2 (2025-09-28)
+  - Simplified to single admin persona; removed role selector UI and role fields in event/log payloads (reduces prompt/token noise and complexity).
+  - Modularized AI assistant front-end: extracted massive inline script from `views/easly.ejs` into `public/js/assistant-core.js` and `public/js/assistant-bulk.js` (improves maintainability, enables strict CSP, reduces initial HTML weight).
+  - Introduced DOMPurify-based message sanitation layer; prepared for removal of `unsafe-inline` in CSP.
+  - Layout upgrades: grid-based assistant layout, sticky compact header behavior, skeleton loading for side panel, jump-to-latest control, improved side panel collapse state persistence.
+  - Health endpoint enhancements: unified `GET /health` (JSON) + `HEAD /health` with 5s server-side cache; includes provider/model readiness snapshot.
+  - Added graceful shutdown handling and standardized default port to 3001.
+  - Dependency cleanup: removed `chromadb` (peer conflicts); consolidated to single root `package.json`.
+  - SSE robustness improvements: reconnection backoff & status dot color semantics (grey/green/amber/red) in `assistant-core.js`.
+  - Security posture: groundwork for CSP tightening, minimized inline scripts, centralized toast & event handling.
+  - Refined system instructions: removed multi-role permission verbiage; single-admin context assumed.
+  - Misc: reduced duplicate markup in assistant view (in progress; further pruning tracked), standardized clientId persistence, improved message formatting & accessibility hooks.
+
 - 2.0.1 (2025-09-24)
   - Added in-process event bus (`utils/eventBus.js`) and SSE endpoint `/events` with CSP allowances.
   - Wired client-side SSE in `views/easly.ejs` with a status indicator dot and toast notifications for key events.
   - Added “Architect mode” toggle and optional Role selector in Easly AI header; client routes to `/ai/co-pilot-arch` when enabled and passes role.
   - `/ai/co-pilot-arch` now accepts `{ textPart }` in addition to `{ message|prompt }` for consistency with the main co-pilot payload.
-- `src/EaslyOfflineAI.*`: offline/image training UI (extendable)
+  - `src/EaslyOfflineAI.*`: offline/image training UI (extendable)
 
 ---
 This document reflects the current codebase (main branch) and implemented behaviors, including no-scroll operational layouts, spreadsheet import with auto-mapping, real-data guardrails for AI, and robust order/inventory flows.
