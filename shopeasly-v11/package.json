@@ -25,27 +25,9 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "ShopEasly V11 - AI-powered inventory management system",
-  "dependencies": {
-    "@langchain/core": "^0.2.34",
-    "@langchain/openai": "^0.3.6",
-  "chromadb": "1.10.5",
-    "openai": "^4.58.1",
-    "googleapis": "^137.0.0",
-    "@google/generative-ai": "^0.24.1",
-    "axios": "^1.6.0",
-    "compression": "^1.8.1",
-    "dotenv": "^16.3.1",
-    "ejs": "^3.1.9",
-    "ejs-mate": "^4.0.0",
-    "express": "^4.18.2",
-    "helmet": "^8.1.0",
-    "morgan": "^1.10.1"
-  },
-  "devDependencies": {
-    "cross-env": "^7.0.3"
-  }
-  ,"overrides": {
-    "chromadb/@google/generative-ai": "0.24.1"
-  }
+  "description": "ShopEasly V11 - sub-app manifest (dependencies consolidated at repository root)",
+  "private": true,
+  "dependencies": {},
+  "devDependencies": {},
+  "note": "All runtime dependencies are defined in root package.json; this file retained for scripts only."
 }

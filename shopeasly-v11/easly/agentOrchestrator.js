@@ -8,6 +8,7 @@
 
 // Note: This module uses ESM-like imports available via require() shims where needed.
 let ChromaClient = null;
+// Optional ChromaDB: install locally with `npm install chromadb` (not required in production deploy if RAG not needed)
 try { ({ ChromaClient } = require('chromadb')); } catch (e) {
   console.warn('[agentOrchestrator] chromadb not installed; RAG context retrieval will return empty context. Install chromadb or set CHROMA_URL.');
 }

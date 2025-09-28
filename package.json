@@ -28,7 +28,6 @@
   "dependencies": {
   "@langchain/core": "^0.3.29",
   "@langchain/openai": "^0.3.17",
-  "chromadb": "1.10.5",
     "@google/genai": "^1.17.0",
     "@google/generative-ai": "^0.24.1",
     "@tensorflow-models/mobilenet": "^2.1.1",
@@ -61,7 +60,5 @@
     "url": "https://github.com/tjmorrow909/shopeasly-v11-starter/issues"
   },
   "homepage": "https://github.com/tjmorrow909/shopeasly-v11-starter#readme"
-  ,"overrides": {
-    "chromadb/@google/generative-ai": "0.24.1"
-  }
+  
 }

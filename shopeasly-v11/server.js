@@ -248,8 +248,12 @@ app.post('/oauth/token', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
+const PORT = Number(process.env.PORT) || 3001;
+const server = app.listen(PORT, () => {
     console.log(`ShopEasly server running on port ${PORT}`);
     console.log(`Visit http://localhost:${PORT} to access the application`);
 });
+
+// Graceful shutdown
+process.on('SIGINT', () => { server.close(()=>process.exit(0)); });
+process.on('SIGTERM', () => { server.close(()=>process.exit(0)); });
