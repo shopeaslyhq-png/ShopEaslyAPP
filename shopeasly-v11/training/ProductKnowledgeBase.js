@@ -7,6 +7,9 @@ class ProductKnowledgeBase {
         this.inventoryPath = path.join(__dirname, '..', 'data', 'inventory.json');
         this.ordersPath = path.join(__dirname, '..', 'data', 'orders.json');
         this.ideasPath = path.join(__dirname, '..', 'data', 'ideas.json');
+        // Optional compiled knowledge (entries array) produced by training/scripts/build-knowledge.js
+        this.compiledKnowledgePath = this.knowledgePath; // backward compat: we reuse same file now
+        // Future: separate compiled vs analytic knowledge: e.g., compiledKnowledgePath = path.join(__dirname,'..','data','compiled_knowledge.json')
     }
 
     // Build comprehensive knowledge base from all data sources
@@ -311,8 +314,33 @@ class ProductKnowledgeBase {
                 this.buildKnowledgeBase();
             }
             
-            const knowledge = JSON.parse(fs.readFileSync(this.knowledgePath, 'utf8'));
+            const raw = JSON.parse(fs.readFileSync(this.knowledgePath, 'utf8'));
+            // Raw may be either the analytic object (old format with products/categories) or the new compiled entries model
+            let knowledge = raw;
             const queryLower = question.toLowerCase();
+
+            // If compiled entries structure (kb-1 format) merge lightweight search on entries
+            if (raw && raw.entries && Array.isArray(raw.entries) && raw.entryCount !== undefined) {
+                // Attempt a simple relevance score (count of keyword hits)
+                const tokens = queryLower.split(/[^a-z0-9]+/).filter(Boolean);
+                const scored = raw.entries.map(e => {
+                    const text = typeof e.content === 'string' ? e.content.toLowerCase() : JSON.stringify(e.content).toLowerCase();
+                    let score = 0;
+                    for (const t of tokens) { if (text.includes(t)) score++; }
+                    return { e, score };
+                }).filter(r => r.score > 0).sort((a,b)=> b.score - a.score).slice(0,3);
+                if (scored.length) {
+                    const answer = scored.map(s => `• ${s.e.title || s.e.id}: ${this.truncate(typeof s.e.content === 'string' ? s.e.content : JSON.stringify(s.e.content), 260)}`).join('\n');
+                    return `Knowledge reference (top ${scored.length}):\n${answer}`;
+                }
+                // Fall through to legacy fields if present in same file
+                if (raw.products || raw.categories) {
+                    knowledge = raw; // continue below
+                } else {
+                    return null; // no legacy structure to query
+                }
+            }
+            // Legacy analytic knowledge path continues
             
             // Product-specific queries
             for (const [productKey, data] of Object.entries(knowledge.products)) {
@@ -351,6 +379,13 @@ class ProductKnowledgeBase {
     }
 
     // Helper methods for data extraction and formatting
+
+    // Added for compiled knowledge response formatting
+    truncate(str, max){
+        if(!str) return '';
+        if(str.length <= max) return str;
+        return str.slice(0, max-3)+'...';
+    }
 
     extractMaterials(product) {
         const text = `${product.name} ${product.description || ''}`.toLowerCase();
@@ -589,6 +624,9 @@ class ProductKnowledgeBase {
             return { isReady: false, error: error.message };
         }
     }
+
+    // Utility: truncate long content for inline answers
+    
 }
 
 module.exports = ProductKnowledgeBase;
