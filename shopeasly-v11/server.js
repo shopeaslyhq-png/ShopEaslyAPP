@@ -129,10 +129,10 @@ const ai = require('./routes/ai');
 const orders = require('./routes/orders');
 const inventory = require('./routes/inventory');
 
-// Health check endpoint for Render
-app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok' });
-});
+// Liveness (HEAD) and readiness (GET) health endpoints (single implementation)
+// HEAD is ultra-fast; GET provides lightweight sampled data with caching.
+let __healthCache = { ts: 0, payload: null };
+app.head('/health', (req, res) => res.status(200).end());
 
 // (Google Home/voice/Dialogflow integrations removed)
 const oauthRouter = require('./routes/oauth');
@@ -158,13 +158,27 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Health check
 app.get('/health', async (req, res) => {
     try {
+        const now = Date.now();
+        // Simple 5s cache to absorb aggressive platform probes
+        if (__healthCache.payload && (now - __healthCache.ts) < 5000) {
+            return res.json(__healthCache.payload);
+        }
         const [inv, ord] = await Promise.all([
             getAllDocuments('inventory', 5).catch(()=>[]),
             getAllDocuments('orders', 5).catch(()=>[])
         ]);
-        res.json({ ok: true, storage: 'local-json', samples: { inventory: inv.length, orders: ord.length } });
+        const payload = {
+            ok: true,
+            status: 'ready',
+            storage: 'local-json',
+            samples: { inventory: inv.length, orders: ord.length },
+            uptimeSec: Math.round(process.uptime()),
+            ts: new Date().toISOString()
+        };
+        __healthCache = { ts: now, payload };
+        res.json(payload);
     } catch (err) {
-        res.status(500).json({ ok: false, error: err.message });
+        res.status(500).json({ ok: false, error: err.message, status: 'degraded' });
     }
 });
 
