@@ -854,6 +854,30 @@ const imageGenForm = document.getElementById('imageGenForm');
 const genDescription = document.getElementById('genDescription');
 const genProduct = document.getElementById('genProduct');
 
+// Product template helper (restored after cleanup of leaking inline script)
+function applyTemplateDefaults(templateType) {
+    const templates = {
+        apparel: { category:'Apparel', priceRange:[15,35], defaultQuantity:25, suggestedMaterials:['Cotton T-Shirt','Fabric Paint'], hints:'Apparel with size variants (S, M, L, XL, XXL)' },
+        drinkware: { category:'Drinkware', priceRange:[12,28], defaultQuantity:20, suggestedMaterials:['Ceramic Mug','Vinyl'], hints:'Drinkware collection with custom designs' },
+        stickers: { category:'Stickers', priceRange:[3,12], defaultQuantity:100, suggestedMaterials:['Vinyl Sticker Paper'], hints:'Sticker pack with multiple designs' },
+        seasonal: { category:'Apparel', priceRange:[18,40], defaultQuantity:15, suggestedMaterials:['Cotton T-Shirt','Seasonal Design'], hints:'Limited edition seasonal collection' }
+    };
+    const template = templates[templateType];
+    if (!template) return;
+    if (typeof productWizardState !== 'undefined' && productWizardState) {
+        productWizardState.data.category = template.category;
+        productWizardState.data.quantity = template.defaultQuantity;
+        productWizardState.data.hints = template.hints;
+        const categorySelect = document.getElementById('pw-category');
+        if (categorySelect) categorySelect.value = template.category;
+        const quantityInput = document.getElementById('pw-qty-manual');
+        if (quantityInput) quantityInput.value = template.defaultQuantity;
+        const hintsInput = document.getElementById('pw-hints');
+        if (hintsInput) hintsInput.value = template.hints;
+    }
+    addMessageToChat('ai', `🎯 Applied **${templateType}** template:\n- **Category:** ${template.category}\n- **Suggested Quantity:** ${template.defaultQuantity}\n- **Price Range:** $${template.priceRange[0]}-${template.priceRange[1]}\n- **Materials:** ${template.suggestedMaterials.join(', ')}\n\nThe Product Wizard is now pre-configured with these settings!`);
+}
+
 function openSettings() {
     if (!settingsModal) return;
     settingsModal.style.display = 'flex';
@@ -2901,49 +2925,11 @@ document.addEventListener('DOMContentLoaded', async function secondaryInit(){
                             <div class="message-header">
                                 <span class="sender-name">Easly AI</span>
                                 <span class="message-time">Just now</span>
-    
-    // Open product wizard with template defaults
-    closeBulkCreation();
-    
-    setTimeout(() => {
-        openProductWizard();
-        applyTemplateDefaults(templateType);
-    }, 300);
-}
-
-function applyTemplateDefaults(templateType) {
-    const templates = {
-        apparel: {
-            category: 'Apparel',
-            priceRange: [15, 35],
-            defaultQuantity: 25,
-            suggestedMaterials: ['Cotton T-Shirt', 'Fabric Paint'],
-            hints: 'Apparel with size variants (S, M, L, XL, XXL)'
-        },
-        drinkware: {
-            category: 'Drinkware',
-            priceRange: [12, 28],
-            defaultQuantity: 20,
-            suggestedMaterials: ['Ceramic Mug', 'Vinyl'],
-            hints: 'Drinkware collection with custom designs'
-        },
-        stickers: {
-            category: 'Stickers',
-            priceRange: [3, 12],
-            defaultQuantity: 100,
-            suggestedMaterials: ['Vinyl Sticker Paper'],
-            hints: 'Sticker pack with multiple designs'
-        },
-        seasonal: {
-            category: 'Apparel',
-            priceRange: [18, 40],
-            defaultQuantity: 15,
-            suggestedMaterials: ['Cotton T-Shirt', 'Seasonal Design'],
-            hints: 'Limited edition seasonal collection'
-        }
-    };
-    
-    const template = templates[templateType];
+                            </div>
+                            <div class="message-text">Welcome! Ask me about inventory, orders, or product ideas.</div>
+                        </div>
+                    </div>
+                    <!-- Inline script removed (was leaking into DOM); functionality centralized in main JS -->
     if (!template) return;
     
     // Apply template to wizard state
