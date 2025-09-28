@@ -153,13 +153,29 @@ module.exports = async function handleAICoPilot(req, res) {
 
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
+    // Lightweight out-of-scope detector
+    function isOutOfScope(q) {
+      const s = q.toLowerCase();
+      // Allowed domain keywords
+      const domain = /(inventory|stock|sku|order|orders|customer|refund|analytics|report|product|material|packing|design|brainstorm|pricing|price|threshold|reorder|fulfillment|shipment|shipping|ai batch|bulk upload|csv|excel)/;
+      if (domain.test(s)) return false;
+      // Common out-of-scope categories (general trivia, coding, unrelated advice)
+      if (/(movie|weather|capital of|president|translate|recipe|medical|diagnos|politic|election|astrology|horoscope|personal advice|tax|bitcoin|crypto|stock market|celebrity|news)/.test(s)) return true;
+      return false; // default not sure => let normal flow decide
+    }
+
+    // Polite refusal helper
+    function politeRefusal() {
+      return applyTone("I’m focused on ShopEasly operations and can’t reliably help with that. Want something about inventory, orders, or products?");
+    }
+
     // Prefer Gemini when API key is present
     if (apiKey) {
       try {
         const geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey;
         const userParts = [];
         if (imagePart) userParts.push({ inline_data: { mime_type: 'image/png', data: imagePart } });
-  userParts.push({ text: `You are Easly AI — a core team member at ShopEasly (not just a bot). Use a friendly, confident, slightly quirky tone (safe and professional). Speak as a teammate using "we" for shop actions. Be concise; if listing steps, keep under 6 bullets.\n\nUser: ${prompt}` });
+  userParts.push({ text: `SYSTEM SCOPE GUARDRAILS:\n- Only answer ShopEasly operational questions (inventory, orders, products, materials, packing materials, analytics, reporting, product design brainstorming).\n- If user asks for anything outside scope: reply with a brief polite refusal: \'I’m focused on ShopEasly operations and can’t reliably help with that. Would you like something inventory, orders, or product related instead?\'\n- If missing details: ask one concise clarification question.\n- Never fabricate unknown data; state what’s unavailable and how to obtain it.\n- Keep refusals < 2 sentences.\n\nYou are Easly AI — a core team member at ShopEasly. Friendly, confident, concise. Use \"we\" for shared shop actions.\n\nUser: ${prompt}` });
 
         const body = {
           contents: [ { role: 'user', parts: userParts } ],
@@ -169,6 +185,13 @@ module.exports = async function handleAICoPilot(req, res) {
         const response = await axios.post(geminiUrl, body, { headers: { 'Content-Type': 'application/json' }, timeout: 15000 });
   let aiText = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
   aiText = applyTone(aiText);
+  // Post-filter: if model ignored scope and gave unrelated trivia, override
+  if (isOutOfScope(prompt)) {
+    // If AI text appears unrelated (does not mention inventory/order/product) then replace
+    if (!/(inventory|order|product|stock|sku|material|report|design)/i.test(aiText)) {
+      aiText = politeRefusal();
+    }
+  }
 
         const maybeJson = extractJsonCandidate(aiText);
         appendAILog({ ip, type: 'gemini', prompt, usage: { model: 'gemini-1.5-flash' } });
@@ -194,6 +217,13 @@ module.exports = async function handleAICoPilot(req, res) {
     }
 
     // Fallback: local intents (reliable even without API key)
+    // Out-of-scope early refusal if clearly unrelated
+    if (isOutOfScope(prompt)) {
+      const text = politeRefusal();
+      appendChatHistory(clientId, [{ role: 'assistant', text }]);
+      appendAILog({ ip, type: 'refusal', prompt });
+      return res.json({ text, source: 'scope_refusal' });
+    }
     const local = await handleLocalIntents(prompt);
     if (local) {
       appendAILog({ ip, type: 'local', prompt, result: local.data });
