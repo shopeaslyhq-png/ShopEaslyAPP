@@ -6,12 +6,17 @@ services:
     env: node
     plan: free
     runtime: nodejs:20
-    start: node shopeasly-v11/server.js
+    buildCommand: cd shopeasly-v11 && npm install
+    start: cd shopeasly-v11 && node server.js
     envVars:
       - key: OPENAI_API_KEY
-        value: ${OPENAI_API_KEY}
+        sync: false
       - key: GEMINI_API_KEY
-        value: ${GEMINI_API_KEY}
+        sync: false
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
     disk:
       sizeGB: 0.5
       mountPath: /data
