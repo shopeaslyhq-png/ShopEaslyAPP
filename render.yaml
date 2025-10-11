@@ -7,9 +7,12 @@ services:
     plan: free
     runtime: nodejs:20
     start: node shopeasly-v11/server.js
-    env:
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    envVars:
+      - key: OPENAI_API_KEY
+        value: ${OPENAI_API_KEY}
+      - key: GEMINI_API_KEY
+        value: ${GEMINI_API_KEY}
     disk:
-      size: 512MB
+      sizeGB: 0.5
+      mountPath: /data
       persistent: true
