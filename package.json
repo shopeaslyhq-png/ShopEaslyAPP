@@ -12,39 +12,39 @@
     "dev:vite": "vite",
     "lint": "eslint --config eslint.config.mjs . --ext .js,.cjs --max-warnings=0",
     "stylelint": "npx stylelint \"**/*.css\" --config .stylelintrc.json",
-    "smoke": "node scripts/smoke-test.mjs"
-    ,"install:compat": "npm install --legacy-peer-deps"
+    "smoke": "node scripts/smoke-test.mjs",
+    "install:compat": "npm install --legacy-peer-deps"
   },
   "devDependencies": {
-    "@types/react": "^19.1.13",
-    "@types/react-dom": "^19.1.9",
-    "@vitejs/plugin-react": "^5.0.3",
-    "eslint": "^9.9.0",
-    "stylelint": "^16.8.0",
-    "stylelint-config-standard": "^36.0.0",
-    "typescript": "^5.2.2",
-    "vite": "^5.4.20"
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.1",
+    "@vitejs/plugin-react": "^5.0.4",
+    "eslint": "^9.37.0",
+    "stylelint": "^16.25.0",
+    "stylelint-config-standard": "^39.0.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.9"
   },
   "dependencies": {
-  "@langchain/core": "^0.3.29",
-  "@langchain/openai": "^0.3.17",
-    "@google/genai": "^1.17.0",
+    "@google/genai": "^1.24.0",
     "@google/generative-ai": "^0.24.1",
+    "@langchain/core": "^0.3.78",
+    "@langchain/openai": "^0.6.14",
     "@tensorflow-models/mobilenet": "^2.1.1",
     "@tensorflow/tfjs": "^4.22.0",
     "axios": "^1.12.2",
     "compression": "^1.8.1",
-    "dompurify": "^3.2.6",
-    "dotenv": "^17.2.2",
+    "dompurify": "^3.2.7",
+    "dotenv": "^17.2.3",
     "ejs-mate": "^4.0.0",
     "express": "^5.1.0",
     "express-ejs-layouts": "^2.5.1",
     "helmet": "^8.1.0",
-    "marked": "^16.2.1",
+    "marked": "^16.4.0",
     "morgan": "^1.10.1",
-  "openai": "^4.59.0",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
+    "openai": "^6.3.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
     "xlsx": "^0.18.5"
   },
   "description": "<div align=\"center\"> <img width=\"1200\" height=\"475\" alt=\"GHBanner\" src=\"https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6\" /> </div>",
@@ -60,5 +60,4 @@
     "url": "https://github.com/tjmorrow909/shopeasly-v11-starter/issues"
   },
   "homepage": "https://github.com/tjmorrow909/shopeasly-v11-starter#readme"
-  
 }
