@@ -14,6 +14,9 @@
     "stylelint": "npx stylelint \"**/*.css\" --config .stylelintrc.json",
     "smoke": "node scripts/smoke-test.mjs",
     "install:compat": "npm install --legacy-peer-deps"
+    ,
+    "java:build-gemini": "mvn -f tools/gemini-java package",
+    "java:run-gemini": "GEMINI_API_KEY=$GEMINI_API_KEY java -jar tools/gemini-java/target/gemini-java-1.0.0.jar"
   },
   "devDependencies": {
     "@types/react": "^19.2.2",
